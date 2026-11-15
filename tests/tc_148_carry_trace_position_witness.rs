@@ -76,18 +76,16 @@ fn a_decisive_result_carries_exactly_the_witness_its_record_holds() {
     // The protocol family has no quantifier and assigns no index.
     assert!(witness.quantifier.is_none() && witness.index.is_none());
     assert!(record.deciding_node().is_some());
-    // A stand-in decisive under either decisive basis carries the same.
-    for basis in [
-        SettlementBasis::DecisiveWitness,
+    // A stand-in agreeing with the record carries the same witness.
+    let (_, held) = refuted_record();
+    let outcome = dispatched(decisive(
         SettlementBasis::DecisiveCounterexample,
-    ] {
-        let (_, held) = refuted_record();
-        let outcome = dispatched(decisive(basis, Some(held.clone())));
-        let ProtocolOutcome::Settled(ClaimSettlement::Result { result, .. }) = outcome else {
-            panic!("{outcome:?}");
-        };
-        assert_eq!(result.witness, Some(held));
-    }
+        Some(held.clone()),
+    ));
+    let ProtocolOutcome::Settled(ClaimSettlement::Result { result, .. }) = outcome else {
+        panic!("{outcome:?}");
+    };
+    assert_eq!(result.witness, Some(held));
 }
 
 #[test]
@@ -182,7 +180,10 @@ fn a_backend_that_writes_no_record_settles_unsupported_with_a_warning() {
 #[test]
 #[trace("TC-148", "FR-302-AC-5")]
 fn a_witness_bearing_result_is_produced_under_the_draft_two_contract() {
-    assert_eq!(WITNESS_RESULT_CONTRACT, "filament.protocol.result/v1-draft.2");
+    assert_eq!(
+        WITNESS_RESULT_CONTRACT,
+        "filament.protocol.result/v1-draft.2"
+    );
     let fixture = Realizability::worked(PICK, "");
     let result = settle(&fixture);
     assert_eq!(result_contract(&result), Some(WITNESS_RESULT_CONTRACT));

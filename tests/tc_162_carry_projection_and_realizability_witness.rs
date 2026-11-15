@@ -35,15 +35,15 @@ fn decisive(_: &Dynamic, truth: Truth, basis: SettlementBasis) -> Sentinel {
     result
 }
 
-fn carried(dynamic: &Dynamic, result: Sentinel) {
+fn carried(dynamic: &Dynamic, kind: ProtocolClaimKind, result: Sentinel) {
     let mut boundary = Boundary::new();
     serve(
         &mut boundary,
         "backend",
-        &[Capability::Realizability],
+        &[kind.capability()],
         always(result.clone()),
     );
-    let asked = request(dynamic, KIND, &["Head"]);
+    let asked = request(dynamic, kind, &["Head"]);
     let outcome = dispatch(&mut boundary, dynamic.linked().declarations(), &asked);
     let ProtocolOutcome::Settled(ClaimSettlement::Result {
         result: carried,
@@ -62,10 +62,15 @@ fn carried(dynamic: &Dynamic, result: Sentinel) {
 #[trace("TC-162", "FR-152-AC-1")]
 fn a_decisive_witness_is_carried_with_the_retained_source_identities() {
     let dynamic = Dynamic::with("workflow", 3);
-    carried(
-        &dynamic,
-        decisive(&dynamic, Truth::Satisfied, SettlementBasis::DecisiveWitness),
+    // A realizability record is the refutation FSL's engine writes, so a
+    // `decisive-witness` result is carried here as a projection result.
+    let mut result = Sentinel::new(
+        "decisive",
+        Truth::Satisfied,
+        SettlementBasis::DecisiveWitness,
     );
+    result.witness = Some(refuted_record().1);
+    carried(&dynamic, ProtocolClaimKind::LocalProjection, result);
 }
 
 #[test]
@@ -74,6 +79,7 @@ fn a_decisive_counterexample_is_carried_with_the_retained_source_identities() {
     let dynamic = Dynamic::with("workflow", 3);
     carried(
         &dynamic,
+        KIND,
         decisive(
             &dynamic,
             Truth::Violated,
@@ -129,8 +135,8 @@ fn a_decisive_result_with_no_source_identity_is_refused_alone() {
         &[Capability::Realizability],
         always(decisive(
             &dynamic,
-            Truth::Satisfied,
-            SettlementBasis::DecisiveWitness,
+            Truth::Violated,
+            SettlementBasis::DecisiveCounterexample,
         )),
     );
     let declarations = dynamic.linked().declarations();
