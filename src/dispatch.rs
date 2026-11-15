@@ -160,6 +160,9 @@ pub enum DispositionRefusal {
     /// The witness a result carries is not the one its `native-run-result/2`
     /// protocol-analysis record holds, byte for byte (FR-302).
     WitnessNotTheRecords,
+    /// The record a result carries states another truth or basis than the
+    /// result does (FR-302).
+    RecordNotTheResults,
     /// FSL's registry selected a backend that has no provider.
     NoProvider(BackendId),
     /// The provider answered with the other claim kind's result.
@@ -406,7 +409,7 @@ pub(crate) fn select<R, B>(
     let set = match registry.candidates(capability, requested) {
         CandidateOutcome::UnknownBackend(_) => {
             return Err(Box::new(ProtocolOutcome::InvalidRequest {
-                // IR-1513: the owner (quire-contract-codegen) is to publish this code.
+                // IR-1513: the owner (filament-contract-codegen) is to publish this code.
                 code: CatalogCode::new("invalid_capability", "unknown-backend"),
                 candidates: Vec::new(),
                 binding,
@@ -429,7 +432,7 @@ pub(crate) fn select<R, B>(
             )))
         } else {
             ProtocolOutcome::InvalidRequest {
-                // IR-1513: the owner (quire-contract-codegen) is to publish this code.
+                // IR-1513: the owner (filament-contract-codegen) is to publish this code.
                 code: CatalogCode::new("invalid_capability", "ambiguous-backend"),
                 candidates: set.candidates().to_vec(),
                 binding,
@@ -483,9 +486,9 @@ pub fn bind<A: Clone, I: Clone>(
     })
 }
 
-/// The contract version a result that carries a witness is produced under
-/// (FR-302-AC-5). A producer selects it explicitly; it is never inferred from
-/// the record.
+/// The contract version a result that carries a `native-run-result/2`
+/// record is produced under (FR-302-AC-5). The record's schema fixes it; it is
+/// never read from the witness.
 pub const WITNESS_RESULT_CONTRACT: &str = "filament.protocol.result/v1-draft.2";
 
 /// The contract version `result` is produced under: the witness-bearing
@@ -654,6 +657,9 @@ fn carry_refusal<R: BackendResult>(
     else {
         return Some(DispositionRefusal::DecisiveWithoutWitness.into());
     };
+    if record.truth() != result.truth() || record.basis() != result.basis() {
+        return Some(DispositionRefusal::RecordNotTheResults.into());
+    }
     (!record.witness_is(witness)).then(|| DispositionRefusal::WitnessNotTheRecords.into())
 }
 

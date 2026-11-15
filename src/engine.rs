@@ -59,16 +59,16 @@ pub fn engine_descriptor(origin: ProviderOrigin) -> Result<BackendDescriptor, Re
 pub struct EngineResult {
     record: Box<AnalyzeRecord>,
     settlement: ProtocolAnalysisSettlement,
-    run_record: Option<ProtocolAnalysisRecord>,
+    run_record: ProtocolAnalysisRecord,
 }
 
 impl EngineResult {
     fn of(record: AnalyzeRecord) -> Option<Self> {
         let artifact = record.protocol_analysis.as_deref()?;
         let settlement = artifact.settlement();
-        // FSL writes the record for every result it settles; a record it
-        // cannot write is carried as absent (FR-302-AC-4).
-        let run_record = artifact.record().ok();
+        // FSL writes the record for every result it settles; an engine that
+        // cannot write it has failed, which is not an absent record.
+        let run_record = artifact.record().ok()?;
         Some(Self {
             record: Box::new(record),
             settlement,
@@ -91,8 +91,8 @@ impl EngineResult {
     /// FSL's `native-run-result/2` protocol-analysis record of the result
     /// (FSpec FR-352), as the engine wrote it.
     #[must_use]
-    pub const fn run_record(&self) -> Option<&ProtocolAnalysisRecord> {
-        self.run_record.as_ref()
+    pub const fn run_record(&self) -> &ProtocolAnalysisRecord {
+        &self.run_record
     }
 
     /// FSL's FR-573 settlement of the result.
@@ -133,7 +133,7 @@ impl BackendResult for EngineResult {
     }
 
     fn run_record(&self) -> Option<&ProtocolAnalysisRecord> {
-        self.run_record.as_ref()
+        Some(&self.run_record)
     }
 
     fn inconclusive(&self) -> Option<&InconclusiveCause> {

@@ -61,7 +61,7 @@ fn decisive(
 fn a_decisive_result_carries_exactly_the_witness_its_record_holds() {
     let fixture = Realizability::worked(PICK, "");
     let result = settle(&fixture);
-    let record = result.run_record().expect("FSL writes the record");
+    let record = result.run_record();
     let witness = result
         .witness()
         .expect("a decisive result carries a witness");
@@ -97,7 +97,7 @@ fn a_basis_that_is_not_decisive_carries_no_witness() {
     let result = settle(&fixture);
     assert_eq!(result.basis(), SettlementBasis::ClosedScope);
     assert!(result.witness().is_none());
-    assert!(!result.run_record().expect("a record").has_witness());
+    assert!(!result.run_record().has_witness());
     for basis in [
         SettlementBasis::ClosedScope,
         SettlementBasis::Unsettled,

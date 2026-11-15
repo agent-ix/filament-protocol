@@ -118,7 +118,7 @@ version the carried result is produced under.
 
 `agent-ix/filament-specification#114` mints `ix://agent-ix/filament-specification/FR-351`
 as the family-neutral separating-witness record shared by codegen,
-quire-verification and filament-protocol consumers, and
+filament-verification and filament-protocol consumers, and
 `ix://agent-ix/filament-specification/FR-352` as the `native-run-result/2` wire that
 carries it; exhausted and cancelled settlements carry no witness, and an
 `unsupported` settlement emits no substitute witness. FR-352's cross-repo note
