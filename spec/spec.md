@@ -60,12 +60,14 @@ repository owns its strict implementation and evidence-backed conformance.
 - Business-operation or compensation execution.
 - Generic producer execution, evidence persistence, method catalogues, sufficiency,
   qualification disposition, or public release policy.
-- Projection, realizability, composition and refinement algorithms, and
+- Projection, realizability and model-level refinement algorithms, and
   protocol exploration semantics (dynamic roles, queues, joins, loops); FSL owns
   them ([ADR-010](adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md)).
-  This library dispatches the claims
+  This library dispatches those claims
   ([FR-301](functional/FR-301-admit-protocol-refinement-dispatch.md)) and
-  carries the results.
+  carries the results. The protocol-level assume-guarantee composition
+  procedure is this library's (ADR-010 Decision 6, FR-200..FR-204); atomic and
+  temporal obligations stay FSL's.
 - An external choreography library before E03 admission.
 
 ## 3. System Overview

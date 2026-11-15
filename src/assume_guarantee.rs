@@ -1,28 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! FR-200, FR-201, FR-202, FR-203, FR-204: dispatch of `composition` and
-//! `refinement` claims to the backend FSL's registry selects.
+//! FR-200, FR-201, FR-202, FR-203, FR-204: the `composition` and `refinement`
+//! claim requests, their premise lists and their binding.
 //!
-//! FSL decides every composition and refinement answer: the product
-//! construction, the premise discharge and the fixed-point slot are FSL's
-//! (FSL FR-530, `filament-specification` FR-176, FR-177, FR-489). This module
-//! binds the claim to its component subjects and its four premise lists, asks
-//! the one backend FR-290 names through the same registry and provider
-//! boundary as FR-150 ([`ProviderBoundary`](crate::dispatch::ProviderBoundary)), and carries what comes back
-//! unchanged. It builds no composition graph, discharges no premise and
-//! evaluates no refinement relation.
-//!
-//! The only decisions made here are inclusion tests on identities: a result
-//! may not name a subject the request did not name, may not retain premise
-//! lists that differ from the request's, and a refinement result may not
-//! retain an assumption identity the request did not state.
+//! A `composition` claim is decided by this library
+//! ([`composition`](crate::composition), ADR-010 Decision 6). A `refinement`
+//! claim is dispatched to the backend FSL's registry selects through the same
+//! registry and provider boundary as FR-150
+//! ([`ProviderBoundary`](crate::dispatch::ProviderBoundary)) and the result is
+//! carried unchanged. For a refinement the only decisions made here are
+//! inclusion tests on identities: a result may not name a subject the request
+//! did not name, may not retain premise lists that differ from the request's,
+//! and may not retain an assumption identity the request did not state.
+
+use std::collections::BTreeSet;
 
 use filament_contract_model::CheckedNodeId;
 use fsl_foundation::BackendId;
-use fsl_replay::ItemLabel;
-use fsl_replay::{SettlementBasis, Truth};
+use fsl_replay::{ItemLabel, SettlementBasis, Truth};
 use fsl_semantics::check::Capability;
 
 use crate::closure::AssessmentExecution;
+use crate::composition::{cycle_members, Guarantee};
 use crate::declarations::Declarations;
 use crate::dispatch::{
     settle_bound, Answer, DispositionRefusal, Fragment, ProtocolOutcome, ProviderBoundary,
@@ -39,12 +37,13 @@ pub enum AssumeGuaranteeKind {
 }
 
 impl AssumeGuaranteeKind {
-    /// FSL's capability kind for the claim kind.
+    /// FSL's capability kind for the claim kind; `None` for a composition,
+    /// which no FSL backend decides.
     #[must_use]
-    pub const fn capability(self) -> Capability {
+    pub const fn capability(self) -> Option<Capability> {
         match self {
-            Self::Composition => Capability::Composition,
-            Self::Refinement => Capability::Refinement,
+            Self::Composition => None,
+            Self::Refinement => Some(Capability::Refinement),
         }
     }
 }
@@ -126,10 +125,10 @@ pub struct AssumeGuaranteeRequest<T> {
     pub assumptions: Vec<CheckedNodeId>,
     /// The four premise lists; empty for a refinement.
     pub premises: PremiseLists<T>,
-    /// The declared dependency cycles, each as the checked node ids of its
-    /// guarantees (FR-203). The cycle is a subject of the claim, never an
-    /// assumption.
-    pub cycles: Vec<Vec<CheckedNodeId>>,
+    /// The component guarantees of a composition and what each proof used
+    /// (FR-176); empty for a refinement. The dependency cycles are computed
+    /// from these (FR-203), never declared.
+    pub guarantees: Vec<Guarantee>,
     /// The source identities the disposition retains (FR-030).
     pub sources: Vec<CheckedNodeId>,
 }
@@ -144,13 +143,11 @@ pub struct AssumeGuaranteeBinding<T> {
     pub selected: Option<BackendId>,
 }
 
-/// What the dispatcher reads of a backend's composition or refinement result.
+/// What the dispatcher reads of a backend's refinement result.
 /// The result itself is FSL's and is carried unchanged.
 pub trait AssumeGuaranteeResult<T> {
     /// The result label, as FSL's backend states it.
     fn label(&self) -> ItemLabel;
-    /// The assessment-execution value the result states, when it states one.
-    fn stated_execution(&self) -> Option<AssessmentExecution>;
     /// The component subjects the result names.
     fn subjects(&self) -> &[CheckedNodeId];
     /// The premise lists the result retains, when it retains them.
@@ -165,9 +162,6 @@ impl<T> AssumeGuaranteeResult<T> for std::convert::Infallible {
     fn label(&self) -> ItemLabel {
         match *self {}
     }
-    fn stated_execution(&self) -> Option<AssessmentExecution> {
-        match *self {}
-    }
     fn subjects(&self) -> &[CheckedNodeId] {
         match *self {}
     }
@@ -179,8 +173,8 @@ impl<T> AssumeGuaranteeResult<T> for std::convert::Infallible {
     }
 }
 
-/// The values a result's label reads into (FR-202). A value is `None` where
-/// no owner table derives it.
+/// The values a refinement result's label reads into (FR-202). A value is
+/// `None` where no owner table derives it.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct LabelReading {
     /// The label, as the backend returned it.
@@ -191,56 +185,6 @@ pub struct LabelReading {
     pub truth: Option<Truth>,
     /// The FR-243 settlement basis.
     pub basis: Option<SettlementBasis>,
-}
-
-/// Read a composition result's label through the `filament-specification`
-/// FR-360 table (execution and truth) and the FR-489 Settlement table (basis).
-///
-/// `failed` states its own execution, `failed` or `resource-incomplete`, and
-/// the backend's statement is read only when it is one of those two. A label
-/// the tables do not contain, `incomplete` included (FSL FR-331 states an
-/// incomplete result as `failed`), reads into nothing. No value is read from
-/// a certificate, counterexample, witness or discharge record, and `refused`
-/// is never derived.
-#[must_use]
-pub fn read_composition_label(
-    label: ItemLabel,
-    stated: Option<AssessmentExecution>,
-) -> LabelReading {
-    let (execution, truth, basis) = match label {
-        ItemLabel::Proved => (
-            Some(AssessmentExecution::Completed),
-            Some(Truth::Satisfied),
-            Some(SettlementBasis::DecisiveWitness),
-        ),
-        ItemLabel::Inconclusive => (
-            Some(AssessmentExecution::Completed),
-            Some(Truth::Pending),
-            Some(SettlementBasis::Unsettled),
-        ),
-        ItemLabel::Unsupported => (
-            Some(AssessmentExecution::Unsupported),
-            Some(Truth::Unavailable),
-            Some(SettlementBasis::Unavailable),
-        ),
-        ItemLabel::Failed => (
-            stated.filter(|execution| {
-                matches!(
-                    execution,
-                    AssessmentExecution::Failed | AssessmentExecution::ResourceIncomplete
-                )
-            }),
-            Some(Truth::Unavailable),
-            Some(SettlementBasis::Unavailable),
-        ),
-        _ => (None, None, None),
-    };
-    LabelReading {
-        label,
-        execution,
-        truth,
-        basis,
-    }
 }
 
 /// A refinement label has no owner table into the axes (FR-202): it is
@@ -256,7 +200,10 @@ pub const fn read_refinement_label(label: ItemLabel) -> LabelReading {
 }
 
 /// The declarations of the component package that owns `node`.
-fn owner<'a>(components: &[&'a Declarations], node: &CheckedNodeId) -> Option<&'a Declarations> {
+pub(crate) fn owner<'a>(
+    components: &[&'a Declarations],
+    node: &CheckedNodeId,
+) -> Option<&'a Declarations> {
     components.iter().copied().find(|declarations| {
         declarations.package() == &*node.package && declarations.declares(node)
     })
@@ -305,7 +252,8 @@ pub fn bind<T: Clone>(
     {
         return Err(DispositionRefusal::UndeclaredAssumption(node.clone()));
     }
-    if let Some(node) = cycle_member(&request.cycles, &request.assumptions) {
+    let cycles = cycle_members(&request.guarantees);
+    if let Some(node) = cycle_member(&cycles, &request.assumptions) {
         return Err(DispositionRefusal::CycleGuaranteeAsAssumption(node));
     }
     if let Some(node) = request
@@ -321,16 +269,18 @@ pub fn bind<T: Clone>(
     })
 }
 
-/// The first of `offered` that is a guarantee of one of `cycles`.
-fn cycle_member(cycles: &[Vec<CheckedNodeId>], offered: &[CheckedNodeId]) -> Option<CheckedNodeId> {
-    offered
-        .iter()
-        .find(|node| cycles.iter().any(|cycle| cycle.contains(node)))
-        .cloned()
+/// The first of `offered` that is a guarantee of a dependency cycle.
+fn cycle_member(
+    cycles: &BTreeSet<CheckedNodeId>,
+    offered: &[CheckedNodeId],
+) -> Option<CheckedNodeId> {
+    offered.iter().find(|node| cycles.contains(*node)).cloned()
 }
 
-/// Settle one claim: bind it to its component packages, then take the steps
-/// every claim kind shares (`settle_bound`).
+/// Settle one `refinement` claim: bind it to its component packages, then take
+/// the steps every backend-decided claim shares (`settle_bound`). A
+/// `composition` claim is decided by [`composition::decide`](crate::composition::decide),
+/// never by a backend, and is refused here.
 pub fn dispatch<K, P, Q, T>(
     boundary: &mut ProviderBoundary<'_, K, Answer<P, Q>>,
     components: &[&Declarations],
@@ -341,6 +291,9 @@ where
     T: Clone + PartialEq,
     Q: AssumeGuaranteeResult<T>,
 {
+    let Some(capability) = request.kind.capability() else {
+        return ProtocolOutcome::Refused(DispositionRefusal::CompositionIsDecidedHere);
+    };
     let binding = match bind(components, request) {
         Ok(binding) => binding,
         Err(refusal) => return ProtocolOutcome::Refused(refusal),
@@ -348,7 +301,7 @@ where
     settle_bound(
         boundary,
         binding,
-        (request.kind.capability(), request.backend.as_ref()),
+        (capability, request.backend.as_ref()),
         |binding| K::from(binding.clone()),
         |binding, selected| binding.selected = Some(selected),
         |answer| match answer {
@@ -360,21 +313,14 @@ where
 }
 
 impl<T, R: AssumeGuaranteeResult<T>> ProtocolOutcome<R, AssumeGuaranteeBinding<T>> {
-    /// The reading of a carried result's label (FR-202). A composition label
-    /// reads through the owner tables and a refinement label into nothing;
-    /// the dispatcher has already refused a result whose stated execution
-    /// contradicts its label, so the reading is the disposition's own.
+    /// The reading of a carried refinement result's label (FR-202): into
+    /// nothing, because no owner table maps it.
     #[must_use]
     pub fn label_reading(&self) -> Option<LabelReading> {
-        let Self::Settled(ClaimSettlement::Result { result, premises }) = self else {
+        let Self::Settled(ClaimSettlement::Result { result, .. }) = self else {
             return None;
         };
-        Some(match premises.request.kind {
-            AssumeGuaranteeKind::Composition => {
-                read_composition_label(result.label(), result.stated_execution())
-            }
-            AssumeGuaranteeKind::Refinement => read_refinement_label(result.label()),
-        })
+        Some(read_refinement_label(result.label()))
     }
 }
 
@@ -392,7 +338,7 @@ fn extra(held: &[CheckedNodeId], allowed: &[CheckedNodeId]) -> Vec<CheckedNodeId
         .collect()
 }
 
-/// FR-201, FR-202, FR-203, FR-204, FR-030: a result is carried only when it
+/// FR-201, FR-202, FR-203, FR-204, FR-030: a refinement result is carried only when it
 /// was established for the request it is attributed to. Identities are
 /// compared by inclusion and the lists by equality; nothing is entailed,
 /// ordered or discharged.
@@ -403,37 +349,21 @@ fn carry_refusal<T: PartialEq, R: AssumeGuaranteeResult<T>>(
     if is_decisive(result.label()) && request.sources.is_empty() {
         return Some(DispositionRefusal::NoSourceIdentity);
     }
-    if request.kind == AssumeGuaranteeKind::Composition {
-        let reading = read_composition_label(result.label(), result.stated_execution());
-        if reading.truth.is_some()
-            && result.stated_execution().is_some()
-            && reading.execution != result.stated_execution()
-        {
-            return Some(DispositionRefusal::ContradictoryExecution(result.label()));
-        }
-    }
     let foreign = extra(result.subjects(), &request.subjects);
     if !foreign.is_empty() {
         return Some(DispositionRefusal::IdentityMismatch(
             IdentityMismatch::Subjects(foreign),
         ));
     }
-    match result.retained_premises() {
-        Some(retained) => {
-            if let Some(list) = retained.first_difference(&request.premises) {
-                return Some(DispositionRefusal::RetainedPremiseList(list));
-            }
-        }
-        None if request.kind == AssumeGuaranteeKind::Composition => {
-            return Some(DispositionRefusal::IdentityMismatch(
-                IdentityMismatch::AbsentPremiseLists,
-            ));
-        }
-        None => {}
+    if let Some(list) = result
+        .retained_premises()
+        .and_then(|retained| retained.first_difference(&request.premises))
+    {
+        return Some(DispositionRefusal::RetainedPremiseList(list));
     }
     let retained = result.retained_assumptions();
     if let Some(retained) = retained {
-        if let Some(node) = cycle_member(&request.cycles, retained) {
+        if let Some(node) = cycle_member(&cycle_members(&request.guarantees), retained) {
             return Some(DispositionRefusal::CycleGuaranteeAsAssumption(node));
         }
         let stronger = extra(retained, &request.assumptions);
@@ -462,6 +392,4 @@ pub enum IdentityMismatch {
     /// The result omits its retained assumption identities, which compare
     /// only to absence (FR-030-AC-4).
     AbsentAssumptions,
-    /// The result omits its retained premise lists.
-    AbsentPremiseLists,
 }

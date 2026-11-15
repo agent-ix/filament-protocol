@@ -1,21 +1,21 @@
 ---
 id: TC-204
-title: "Refuse a refinement result whose assumptions are stronger than the request's"
+title: "Refuse a claim established under assumptions stronger than the request's"
 type: TC
 relationships:
   - target: ix://agent-ix/filament-protocol/FR-204
     type: verifies
 ---
-# TC-204: Refuse a refinement result whose assumptions are stronger than the request's
+# TC-204: Refuse a claim established under assumptions stronger than the request's
 
 ## Description
 
-Verify identity inclusion of a result's retained assumptions in the request's and the carrying of a backend-reported strengthened-assumption finding, with a stand-in for the FSL call boundary and no local analysis.
+Verify that a refinement result retaining an assumption the request did not state is refused, and that a composition resting on an unoffered assumption yields a paired replayable counterexample.
 
 ## Test Procedure
 
-Request a refinement claim with assumptions. Feed stand-in results that retain the same set, one extra identity on a proof, one extra identity on a violation, a strict subset, an empty set, an omitted field, and the backend's own `protocol-assumption-not-established` finding, beside conformance and composition claims. Tag each test with the exact acceptance criterion it verifies.
+Feed stand-in refinement results retaining extra, fewer, omitted and the backend's own strengthened assumptions. Decide compositions whose relied-on proof reaches an unoffered assumption directly and through a sibling guarantee, replay each counterexample, alter its steps, premise and offered side, and decide one that uses only offered assumptions. Tag each test with the exact acceptance criterion it verifies.
 
 ## Expected Results
 
-Equal and subset sets are carried; an omitted field is refused naming it; an extra identity refuses the disposition with `identity-mismatch` naming it and no success value; independent dispositions are unchanged; the backend's own finding is carried unchanged.
+Extra identities refuse the refinement naming each; the composition is incompatible with a counterexample naming premise, offered side and path; the counterexample replays and an altered one does not; offered-but-unused assumptions change nothing.

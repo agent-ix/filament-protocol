@@ -25,7 +25,7 @@ use fsl_route::ProviderOrigin;
 
 use super::dynamic::Dynamic;
 
-pub type Asked = Claim<(), (), ()>;
+pub type Asked = Claim<(), (), CheckedNodeId>;
 pub type Boundary<'p> = ProviderBoundary<'p, Asked, Answer<EngineResult, Infallible>>;
 
 pub const RECORDS: &str = "record Ack { ok: Boolean; }\nrecord Note { ok: Boolean; }\n\

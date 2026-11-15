@@ -9,6 +9,7 @@ mod support {
     pub mod projection;
 }
 
+use filament_contract_model::CheckedNodeId;
 use std::convert::Infallible;
 
 use filament_protocol::dispatch::{
@@ -65,7 +66,7 @@ fn the_corpus_settles_each_role_of_each_workflow_by_the_engines_own_decision() {
 fn a_projection_claim_leaves_a_global_conformance_result_untouched() {
     let dynamic = worked(PICK, CANCELLED);
     let mut boundary = boundary(&dynamic, "Warehouse", "bounded-static");
-    let settled = dispatch_claims::<_, _, _, _, (), _, Infallible>(
+    let settled = dispatch_claims::<_, _, _, _, CheckedNodeId, _, Infallible>(
         &mut boundary,
         dynamic.linked().declarations(),
         &[],

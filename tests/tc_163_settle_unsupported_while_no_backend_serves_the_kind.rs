@@ -8,6 +8,7 @@ mod support {
     pub mod standin;
 }
 
+use filament_contract_model::CheckedNodeId;
 use filament_protocol::closure::AssessmentExecution;
 use filament_protocol::dispatch::{
     dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, ProtocolClaimKind, ProtocolOutcome,
@@ -38,7 +39,7 @@ fn protocol(
         &'static str,
         support::standin::Assumptions,
         &'static str,
-        (),
+        CheckedNodeId,
         Sentinel,
         std::convert::Infallible,
     >,
