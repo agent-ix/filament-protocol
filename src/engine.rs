@@ -23,6 +23,7 @@ use fsl_foundation::RequestIndex;
 use fsl_replay::protocol_analysis::{
     AnalysisOutcome, ProtocolAnalysisSettlement, RealizabilityCounterexample,
 };
+use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
     InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TerminalValue, Truth,
 };
@@ -58,14 +59,20 @@ pub fn engine_descriptor(origin: ProviderOrigin) -> Result<BackendDescriptor, Re
 pub struct EngineResult {
     record: Box<AnalyzeRecord>,
     settlement: ProtocolAnalysisSettlement,
+    run_record: ProtocolAnalysisRecord,
 }
 
 impl EngineResult {
     fn of(record: AnalyzeRecord) -> Option<Self> {
-        let settlement = record.protocol_analysis.as_deref()?.settlement();
+        let artifact = record.protocol_analysis.as_deref()?;
+        let settlement = artifact.settlement();
+        // FSL writes the record for every result it settles; an engine that
+        // cannot write it has failed, which is not an absent record.
+        let run_record = artifact.record().ok()?;
         Some(Self {
             record: Box::new(record),
             settlement,
+            run_record,
         })
     }
 
@@ -79,6 +86,13 @@ impl EngineResult {
     #[must_use]
     pub fn artifact(&self) -> Option<&ProtocolAnalysisArtifact> {
         self.record.protocol_analysis.as_deref()
+    }
+
+    /// FSL's `native-run-result/2` protocol-analysis record of the result
+    /// (FSpec FR-352), as the engine wrote it.
+    #[must_use]
+    pub const fn run_record(&self) -> &ProtocolAnalysisRecord {
+        &self.run_record
     }
 
     /// FSL's FR-573 settlement of the result.
@@ -116,6 +130,10 @@ impl BackendResult for EngineResult {
                 _ => None,
             },
         }
+    }
+
+    fn run_record(&self) -> Option<&ProtocolAnalysisRecord> {
+        Some(&self.run_record)
     }
 
     fn inconclusive(&self) -> Option<&InconclusiveCause> {
@@ -188,12 +206,11 @@ fn without_result<R>(record: &AnalyzeRecord) -> FslReport<R> {
     }
 }
 
-impl<'p, A, C, I, T, Q, S> FslBoundary<Claim<A, C, I, T>, Answer<EngineResult, Q>>
-    for FslEngine<'p, S>
+impl<'p, A, I, T, Q, S> FslBoundary<Claim<A, I, T>, Answer<EngineResult, Q>> for FslEngine<'p, S>
 where
-    S: FnMut(&Binding<A, C, I>) -> EngineRequest<'p>,
+    S: FnMut(&Binding<A, I>) -> EngineRequest<'p>,
 {
-    fn report(&mut self, claim: &Claim<A, C, I, T>) -> FslReport<Answer<EngineResult, Q>> {
+    fn report(&mut self, claim: &Claim<A, I, T>) -> FslReport<Answer<EngineResult, Q>> {
         let Claim::Protocol(binding) = claim else {
             // Composition and refinement are not this engine's kinds.
             return FslReport::Unsupported {

@@ -20,6 +20,7 @@ use fsl_foundation::witness::{
     ObservationIdentity, RuntimeValuePath, ValuePathStep, ValuePathSubject,
 };
 use fsl_foundation::BackendId;
+use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
     InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TracePosition, Truth,
 };
@@ -28,20 +29,12 @@ use fsl_semantics::check::Capability;
 
 use super::dynamic::Dynamic;
 
-/// The channel components FSL's read view does not publish yet.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Rest {
-    pub sender: &'static str,
-    pub receiver: &'static str,
-    pub message_type: &'static str,
-}
-
 pub type Assumptions = &'static str;
-pub type Req = ProtocolRequest<Assumptions, Rest, &'static str>;
-pub type Bind = Binding<Assumptions, Rest, &'static str>;
+pub type Req = ProtocolRequest<Assumptions, &'static str>;
+pub type Bind = Binding<Assumptions, &'static str>;
 /// The unified claim a provider is asked about; these tests ask no
 /// composition or refinement, whose entries are therefore `()`.
-pub type Asked = Claim<Assumptions, Rest, &'static str, ()>;
+pub type Asked = Claim<Assumptions, &'static str, ()>;
 pub type Boundary = ProviderBoundary<'static, Asked, Answer<Sentinel, Infallible>>;
 
 /// The result a stand-in returns, with the parts the dispatcher reads.
@@ -51,6 +44,7 @@ pub struct Sentinel {
     pub truth: Truth,
     pub basis: SettlementBasis,
     pub witness: Option<SeparatingWitnessRecord>,
+    pub record: Option<ProtocolAnalysisRecord>,
     pub inconclusive: Option<InconclusiveCause>,
     pub artifact: Option<&'static str>,
 }
@@ -62,6 +56,7 @@ impl Sentinel {
             truth,
             basis,
             witness: None,
+            record: None,
             inconclusive: None,
             artifact: None,
         }
@@ -77,6 +72,9 @@ impl BackendResult for Sentinel {
     }
     fn witness(&self) -> Option<&SeparatingWitnessRecord> {
         self.witness.as_ref()
+    }
+    fn run_record(&self) -> Option<&ProtocolAnalysisRecord> {
+        self.record.as_ref()
     }
     fn inconclusive(&self) -> Option<&InconclusiveCause> {
         self.inconclusive.as_ref()
@@ -156,14 +154,6 @@ pub fn always(result: Sentinel) -> Reply {
     Box::new(move |_| FslReport::Result(result.clone()))
 }
 
-pub fn rest() -> Rest {
-    Rest {
-        sender: "S",
-        receiver: "R",
-        message_type: "Notice",
-    }
-}
-
 /// A request over the fragment of the channels `channels` and roles `S`, `R`,
 /// with every premise supplied.
 pub fn request(dynamic: &Dynamic, kind: ProtocolClaimKind, channels: &[&str]) -> Req {
@@ -192,7 +182,6 @@ pub fn request(dynamic: &Dynamic, kind: ProtocolClaimKind, channels: &[&str]) ->
                     let premise = ChannelPremise {
                         ordering: declared.ordering.clone(),
                         delivery: declared.delivery,
-                        unread: rest(),
                     };
                     (node, premise)
                 })

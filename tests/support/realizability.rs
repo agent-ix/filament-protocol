@@ -185,6 +185,7 @@ fn channel(name: &str, from: &str, to: &str, carries: &str) -> String {
 
 /// One fixture: both package forms and the model's documents.
 pub struct Realizability {
+    document: Vec<u8>,
     checked: CheckedPackage,
     admitted: Box<CheckedPackageV2>,
     packages: PackageInput,
@@ -265,6 +266,7 @@ impl Realizability {
             .clone();
         let linked = link(&admitted, &clause).expect("the protocol links");
         Self {
+            document: document.clone(),
             clause,
             linked,
             checked,
@@ -276,6 +278,25 @@ impl Realizability {
                 identity: "s0".to_owned(),
             }],
         }
+    }
+
+    /// The package emitted again with `mutate` applied to its wire JSON, read
+    /// by Contract IR's reader.
+    pub fn read_mutated(&self, mutate: impl FnOnce(&mut Json)) -> CheckedPackageDispatchResult {
+        let emission = fsl_package::emit_checked(&self.checked, EmitLimits::new(1 << 32))
+            .expect("the protocol package emits");
+        let mut evidence = emission.evidence().clone();
+        evidence
+            .insert_domain_package_document(PACKAGE, self.document.as_slice())
+            .expect("fresh domain evidence");
+        let mut wire: Json =
+            serde_json::from_slice(emission.package().bytes()).expect("the package is JSON");
+        mutate(&mut wire);
+        filament_contract_model::read_checked_package(
+            &serde_json::to_vec(&wire).expect("JSON bytes"),
+            CheckedPackageReadLimits::bounded(),
+            &evidence,
+        )
     }
 
     /// The admitted package, the request's own form.
@@ -376,5 +397,75 @@ impl Realizability {
             assessed_root: Some(assessed_root()),
             budget: RunBudget::default(),
         }
+    }
+}
+
+/// The `native-run-result/2` record FSL's engine writes for a refuted
+/// `realizability` result, and the FR-351 witness it holds: what a decisive
+/// stand-in result carries.
+pub fn refuted_record() -> (
+    fsl_replay::spine::ProtocolAnalysisRecord,
+    fsl_replay::SeparatingWitnessRecord,
+) {
+    use fsl_analyze::protocol_analysis::{realize, ProtocolAnalysisArtifact};
+    use fsl_replay::protocol_analysis::AnalysisOutcome;
+
+    let fixture = Realizability::worked(super::projection::PICK, "");
+    let result = realize(fixture.package(), fixture.request()).expect("the request is admitted");
+    let AnalysisOutcome::Refuted(counterexample) = &result.outcome else {
+        panic!("a refutation: {:?}", result.outcome);
+    };
+    let witness = counterexample.separating_witness().clone();
+    let record = ProtocolAnalysisArtifact::Realizability(Box::new(result))
+        .record()
+        .expect("FSL writes the record");
+    (record, witness)
+}
+
+/// Dispatch a `realizability` claim over `fixture` to FSL's registered engine
+/// and return its result, as TC-166 and TC-148 do.
+pub fn settle(fixture: &Realizability) -> filament_protocol::engine::EngineResult {
+    use std::convert::Infallible;
+
+    use filament_protocol::dispatch::{
+        dispatch, Answer, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
+    };
+    use filament_protocol::disposition::ClaimSettlement;
+    use filament_protocol::engine::{engine_descriptor, EngineRequest, FslEngine};
+    use fsl_analyze::protocol_analysis::manifest::BACKEND_ID;
+    use fsl_route::ProviderOrigin;
+
+    use super::projection::{claim_of, Asked};
+
+    let mut boundary: ProviderBoundary<
+        '_,
+        Asked,
+        Answer<filament_protocol::engine::EngineResult, Infallible>,
+    > = ProviderBoundary::new();
+    let engine = FslEngine::new(fixture.package(), |_: &Binding<(), ()>| {
+        EngineRequest::Realizability(Box::new(fixture.request()))
+    })
+    .expect("FSL's linked engines register");
+    boundary
+        .register(
+            engine_descriptor(ProviderOrigin::Linked).expect("FSL's own descriptor"),
+            engine,
+        )
+        .expect("the registration is accepted");
+    let asked = claim_of(
+        ProtocolClaimKind::Realizability,
+        fixture.linked(),
+        fixture.clause(),
+        |form, name| fixture.named(form, name),
+    );
+    match dispatch(&mut boundary, fixture.linked().declarations(), &asked) {
+        ProtocolOutcome::Settled(ClaimSettlement::Result { result, premises }) => {
+            assert_eq!(
+                premises.selected.as_ref().map(|id| id.as_str()),
+                Some(BACKEND_ID)
+            );
+            result
+        }
+        other => panic!("the engine decides the claim: {other:?}"),
     }
 }

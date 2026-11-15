@@ -24,7 +24,7 @@ When a `local-projection` or `realizability` claim is dispatched, the dispatcher
 
 ## Inputs
 
-The channel premise (sender, receiver, message type, ordering policy and delivery policy) of every channel and the role internality of every role in the claim's admitted fragment; and the per-claim premises the requester supplied (FR-030).
+The channel premise (ordering policy and delivery policy, which the requester states; sender, receiver and message type, which the linked declaration carries) of every channel and the role internality of every role in the claim's admitted fragment; and the per-claim premises the requester supplied (FR-030).
 
 FSL's read view of the checked package (`ix://agent-ix/filament-spec-language/ADR-017`, read through FR-044) publishes each channel's ordering and delivery policy and each role declaration. It publishes a channel's sender, receiver and message type (FR-151-AC-7) but not a role's internality. Until FSL publishes it (FR-151-AC-9), the dispatcher forwards the internality as the requester states it and verifies none against the checked package.
 
@@ -37,7 +37,8 @@ Upstream admission already refuses a checked-package channel with a missing comp
 ## Behavior
 
 - The dispatcher shall hand the backend each channel's ordering and delivery policy and each role declaration exactly as the checked package authors them.
-- The dispatcher shall hand the backend each channel's sender, receiver and message type as the linked declaration carries them, and each component of the requester's premises that FSL's read view does not publish exactly as the requester stated it. `ChannelPremise::unread` holds nothing FSL publishes for a channel today; callers state `()`.
+- The dispatcher shall hand the backend each channel's sender, receiver and message type as the linked declaration carries them; the requester states none of them.
+- The dispatcher shall hand the backend each role internality exactly as the requester stated it, until FSL publishes it (FR-151-AC-9).
 - When the requester's ordering or delivery premise for a channel differs from the checked package's declaration of it, the dispatcher shall refuse that disposition under FR-030 naming the channel.
 - When the requester's premise differs from the checked package's declaration, the dispatcher shall invoke no backend for that claim.
 - The dispatcher shall retain on the disposition each premise it handed the backend.
@@ -54,7 +55,7 @@ Upstream admission already refuses a checked-package channel with a missing comp
 | ID | Criteria | Verification |
 | --- | --- | --- |
 | FR-151-AC-1 | Given a fragment with channels and roles, the stand-in backend's recorded call carries each channel's ordering and delivery premise and each role declaration equal to the checked package's, and the disposition retains the same premises. | Test (TC-161) |
-| FR-151-AC-2 | Given two requests that differ in exactly one component of one channel premise, their request identities and their disposition provenance differ. | Test (TC-161) |
+| FR-151-AC-2 | Given two requests that differ in exactly one role internality, their request identities and their disposition provenance differ. | Test (TC-161) |
 | FR-151-AC-3 | Given a request whose per-claim premise set omits one channel premise or one role internality of the fragment, that disposition is refused under FR-030 naming the absent premise, the stand-in records no call for that claim, and every independent disposition is unchanged. | Test (TC-161) |
 | FR-151-AC-4 | Given a requester premise set stating `external` for a role, the backend call carries `external` for it as stated and no premise implying that the role is fully observable. | Test (TC-161) |
 | FR-151-AC-5 | Given a stand-in that returns the `Inconclusive` verdict with a `BoundReached` `InconclusiveCause`, truth `pending` and basis `unsettled`, one that returns the same verdict with truth `satisfied`, and one that returns a requires-bound outcome, each disposition carries the outcome and the cause unchanged and holds neither truth `satisfied` nor truth `violated`, and the first holds truth `pending`. | Test (TC-161) |
@@ -67,7 +68,7 @@ Upstream admission already refuses a checked-package channel with a missing comp
 
 | Noun | Upstream object | Identity kind |
 | --- | --- | --- |
-| Channel premise (five components) | `ix://agent-ix/filament-specification/FR-216` | value |
+| Channel premise (ordering, delivery; the ends and message type are the linked declaration's) | `ix://agent-ix/filament-specification/FR-216` | value |
 | Role internality | `ix://agent-ix/filament-specification/FR-217` | value |
 | Truth disposition | `ix://agent-ix/filament-specification/FR-242` | value |
 | Settlement basis | `ix://agent-ix/filament-specification/FR-243` | value |
