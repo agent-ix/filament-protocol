@@ -15,19 +15,20 @@ use filament_protocol::assume_guarantee::{
     AssumeGuaranteeBinding, AssumeGuaranteeKind, AssumeGuaranteeRequest, AssumeGuaranteeResult,
     PremiseLists,
 };
-use filament_protocol::closure::AssessmentExecution;
+use filament_protocol::composition::Guarantee;
 use filament_protocol::dispatch::{
     Answer, Claim, ClaimDisposition, ClaimRequest, Fragment, ProviderBoundary,
 };
 use filament_protocol::disposition::{FslBoundary, FslReport};
 use fsl_foundation::BackendId;
+use fsl_replay::planner::ClauseForm;
 use fsl_replay::{InconclusiveCause, ItemLabel};
 use fsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
 use fsl_semantics::check::Capability;
 
 use super::dynamic::Dynamic;
 
-pub type Entry = &'static str;
+pub type Entry = CheckedNodeId;
 pub type Bind = AssumeGuaranteeBinding<Entry>;
 pub type Req = AssumeGuaranteeRequest<Entry>;
 /// The unified claim a provider is asked about; these tests ask no
@@ -42,7 +43,6 @@ pub type Settled = ClaimDisposition<&'static str, (), (), Entry, Infallible, Out
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Out {
     pub label: ItemLabel,
-    pub execution: Option<AssessmentExecution>,
     pub cause: Option<InconclusiveCause>,
     pub subjects: Vec<CheckedNodeId>,
     pub premises: Option<PremiseLists<Entry>>,
@@ -57,7 +57,6 @@ impl Out {
     pub fn new(label: ItemLabel) -> Self {
         Self {
             label,
-            execution: None,
             cause: None,
             subjects: Vec::new(),
             premises: None,
@@ -73,9 +72,6 @@ impl Out {
 impl AssumeGuaranteeResult<Entry> for Out {
     fn label(&self) -> ItemLabel {
         self.label
-    }
-    fn stated_execution(&self) -> Option<AssessmentExecution> {
-        self.execution
     }
     fn subjects(&self) -> &[CheckedNodeId] {
         &self.subjects
@@ -147,7 +143,8 @@ pub fn always(result: Out) -> Reply {
 /// channel `Head` as an assumption identity and a distinct entry in each of
 /// the four premise lists.
 pub fn request(dynamic: &Dynamic, kind: AssumeGuaranteeKind) -> Req {
-    Req {
+    let composition = kind == AssumeGuaranteeKind::Composition;
+    let mut asked = Req {
         kind,
         fragment: Fragment {
             channels: vec![dynamic.named("channel", "Head")],
@@ -160,13 +157,36 @@ pub fn request(dynamic: &Dynamic, kind: AssumeGuaranteeKind) -> Req {
             dynamic.named("channel", "Tail"),
         ],
         premises: PremiseLists {
-            environment: vec!["env-1"],
-            relies: vec!["rely-1", "rely-2"],
-            liveness_dependencies: vec!["live-1"],
-            fairness: vec!["fair-1"],
+            environment: vec![dynamic.named("channel", "Head")],
+            relies: vec![dynamic.named("channel", "Reject")],
+            liveness_dependencies: vec![dynamic.named("channel", "New")],
+            fairness: vec![dynamic.named("channel", "Tail")],
         },
-        cycles: Vec::new(),
+        guarantees: vec![
+            guarantee(dynamic, "Reject", ClauseForm::Safety, &["Head"]),
+            guarantee(dynamic, "New", ClauseForm::Liveness, &["Reject", "Tail"]),
+        ],
         sources: vec![dynamic.clause().clone()],
+    };
+    // A refinement carries neither declared guarantees nor premise entries.
+    if !composition {
+        asked.guarantees.clear();
+        asked.premises = PremiseLists::default();
+    }
+    asked
+}
+
+/// A `proved` guarantee at the channel `name` whose proof used the channels
+/// `uses`.
+pub fn guarantee(dynamic: &Dynamic, name: &str, form: ClauseForm, uses: &[&str]) -> Guarantee {
+    Guarantee {
+        id: dynamic.named("channel", name),
+        form,
+        label: ItemLabel::Proved,
+        uses: uses
+            .iter()
+            .map(|used| dynamic.named("channel", used))
+            .collect(),
     }
 }
 

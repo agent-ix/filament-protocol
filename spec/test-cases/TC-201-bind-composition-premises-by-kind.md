@@ -10,12 +10,12 @@ relationships:
 
 ## Description
 
-Verify separate premise lists, subject binding and undischarged-slot retention, with a stand-in for the FSL call boundary and no local analysis.
+Verify that the four premise lists stay separate and that each premise is discharged only by a node of the kind its list requires.
 
 ## Test Procedure
 
-Request a composition claim with entries in all four premise lists. Feed stand-in results that name an unknown subject, carry `component-guarantee` and `fixed-point` entries, return a slot undischarged although a supplied guarantee would discharge it by a local reading, and return an empty discharge record. Drop or merge one list from the disposition. Tag each test with the exact acceptance criterion it verifies.
+Decide compositions with a premise in each list; name an offered assumption in a rely list, an unoffered node in a fairness list, a guarantee of the other form, an unproved guarantee and an undeclared node. Tag each test with the exact acceptance criterion it verifies.
 
 ## Expected Results
 
-Four separate byte-equal lists reach the stand-in and stay in the disposition; an unknown subject refuses the disposition with `identity-mismatch` naming it; real discharge-record entries are carried byte-equal and none refused; undischarged slots stay undischarged; no slot is marked discharged by the library.
+Each premise is discharged or left undischarged with its cause by its own list's rule; the discharge record names list, index and discharger; an undeclared node refuses the disposition naming it.

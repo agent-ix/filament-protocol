@@ -15,42 +15,41 @@ relationships:
 
 ## Description
 
-When a composition disposition is returned, the dispatcher SHALL keep the request's environment, rely, liveness-dependency and fairness premises as four separate lists bound to their component subjects. The dispatcher SHALL refuse a disposition whose retained lists or subjects differ from the request's.
+When a composition is decided, the library SHALL keep the request's environment, rely, liveness-dependency and fairness premises as four separate lists, discharge each premise only by a node of the kind its list requires, and record each discharge against its premise.
 
 ## Inputs
 
-One composition request (FR-200) carrying the component subjects (checked package and subject identity each) and the four premise lists of `ix://agent-ix/filament-specification/FR-489`, and the backend's returned result with its discharge record.
+One composition request (FR-200) carrying the component subjects (checked package and subject identity each), the declared guarantees and the four premise lists of `ix://agent-ix/filament-specification/FR-489`, each entry naming its discharger.
 
 ## Outputs
 
-The composition disposition retaining the four lists and the subjects exactly as requested, with the backend's discharge record bound to them, or one refusal of that disposition under FR-030 naming the list or subject that differs.
+The composition disposition retaining the four lists and the subjects exactly as requested, the discharge record with one entry per discharged premise naming the list, the index and the discharger, the undischarged premises each with its cause, or one refusal of that disposition under FR-030 naming the node that is not declared.
 
 ## Behavior
 
-- The dispatcher shall pass the `environment`, `relies`, `liveness_dependencies` and `fairness` lists to the backend as four separate lists, each entry byte-equal to the request's.
-- The dispatcher shall retain all four lists in the disposition, collapsing none into a flag and merging none into another.
-- The dispatcher shall carry the discharge record as the backend returned it, with one entry per discharged slot and each entry's role as FSL names it.
-- The dispatcher shall classify no slot into a premise list.
-- When a returned result names a component subject that is not among the request's subjects, the dispatcher shall refuse the disposition under FR-030 with the cause `identity-mismatch`.
-- When the backend returns a slot undischarged, the disposition shall retain that slot as undischarged.
-- The dispatcher shall mark no slot discharged on any basis other than the backend's discharge record.
+- The library shall retain all four lists in the disposition exactly as requested, collapsing none into a flag and merging none into another.
+- The library shall discharge an `environment` or `fairness` premise only by an assumption identity the request offered.
+- The library shall discharge a `relies` premise only by a declared safety guarantee that is proved, outside every dependency cycle and whose proof used only offered assumptions and available guarantees.
+- The library shall discharge a `liveness_dependencies` premise only by such a guarantee of liveness form, because a guarantee of one form never discharges a premise of the other.
+- The library shall leave undischarged, with its cause, a premise whose discharger is not offered, not declared, of the other form, not `proved`, on a cycle or dependent on an unavailable guarantee.
+- When a premise names a discharger that is not a node of its owning checked package, the library shall refuse the disposition under FR-030 naming that node.
+- The library shall mark no premise discharged on any basis other than the procedure's own discharge record.
 
-Which guarantee discharges which premise is FSL's decision (FSL FR-530, `ix://agent-ix/filament-specification/FR-489` "Discharge"). This requirement binds the answer to the question that was asked; it decides none of it.
+Entailment between different clauses and the fairness implication of `ix://agent-ix/filament-specification/FR-380` are not decided here: a fairness premise is discharged by identity only.
 
 ## Acceptance Criteria
 
 | ID | Criteria | Verification |
 | --- | --- | --- |
-| FR-201-AC-1 | A recording stand-in for the FSL call boundary receives the four premise lists as four separate lists whose entries are byte-equal to the request's, and no Boolean flag stands in for any list. | Test (TC-201) |
-| FR-201-AC-2 | The disposition retains all four lists exactly as requested, and dropping or merging any one of them from the disposition refuses it under FR-030 without changing an independent disposition. | Test (TC-201) |
-| FR-201-AC-3 | Given a stand-in discharge record whose entries carry the roles FSL names, including `component-guarantee` and `fixed-point` entries, the disposition carries every entry byte-equal, refuses none of them, and the library derives no slot, role or premise list of its own. | Test (TC-201) |
-| FR-201-AC-4 | A stand-in result naming a component subject absent from the request refuses the disposition with `identity-mismatch`, and the refusal names the subject. | Test (TC-201) |
-| FR-201-AC-5 | Given a request whose supplied guarantees would discharge a rely slot by a local reading and a stand-in that returns that slot undischarged, the disposition retains the slot as undischarged and carries no success. | Test (TC-201) |
-| FR-201-AC-6 | Given a stand-in discharge record that is empty, no slot in the disposition is marked discharged. | Test (TC-201) |
+| FR-201-AC-1 | A premise in each of the four lists is discharged or left undischarged by its own list's rule: the same node discharges an `environment` premise when offered and fails a `relies` premise when it is no declared guarantee, and no Boolean flag stands in for any list. | Test (TC-201) |
+| FR-201-AC-2 | The disposition retains all four lists exactly as requested and a premise's discharge is recorded against its own list and index; no list is merged into another. | Test (TC-201) |
+| FR-201-AC-3 | The discharge record has one entry per discharged premise naming its list, index and discharger, an assumption for `environment` and `fairness` and a guarantee for `relies` and `liveness_dependencies`. | Test (TC-201) |
+| FR-201-AC-4 | A premise naming a node its package does not declare refuses the disposition, and the refusal names the node. | Test (TC-201) |
+| FR-201-AC-5 | A safety guarantee named by a `liveness_dependencies` premise, a liveness guarantee named by a `relies` premise and a guarantee that is not `proved` each leave the premise undischarged with the cause, and the disposition is not `proved`. | Test (TC-201) |
+| FR-201-AC-6 | Given no discharger that satisfies any premise, the discharge record is empty and every premise is listed undischarged. | Test (TC-201) |
 
 ## Dependencies
 
-- [FR-200](./FR-200-dispatch-composition-claims-to-fsl.md) supplies the composition request this requirement binds.
-- [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) supplies the premise-binding refusal this requirement applies to the four lists and the subjects.
-- [FR-008](./FR-008-return-typed-refusals.md) supplies the closed cause vocabulary that holds `identity-mismatch`.
-- `ix://agent-ix/filament-specification/FR-489` and FSL FR-530 define the four lists, the slots and the discharge record this requirement binds but does not restate.
+- [FR-200](./FR-200-decide-composition-claims.md) supplies the composition request this requirement binds.
+- [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) supplies the premise-binding refusal this requirement applies to the four lists and the nodes.
+- `ix://agent-ix/filament-specification/FR-489` defines the four lists this requirement binds.

@@ -27,7 +27,7 @@ extern crate self as filament_protocol;
 // established here.
 // ---------------------------------------------------------------------------
 
-/// Dispatch of `composition` and `refinement` claims to FSL's backends (FR-200..204).
+/// The `composition` and `refinement` claim requests and the refinement dispatch to FSL's backend (FR-200..204).
 pub mod assume_guarantee;
 /// Count, allocation and deadline guards. Owner chunk: C-29 (submodule: C-30).
 pub mod bounds;
@@ -38,6 +38,8 @@ pub mod checked_package;
 pub mod closure;
 /// Compensation algebra, purity, activation and recovery. Owner chunks: C-16..C-19.
 pub mod compensation;
+/// Assume-guarantee composition decision: cycles, discharge and stronger assumptions (FR-200..204).
+pub mod composition;
 /// Settlement of inclusive deadline branches (FR-100).
 pub mod deadline;
 /// Authored role, channel, join and loop declarations of a linked protocol.

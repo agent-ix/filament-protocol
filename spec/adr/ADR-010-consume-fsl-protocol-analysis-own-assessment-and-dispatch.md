@@ -33,7 +33,7 @@ relationships:
 
 ## Status
 
-Accepted. This record fixes the split between this library and FSL's
+Accepted; Decision 6 reverses the composition assumption on 2026-11-15. This record fixes the split between this library and FSL's
 `fsl-analyze` for the dynamic, projection, realizability, composition and
 refinement extension. It authors no requirement; it reserves requirement-id
 blocks and names, per capability, what this library owns and what it consumes.
@@ -103,10 +103,12 @@ them (FR-005). Those are different questions, and the split follows them.
 
 ## Decision
 
-1. **The library implements no projection, realizability, refinement or
-   composition decision procedure, and no queue, role, join or loop
+1. **The library implements no projection, realizability or model-level
+   refinement decision procedure, and no queue, role, join or loop
    exploration semantics.** It consumes FSL's. It builds no product
-   construction, strategy game or fixed-point engine. This is ADR-007 and
+   construction, strategy game or fixed-point engine. The protocol-level
+   assume-guarantee composition procedure is the exception recorded in
+   Decision 6. This is ADR-007 and
    AD-001's boundary table applied to the extension. The protocol and
    frame boundaries FSL fixes for the checked package, which this library
    reads and does not redefine, are FSL ADR-017.
@@ -158,6 +160,26 @@ them (FR-005). Those are different questions, and the split follows them.
    `ix://agent-ix/filament-specification/FR-0nn`; they are not local ids and do
    not collide with these blocks.
 
+6. **Reversal for composition (2026-11-15): this library decides the
+   protocol-level assume-guarantee composition procedure.** The table above
+   and Decision 1 assumed FSL serves composition. FSL does not: FSL FR-530's
+   planner settles an FSL `composition-decl` from FSL result entries and
+   writes the discharge record, FSL FR-530 adds no TL-9 algorithm, FSL FR-147
+   never kinds a model-refines-protocol check `refinement`, and
+   `open_systems_inner` refuses concrete protocol sides. No FSL API decides a
+   composition of this library's component protocols. The library therefore
+   owns, in `composition`: cycle detection over the declared guarantee
+   dependencies (strongly connected components); discharge of a premise only
+   from a proved guarantee outside every cycle, of the matching form; and a
+   paired, replayable counterexample when a relied-on proof rests on an
+   assumption the request did not offer. FSL still owns every atomic and
+   temporal obligation: the requester carries FSL's label for each guarantee,
+   and the library evaluates no temporal formula and no model-level
+   refinement. The library computes no fixed point; a cycle is refused as
+   circular reasoning (FSL FR-176). The protocol refinement procedure is
+   reversed the same way by a later change; until then `refinement` is
+   dispatched and carried as before.
+
 ## Per-ticket ownership
 
 | Ticket | Provided by FSL | Remains Protocol-owned | Planner action |
@@ -165,7 +187,7 @@ them (FR-005). Those are different questions, and the split follows them.
 | TL-11 dynamic roles, bounded queues, joins, proved loops | Exploration semantics for all of them (table above), except FSL gaps G3 to G5 | FR-050 to FR-099: link the role, queue, join and loop declarations; assess an observed history against role lifetime and population bound, queue capacity and overflow outcome, join settlement per policy, loop bound; map FSL `Unsupported` and requires-bound outcomes to typed dispositions (Decision 3) | Rewrite as assessment and carrying work over FSL's semantics; drop "implement exploration" and "loop invariants and variants" from this repository |
 | TL-6 core roles, messages, channels, control, compensation, replay | Compensation and channel steps for model subjects | FR-100 to FR-149: only the delta over the existing FR-002, FR-003, FR-004, FR-019 to FR-028 and FR-041 coverage. Each new requirement names the V1-PROT capability it closes and the existing requirement it extends; a capability those FRs already cover gets no new FR | Rewrite as a delta ticket; close the rows the existing FRs already cover |
 | TL-10 projection and realizability | Claim vocabulary and routing only. No engine (gaps G1, G2) | FR-150 to FR-199: dispatch of both kinds to FSL's backend once one exists; premise binding for communication and visibility premises; carrying a FSL witness with trace-position correspondence to the linked graph (FR-302); `unsupported` while no backend exists, with global conformance preserved | Rewrite to dispatch and carrying only; the decision procedures move to a ticket for the FSL code lead (G1, G2); keep blocked by that ticket |
-| TL-9 composition and refinement | Refinement engine, protocol abstract side, replay, certificate; composition planner for acyclic discharge. Gap G6 for declared fixed-point cycles | FR-200 to FR-249: dispatch `refinement` and `composition` to FSL's backends (amends FR-301); premise binding; carrying paired counterexamples and certificates; refusing a refinement result whose assumptions are stronger than the request's | Rewrite to dispatch and carrying; remove the product construction and the discharge algorithm from scope |
+| TL-9 composition and refinement | Model-level refinement engine, protocol abstract side, replay, certificate; atomic and temporal obligations. FSL provides no protocol-level composition procedure (Decision 6) | FR-200 to FR-249: the protocol-level composition decision (cycles, discharge, stronger assumptions; Decision 6); dispatch of `refinement` to FSL's backend (amends FR-301); premise binding; carrying paired counterexamples and certificates | Composition: decided here (FR-200..FR-204). Refinement: dispatch and carrying |
 | TL-8 reference workflows, integration, qualification | Backends for the corpora where FSL has them | Integration tests and evidence for each Protocol-owned cell, as IT and TC artifacts that cite the FR blocks above. No FR block; qualification adds no requirement of its own | Keep as the last layer; scope corpora to the capabilities that have backends, and mark projection and realizability corpora blocked on G1 and G2 |
 | TL-12 adopt the extension and delivery DAG | Not applicable | This record is the adoption: it fixes the split, reserves the blocks and names ownership. No further adoption artifact is owed | Close when this record merges |
 
@@ -179,6 +201,8 @@ them (FR-005). Those are different questions, and the split follows them.
 - The library keeps no copy of FSL's step semantics. Where a requirement here
   must state a threshold or overflow rule for assessment, it cites the FSpec
   clause (FR-170, FR-171) and the FSL record (ADR-027) and does not restate them.
+- Composition is decided in `composition`, not dispatched (Decision 6);
+  FR-200 to FR-204 state it.
 - FR-301, spec.md section 2, AD-001 and TC-147 lose their wording about a
   library-built product construction. Their dispatch, independence and
   premise-binding obligations are unchanged.
@@ -196,7 +220,7 @@ does no FSL-side work.
 | G3 | `join predicate(...)` was not stepped and a join with no `outstanding` rule was refused (both closed in FSL by QSL-1885 and QSL-1891; this library still does not assess a predicate join) | `fsl-eval/src/simulation/protocol/program.rs` | TL-11 |
 | G4 | Symbolic channel capacity is not stepped (`Unsupported::SymbolicCapacity`); only literal capacity is | Same file | TL-11 |
 | G5 | No discharge of a `repeat`'s `invariant` and `variant` (lexicographic variants included) was found. They parse and lower into the checked package, but a search of `fsl-analyze`, `fsl-eval`, `fsl-replay` and `fsl-route` found no engine that proves them | `fsl-forms/src/protocol_control.rs`, `fsl-semantics/.../controls.rs` | TL-11 |
-| G6 | Declared least-fixed-point cycles: the composition planner computes no fixed point and discharges a cycle only from a `fixed-point` slot holding a proved result. No producer of that result was found | `fsl-replay/src/planner/compose.rs` | TL-9 |
+| G6 | Declared least-fixed-point cycles: the composition planner computes no fixed point and discharges a cycle only from a `fixed-point` slot holding a proved result. No producer of that result was found. Closed here by Decision 6: this library computes no fixed point either and refuses a cycle as circular | `fsl-replay/src/planner/compose.rs` | TL-9 |
 | G7 | Other protocol-system constructs that are not stepped and refuse today: `activation on each` with a compensation template, a protocol capture, an `unordered` channel with a `head` or `tail` loss selector, and a step binder of an unenumerable record type | `Unsupported` in `fsl-eval/src/simulation/protocol.rs` | TL-11, TL-6 |
 
 G5 and G6 are findings from a negative search. The FSL code lead should confirm

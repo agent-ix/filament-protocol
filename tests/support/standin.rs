@@ -6,6 +6,7 @@
 // Each test binary uses a different part of these helpers.
 #![allow(dead_code)]
 
+use filament_contract_model::CheckedNodeId;
 use std::cell::RefCell;
 use std::convert::Infallible;
 use std::rc::Rc;
@@ -34,7 +35,7 @@ pub type Req = ProtocolRequest<Assumptions, &'static str>;
 pub type Bind = Binding<Assumptions, &'static str>;
 /// The unified claim a provider is asked about; these tests ask no
 /// composition or refinement, whose entries are therefore `()`.
-pub type Asked = Claim<Assumptions, &'static str, ()>;
+pub type Asked = Claim<Assumptions, &'static str, CheckedNodeId>;
 pub type Boundary = ProviderBoundary<'static, Asked, Answer<Sentinel, Infallible>>;
 
 /// The result a stand-in returns, with the parts the dispatcher reads.

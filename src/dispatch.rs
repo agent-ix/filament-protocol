@@ -22,14 +22,15 @@ use filament_semantic_value::catalog::CatalogCode;
 use fsl_foundation::BackendId;
 use fsl_package::protocol_view::Delivery;
 use fsl_replay::spine::ProtocolAnalysisRecord;
-use fsl_replay::{InconclusiveCause, ItemLabel, SeparatingWitnessRecord, SettlementBasis, Truth};
+use fsl_replay::{InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, Truth};
 use fsl_route::{BackendDescriptor, Candidate, CandidateOutcome, RegistrationRefusal, Registry};
 use fsl_semantics::check::Capability;
 
 use crate::assume_guarantee::{
-    AssumeGuaranteeBinding, AssumeGuaranteeRequest, AssumeGuaranteeResult, IdentityMismatch,
-    PremiseList,
+    AssumeGuaranteeBinding, AssumeGuaranteeKind, AssumeGuaranteeRequest, AssumeGuaranteeResult,
+    IdentityMismatch, PremiseList,
 };
+use crate::composition::{decide, CompositionOutcome, Premise};
 use crate::declarations::{ChannelDeclaration, Declarations, Ordering, RoleDeclaration};
 use crate::disposition::{
     settle_claim, ClaimSettlement, Disposition, FslBoundary, UnsupportedCause,
@@ -180,12 +181,28 @@ pub enum DispositionRefusal {
     UndeclaredAssumption(CheckedNodeId),
     /// A source identity is not a node of the checked package's protocol.
     UndeclaredSource(CheckedNodeId),
-    /// A guarantee of a declared cycle is offered as an assumption, in the
+    /// A guarantee on a dependency cycle (computed from the declared proof edges) is offered as an assumption, in the
     /// request or in the result's retained assumptions (FR-203).
     CycleGuaranteeAsAssumption(CheckedNodeId),
-    /// A result states an assessment-execution value its label does not read
-    /// into (FR-202).
-    ContradictoryExecution(ItemLabel),
+    /// A guarantee, or a node a guarantee's proof used, is not a node of the
+    /// checked package's protocol (FR-200).
+    UndeclaredGuarantee(CheckedNodeId),
+    /// A premise names a discharger that is not a node of the checked
+    /// package's protocol (FR-201).
+    UndeclaredPremise(CheckedNodeId),
+    /// A guarantee is declared twice (FR-200).
+    DuplicateGuarantee(CheckedNodeId),
+    /// A composition request names a backend, although no backend decides a
+    /// composition (FR-200).
+    BackendNamedForComposition(BackendId),
+    /// A composition request reached the backend path, which only a
+    /// refinement takes (FR-200).
+    CompositionIsDecidedHere,
+    /// A request of another kind reached the composition decision (FR-200).
+    NotAComposition,
+    /// A `refinement` request carries declared guarantees or premise entries,
+    /// which only a composition has (FR-200).
+    RefinementCarriesCompositionInputs,
     /// A result names an identity the request does not, or omits a field it
     /// must retain (FR-201, FR-204).
     IdentityMismatch(IdentityMismatch),
@@ -281,7 +298,7 @@ pub enum ClaimRequest<G, A, I, T> {
     GlobalConformance(G),
     /// `local-projection` or `realizability`.
     Protocol(ProtocolRequest<A, I>),
-    /// `composition` or `refinement` (FR-200).
+    /// `composition` (decided here) or `refinement` (dispatched; FR-200).
     AssumeGuarantee(AssumeGuaranteeRequest<T>),
 }
 
@@ -295,8 +312,10 @@ pub enum ClaimDisposition<G, A, I, T, P, Q> {
     GlobalConformance(G),
     /// The protocol claim's settlement.
     Protocol(ProtocolOutcome<P, Binding<A, I>>),
-    /// The composition or refinement claim's settlement.
+    /// The refinement claim's settlement.
     AssumeGuarantee(ProtocolOutcome<Q, AssumeGuaranteeBinding<T>>),
+    /// The composition claim's decision, made by this library (FR-200).
+    Composition(CompositionOutcome<T>),
 }
 
 /// The claim a registered provider is asked about: one boundary, registry and
@@ -676,7 +695,7 @@ where
     G: Clone,
     A: Clone,
     I: Clone,
-    T: Clone + PartialEq,
+    T: Clone + PartialEq + Premise,
     P: BackendResult,
     Q: AssumeGuaranteeResult<T>,
 {
@@ -688,6 +707,11 @@ where
             }
             ClaimRequest::Protocol(request) => {
                 ClaimDisposition::Protocol(dispatch(boundary, declarations, request))
+            }
+            ClaimRequest::AssumeGuarantee(request)
+                if request.kind == AssumeGuaranteeKind::Composition =>
+            {
+                ClaimDisposition::Composition(decide(components, request))
             }
             ClaimRequest::AssumeGuarantee(request) => ClaimDisposition::AssumeGuarantee(
                 crate::assume_guarantee::dispatch(boundary, components, request),
