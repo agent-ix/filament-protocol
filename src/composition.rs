@@ -34,7 +34,8 @@ use fsl_replay::planner::ClauseForm;
 use fsl_replay::{ItemLabel, SettlementBasis, Truth};
 
 use crate::assume_guarantee::{
-    bind as bind_claim, owner, AssumeGuaranteeBinding, AssumeGuaranteeRequest, PremiseList,
+    bind as bind_claim, owner, AssumeGuaranteeBinding, AssumeGuaranteeKind, AssumeGuaranteeRequest,
+    PremiseList,
 };
 use crate::closure::AssessmentExecution;
 use crate::declarations::Declarations;
@@ -156,19 +157,29 @@ impl Counterexample {
         self.path.last().map(|step| &step.uses)
     }
 
-    /// Replay the counterexample against `request`: the premise relies on the
-    /// path's first guarantee, every step is an edge the request declares, the
-    /// steps chain, the offered side is the request's, and the path's end is
+    /// Replay the counterexample against `request`: the premise is a
+    /// `relies` or `liveness_dependencies` premise whose discharger is the
+    /// path's first guarantee and of the form the list needs, every step is
+    /// an edge the request declares, the steps chain, no guarantee repeats on
+    /// the path, the offered side is the request's, and the path's end is
     /// neither a declared guarantee nor an offered assumption.
     #[must_use]
     pub fn replay<T: Premise>(&self, request: &AssumeGuaranteeRequest<T>) -> bool {
         let Some(first) = self.path.first() else {
             return false;
         };
+        if !matches!(
+            self.premise.list,
+            PremiseList::Relies | PremiseList::LivenessDependencies
+        ) {
+            return false;
+        }
         let relied = request
             .premises_list(self.premise.list)
             .get(self.premise.index);
         let declared = |id: &CheckedNodeId| request.guarantees.iter().find(|g| &g.id == id);
+        let form_matches = declared(&first.guarantee)
+            .is_some_and(|guarantee| guarantee.form == needed_form(self.premise.list));
         let edges_exist = self.path.iter().all(|step| {
             declared(&step.guarantee).is_some_and(|guarantee| guarantee.uses.contains(&step.uses))
         });
@@ -176,13 +187,20 @@ impl Counterexample {
             .path
             .windows(2)
             .all(|pair| pair[0].uses == pair[1].guarantee);
+        let acyclic = self.path.iter().enumerate().all(|(at, step)| {
+            self.path[..at]
+                .iter()
+                .all(|before| before.guarantee != step.guarantee)
+        });
         let ends_unoffered = self
             .unoffered()
             .is_some_and(|end| declared(end).is_none() && !request.assumptions.contains(end));
         relied.is_some_and(|entry| entry.discharger() == &first.guarantee)
+            && form_matches
             && self.offered == request.assumptions
             && edges_exist
             && chained
+            && acyclic
             && ends_unoffered
     }
 }
@@ -199,16 +217,20 @@ impl<T> AssumeGuaranteeRequest<T> {
     }
 }
 
-/// What a decided composition is, in the order of what it must name first.
+/// What a decided composition is. The precedence, whatever the order of the
+/// guarantees and of the nodes their proofs used, is `Circular`, then
+/// `Incompatible`, then `Unproved`, then `Proved`; every finding is retained
+/// beside the verdict.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Verdict {
     /// Every premise is discharged, no proof rests on more than was offered
     /// and no guarantee is on a cycle.
     Proved,
-    /// A proof rests on an assumption the request did not offer.
+    /// A relied-on proof rests on an assumption the request did not offer.
     Incompatible,
-    /// The declared guarantees depend on one another in a cycle. The cycle is
-    /// refused as circular reasoning (FSL FR-176) and discharges nothing.
+    /// The declared guarantees depend on one another in a cycle, relied on or
+    /// not. The cycle is refused as circular reasoning (FSL FR-176) and
+    /// discharges nothing.
     Circular,
     /// A premise stays undischarged.
     Unproved,
@@ -235,10 +257,10 @@ impl<T> Composition<T> {
     /// any other kind.
     #[must_use]
     pub fn verdict(&self) -> Verdict {
-        if !self.counterexamples.is_empty() {
-            Verdict::Incompatible
-        } else if !self.cycles.is_empty() {
+        if !self.cycles.is_empty() {
             Verdict::Circular
+        } else if !self.counterexamples.is_empty() {
+            Verdict::Incompatible
         } else if !self.undischarged.is_empty() {
             Verdict::Unproved
         } else {
@@ -350,47 +372,33 @@ fn cycles(guarantees: &[Guarantee]) -> Vec<Vec<CheckedNodeId>> {
     components.into_iter().collect()
 }
 
-/// Why a guarantee is not available.
-enum Blocked {
-    /// It, or something it used, is unavailable for this reason.
-    Unavailable(Unavailable),
-    /// Its proof reaches an assumption that was not offered, by this path.
-    Stronger(Vec<DependencyStep>),
-}
-
-/// Resolve each declared guarantee: available, or blocked and why. A cycle
-/// member is blocked at once; every other guarantee is resolved after the
+/// Resolve each declared guarantee: available, or unavailable and why. A cycle
+/// member is unavailable at once; every other guarantee is resolved after the
 /// guarantees its proof used, which exist because what remains is acyclic.
-fn availability(
-    request_guarantees: &[Guarantee],
-    offered: &[CheckedNodeId],
-) -> BTreeMap<CheckedNodeId, Result<(), Blocked>> {
-    let on_cycle = cycle_members(request_guarantees);
-    let mut resolved: BTreeMap<CheckedNodeId, Result<(), Blocked>> = request_guarantees
+fn availability(guarantees: &[Guarantee]) -> BTreeMap<CheckedNodeId, Result<(), Unavailable>> {
+    let on_cycle = cycle_members(guarantees);
+    let mut resolved: BTreeMap<CheckedNodeId, Result<(), Unavailable>> = guarantees
         .iter()
         .filter(|g| on_cycle.contains(&g.id))
-        .map(|g| {
-            (
-                g.id.clone(),
-                Err(Blocked::Unavailable(Unavailable::InCycle)),
-            )
-        })
+        .map(|g| (g.id.clone(), Err(Unavailable::InCycle)))
         .collect();
-    let declared = |id: &CheckedNodeId| request_guarantees.iter().any(|g| &g.id == id);
-    while resolved.len() < request_guarantees.len() {
+    let declared = |id: &CheckedNodeId| guarantees.iter().any(|g| &g.id == id);
+    while resolved.len() < guarantees.len() {
         let before = resolved.len();
-        for guarantee in request_guarantees {
+        for guarantee in guarantees {
             if resolved.contains_key(&guarantee.id) {
                 continue;
             }
-            let ready = guarantee
+            // A guarantee waits for every guarantee its proof used.
+            let waiting = guarantee
                 .uses
                 .iter()
-                .all(|used| !declared(used) || resolved.contains_key(used));
-            if ready {
-                let outcome = resolve(guarantee, &resolved, &declared, offered);
-                resolved.insert(guarantee.id.clone(), outcome);
+                .any(|used| declared(used) && !resolved.contains_key(used));
+            if waiting {
+                continue;
             }
+            let outcome = resolve(guarantee, &resolved, &declared);
+            resolved.insert(guarantee.id.clone(), outcome);
         }
         // What is left would be a cycle, which was resolved first.
         if resolved.len() == before {
@@ -400,39 +408,74 @@ fn availability(
     resolved
 }
 
+/// Whether `guarantee` is available, given every guarantee it used is
+/// resolved. The nodes it used that are not guarantees are the concern of
+/// [`unoffered_path`], not of availability.
 fn resolve(
     guarantee: &Guarantee,
-    resolved: &BTreeMap<CheckedNodeId, Result<(), Blocked>>,
+    resolved: &BTreeMap<CheckedNodeId, Result<(), Unavailable>>,
     declared: &dyn Fn(&CheckedNodeId) -> bool,
-    offered: &[CheckedNodeId],
-) -> Result<(), Blocked> {
+) -> Result<(), Unavailable> {
     if guarantee.label != ItemLabel::Proved {
-        return Err(Blocked::Unavailable(Unavailable::NotProved(
-            guarantee.label,
-        )));
+        return Err(Unavailable::NotProved(guarantee.label));
     }
-    for used in &guarantee.uses {
-        let step = || DependencyStep {
-            guarantee: guarantee.id.clone(),
-            uses: used.clone(),
+    let mut used: Vec<&CheckedNodeId> = guarantee.uses.iter().filter(|u| declared(u)).collect();
+    used.sort();
+    match used
+        .into_iter()
+        .find(|used| !matches!(resolved.get(*used), Some(Ok(()))))
+    {
+        Some(used) => Err(Unavailable::DependsOn(used.clone())),
+        None => Ok(()),
+    }
+}
+
+/// The shortest proof path from the guarantee `from` to a node its proof
+/// reaches that is neither a declared guarantee nor offered, whatever any
+/// guarantee on the way is labelled or whether it is on a cycle. Ties are
+/// broken by node order, so the path depends on neither the order of the
+/// declared guarantees nor the order of the nodes a proof used.
+fn unoffered_path(
+    guarantees: &[Guarantee],
+    offered: &[CheckedNodeId],
+    from: &CheckedNodeId,
+) -> Option<Vec<DependencyStep>> {
+    let by_id: BTreeMap<&CheckedNodeId, &Guarantee> =
+        guarantees.iter().map(|g| (&g.id, g)).collect();
+    // Each reached guarantee, with the step that first reached it.
+    let mut reached: BTreeMap<&CheckedNodeId, Option<DependencyStep>> = BTreeMap::new();
+    reached.insert(from, None);
+    let mut queue = std::collections::VecDeque::from([from]);
+    while let Some(current) = queue.pop_front() {
+        let Some(guarantee) = by_id.get(current) else {
+            continue;
         };
-        if declared(used) {
-            match &resolved[used] {
-                Ok(()) => {}
-                Err(Blocked::Unavailable(_)) => {
-                    return Err(Blocked::Unavailable(Unavailable::DependsOn(used.clone())));
+        let mut uses: Vec<&CheckedNodeId> = guarantee.uses.iter().collect();
+        uses.sort();
+        uses.dedup();
+        for used in uses {
+            let step = DependencyStep {
+                guarantee: current.clone(),
+                uses: used.clone(),
+            };
+            if by_id.contains_key(used) {
+                if let std::collections::btree_map::Entry::Vacant(slot) = reached.entry(used) {
+                    slot.insert(Some(step));
+                    queue.push_back(used);
                 }
-                Err(Blocked::Stronger(path)) => {
-                    let mut through = vec![step()];
-                    through.extend(path.iter().cloned());
-                    return Err(Blocked::Stronger(through));
+            } else if !offered.contains(used) {
+                let mut path = vec![step];
+                let mut at = current;
+                while let Some(Some(back)) = reached.get(at) {
+                    path.push(back.clone());
+                    at = &back.guarantee;
                 }
+                path.reverse();
+                return Some(path);
             }
-        } else if !offered.contains(used) {
-            return Err(Blocked::Stronger(vec![step()]));
         }
     }
-    Ok(())
+    None
 }
 
 /// Bind a composition request (FR-030, FR-200): the claim binding of
@@ -494,6 +537,9 @@ pub fn decide<T: Clone + Premise>(
     components: &[&Declarations],
     request: &AssumeGuaranteeRequest<T>,
 ) -> CompositionOutcome<T> {
+    if request.kind != AssumeGuaranteeKind::Composition {
+        return CompositionOutcome::Refused(DispositionRefusal::NotAComposition);
+    }
     let binding = match bind(components, request) {
         Ok(binding) => binding,
         Err(refusal) => return CompositionOutcome::Refused(refusal),
@@ -512,8 +558,7 @@ pub fn decide<T: Clone + Premise>(
 /// The procedure over a bound request.
 fn run<T: Premise>(binding: AssumeGuaranteeBinding<T>) -> Composition<T> {
     let request = &binding.request;
-    let resolved = availability(&request.guarantees, &request.assumptions);
-    let guarantee = |id: &CheckedNodeId| request.guarantees.iter().find(|g| &g.id == id);
+    let resolved = availability(&request.guarantees);
     let mut discharges = Vec::new();
     let mut undischarged = Vec::new();
     let mut counterexamples = Vec::new();
@@ -526,16 +571,16 @@ fn run<T: Premise>(binding: AssumeGuaranteeBinding<T>) -> Composition<T> {
                     .assumptions
                     .contains(named)
                     .then(|| DischargedBy::Assumption(named.clone()))
-                    .ok_or(Blocked::Unavailable(Unavailable::NotOffered)),
+                    .ok_or(Finding::Unavailable(Unavailable::NotOffered)),
                 PremiseList::Relies | PremiseList::LivenessDependencies => {
-                    relied(guarantee(named), list, &resolved)
+                    relied(request, named, list, &resolved)
                         .map(|()| DischargedBy::Guarantee(named.clone()))
                 }
             };
             match outcome {
                 Ok(by) => discharges.push(Discharge { premise, by }),
-                Err(Blocked::Unavailable(why)) => undischarged.push(Undischarged { premise, why }),
-                Err(Blocked::Stronger(path)) => counterexamples.push(Counterexample {
+                Err(Finding::Unavailable(why)) => undischarged.push(Undischarged { premise, why }),
+                Err(Finding::Stronger(path)) => counterexamples.push(Counterexample {
                     premise,
                     offered: request.assumptions.clone(),
                     path,
@@ -552,25 +597,44 @@ fn run<T: Premise>(binding: AssumeGuaranteeBinding<T>) -> Composition<T> {
     }
 }
 
-/// Whether the declared `guarantee` can discharge a premise of `list`.
-fn relied(
-    guarantee: Option<&Guarantee>,
-    list: PremiseList,
-    resolved: &BTreeMap<CheckedNodeId, Result<(), Blocked>>,
-) -> Result<(), Blocked> {
-    let Some(guarantee) = guarantee else {
-        return Err(Blocked::Unavailable(Unavailable::NotDeclared));
-    };
-    let needed = match list {
+/// Why a premise is not discharged.
+enum Finding {
+    /// The discharger is unavailable for this reason.
+    Unavailable(Unavailable),
+    /// The relied-on proof reaches an unoffered node by this path.
+    Stronger(Vec<DependencyStep>),
+}
+
+/// The form of guarantee a premise of `list` is discharged by.
+const fn needed_form(list: PremiseList) -> ClauseForm {
+    match list {
         PremiseList::LivenessDependencies => ClauseForm::Liveness,
         _ => ClauseForm::Safety,
-    };
-    if guarantee.form != needed {
-        return Err(Blocked::Unavailable(Unavailable::WrongForm(guarantee.form)));
     }
-    match &resolved[&guarantee.id] {
-        Ok(()) => Ok(()),
-        Err(Blocked::Unavailable(why)) => Err(Blocked::Unavailable(why.clone())),
-        Err(Blocked::Stronger(path)) => Err(Blocked::Stronger(path.clone())),
+}
+
+/// Whether the guarantee `named` can discharge a premise of `list`. A
+/// counterexample is found before the guarantee's label or availability is
+/// judged, so that it does not depend on either.
+fn relied<T>(
+    request: &AssumeGuaranteeRequest<T>,
+    named: &CheckedNodeId,
+    list: PremiseList,
+    resolved: &BTreeMap<CheckedNodeId, Result<(), Unavailable>>,
+) -> Result<(), Finding> {
+    let Some(guarantee) = request.guarantees.iter().find(|g| &g.id == named) else {
+        return Err(Finding::Unavailable(Unavailable::NotDeclared));
+    };
+    if guarantee.form != needed_form(list) {
+        return Err(Finding::Unavailable(Unavailable::WrongForm(guarantee.form)));
+    }
+    if let Some(path) = unoffered_path(&request.guarantees, &request.assumptions, named) {
+        return Err(Finding::Stronger(path));
+    }
+    match resolved.get(named) {
+        Some(Ok(())) => Ok(()),
+        Some(Err(why)) => Err(Finding::Unavailable(why.clone())),
+        // Every declared guarantee is resolved; a missing entry is unresolved.
+        None => Err(Finding::Unavailable(Unavailable::InCycle)),
     }
 }

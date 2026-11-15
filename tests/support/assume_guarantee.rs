@@ -143,7 +143,8 @@ pub fn always(result: Out) -> Reply {
 /// channel `Head` as an assumption identity and a distinct entry in each of
 /// the four premise lists.
 pub fn request(dynamic: &Dynamic, kind: AssumeGuaranteeKind) -> Req {
-    Req {
+    let composition = kind == AssumeGuaranteeKind::Composition;
+    let mut asked = Req {
         kind,
         fragment: Fragment {
             channels: vec![dynamic.named("channel", "Head")],
@@ -166,7 +167,13 @@ pub fn request(dynamic: &Dynamic, kind: AssumeGuaranteeKind) -> Req {
             guarantee(dynamic, "New", ClauseForm::Liveness, &["Reject", "Tail"]),
         ],
         sources: vec![dynamic.clause().clone()],
+    };
+    // A refinement carries neither declared guarantees nor premise entries.
+    if !composition {
+        asked.guarantees.clear();
+        asked.premises = PremiseLists::default();
     }
+    asked
 }
 
 /// A `proved` guarantee at the channel `name` whose proof used the channels

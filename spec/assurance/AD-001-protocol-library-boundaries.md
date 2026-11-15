@@ -389,13 +389,16 @@ affected identity or refuses.
    No reverse edge or local substitute is allowed.
 6. Apply one transactional state model, one refusal envelope and one Protocol
    resource accountant across the path.
-7. Projection, realizability, composition and refinement are decided by FSL
-   (ADR-010). This library dispatches each claim kind to FSL's backend,
+7. Projection, realizability and refinement are decided by FSL (ADR-010).
+   This library dispatches each of those claim kinds to FSL's backend,
    [FR-301](../functional/FR-301-admit-protocol-refinement-dispatch.md) for
    refinement, carries the result unchanged, and uses the same closed dispatch,
    premise-binding and unsupported-absence discipline FR-005, FR-029 and
    FR-030 apply to every claim kind. A kind FSL has no backend for settles
-   `unsupported`, never false, satisfied or successful.
+   `unsupported`, never false, satisfied or successful. Assume-guarantee
+   composition is decided by this library (ADR-010 Decision 6, FR-200..FR-204):
+   FSL keeps every atomic and temporal obligation, and no backend is called for
+   the composition decision.
 
 ## Conformance Rules
 

@@ -181,7 +181,7 @@ pub enum DispositionRefusal {
     UndeclaredAssumption(CheckedNodeId),
     /// A source identity is not a node of the checked package's protocol.
     UndeclaredSource(CheckedNodeId),
-    /// A guarantee of a declared cycle is offered as an assumption, in the
+    /// A guarantee on a dependency cycle (computed from the declared proof edges) is offered as an assumption, in the
     /// request or in the result's retained assumptions (FR-203).
     CycleGuaranteeAsAssumption(CheckedNodeId),
     /// A guarantee, or a node a guarantee's proof used, is not a node of the
@@ -198,6 +198,11 @@ pub enum DispositionRefusal {
     /// A composition request reached the backend path, which only a
     /// refinement takes (FR-200).
     CompositionIsDecidedHere,
+    /// A request of another kind reached the composition decision (FR-200).
+    NotAComposition,
+    /// A `refinement` request carries declared guarantees or premise entries,
+    /// which only a composition has (FR-200).
+    RefinementCarriesCompositionInputs,
     /// A result names an identity the request does not, or omits a field it
     /// must retain (FR-201, FR-204).
     IdentityMismatch(IdentityMismatch),

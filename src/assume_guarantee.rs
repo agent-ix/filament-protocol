@@ -213,7 +213,7 @@ pub(crate) fn owner<'a>(
 /// live in separate checked packages (FR-043, FR-044), so `components` holds
 /// the declarations of each, and every fragment node, subject, assumption
 /// identity and source identity is checked against the package that owns it.
-/// No guarantee of a declared cycle may be offered as an assumption (FR-203).
+/// No guarantee on a dependency cycle may be offered as an assumption (FR-203).
 ///
 /// # Errors
 ///
@@ -294,6 +294,9 @@ where
     let Some(capability) = request.kind.capability() else {
         return ProtocolOutcome::Refused(DispositionRefusal::CompositionIsDecidedHere);
     };
+    if !request.guarantees.is_empty() || request.premises != PremiseLists::default() {
+        return ProtocolOutcome::Refused(DispositionRefusal::RefinementCarriesCompositionInputs);
+    }
     let binding = match bind(components, request) {
         Ok(binding) => binding,
         Err(refusal) => return ProtocolOutcome::Refused(refusal),

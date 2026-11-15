@@ -38,6 +38,11 @@ One source-bound composition disposition retaining its exact admitted fragment, 
 - The dispatcher shall settle a `composition` claim `proved` only when every premise is discharged, no guarantee is on a dependency cycle and no relied-on proof rests on an assumption the request did not offer.
 - The dispatcher shall take FSL's label for each guarantee as given, because FSL owns atomic and temporal obligations.
 - The dispatcher shall evaluate no temporal formula and no model-level refinement.
+- The dispatcher shall name the verdict by the precedence circular, then incompatible, then unproved, then proved, whatever the order of the declared guarantees and of the nodes each proof used, retaining every finding beside it.
+- The dispatcher shall let only a guarantee a premise relies on block success through an unproved premise or a counterexample.
+- The dispatcher shall refuse a dependency cycle among any declared guarantees as circular (FR-203), a cycle no premise relies on included, because FSL FR-176 builds the whole dependency graph.
+- The dispatcher shall refuse a request of any kind other than `composition` that reaches the composition decision.
+- The dispatcher shall refuse a `refinement` request that carries declared guarantees or premise entries.
 - The dispatcher shall not settle a `composition` claim `proved` when any relied-on guarantee carries a label other than `proved`, `unsupported` included.
 - The dispatcher shall read a decided composition into the assessment-execution, truth and settlement-basis values of `ix://agent-ix/filament-specification/FR-241`, `FR-242` and `FR-243`: `proved` as `completed`, `satisfied`, `decisive-witness`; incompatible as `completed`, `violated`, `decisive-witness`; unproved as `completed`, `pending`, `unsettled`; circular as `refused`, `unavailable`, `unavailable`.
 - When a composition claim settles `proved` or incompatible without a source identity, the dispatcher shall refuse that disposition (FR-030).
@@ -57,6 +62,8 @@ This requirement reverses the dispatch FR-200 stated before ADR-010 Decision 6: 
 | FR-200-AC-5 | Removing or substituting the composition disposition's admitted fragment, assumption identities, source identity or a guarantee's node one at a time refuses only that disposition (FR-030) and leaves every independent disposition unchanged. | Test (TC-200) |
 | FR-200-AC-6 | Changing one guarantee's FSL label from `proved` to `unsupported` or `inconclusive` changes a `proved` composition to an unproved one naming the premise and the label, and the composition is never `proved` while a relied-on guarantee is not `proved`. | Test (TC-200) |
 | FR-200-AC-7 | The four verdicts read into the execution, truth and settlement-basis values the Behavior section states, and only `proved` reads as `satisfied`. | Test (TC-200) |
+| FR-200-AC-8 | The composition decision refuses a request whose kind is not `composition`, and a `refinement` request carrying declared guarantees or premise entries is refused, each with a typed refusal. | Test (TC-200) |
+| FR-200-AC-9 | A guarantee no premise relies on that is not `proved` leaves an otherwise discharged composition `proved`, while a cycle among guarantees no premise relies on makes it `circular`. | Test (TC-200) |
 
 ## Dependencies
 

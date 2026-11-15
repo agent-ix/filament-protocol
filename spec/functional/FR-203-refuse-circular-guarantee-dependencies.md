@@ -33,6 +33,7 @@ The composition disposition listing every dependency cycle as a strongly connect
 - The library shall refuse a disposition that offers a guarantee of a cycle as an assumption (FR-030), naming that guarantee.
 - The library shall compute no iteration, lattice element or least fixed point, because no profile that declares one is admitted here.
 - The library shall emit no success for a composition with a cycle (FR-040).
+- The library shall name a composition with a cycle `circular` before any counterexample or undischarged premise, retaining those findings beside it.
 - The library shall leave every other claim's disposition unchanged (FR-029).
 
 ## Acceptance Criteria
@@ -45,6 +46,7 @@ The composition disposition listing every dependency cycle as a strongly connect
 | FR-203-AC-4 | Given a proved guarantee whose proof used a cycle member, its premise stays undischarged as dependent on the unavailable member and the disposition is not success. | Test (TC-203) |
 | FR-203-AC-5 | Given the cyclic claim beside an acyclic composition claim, the acyclic disposition equals the one returned without the cyclic claim. | Test (TC-203) |
 | FR-203-AC-6 | Given a composition whose guarantees are acyclic, the disposition lists no cycle, and the result does not depend on the order of the declared guarantees. | Test (TC-203) |
+| FR-203-AC-7 | A composition with an unrelied cycle and a proof that rests on an unoffered assumption has verdict `circular` and still lists the counterexample. | Test (TC-203) |
 
 ## Dependencies
 

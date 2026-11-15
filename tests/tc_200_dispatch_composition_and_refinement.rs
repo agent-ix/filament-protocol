@@ -16,7 +16,8 @@ use filament_protocol::assume_guarantee::{
 };
 use filament_protocol::closure::AssessmentExecution;
 use filament_protocol::composition::{
-    cycle_members, Composition, CompositionOutcome, DischargedBy, PremiseRef, Unavailable, Verdict,
+    cycle_members, decide, Composition, CompositionOutcome, DischargedBy, PremiseRef, Unavailable,
+    Verdict,
 };
 use filament_protocol::dispatch::{
     dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal, ProtocolOutcome,
@@ -888,6 +889,74 @@ fn an_acyclic_composition_lists_no_cycle_whatever_the_declaration_order() {
     assert_eq!(forward.discharges, backward.discharges);
 }
 
+#[test]
+#[trace("TC-203", "FR-203-AC-7")]
+fn an_unrelied_cycle_makes_the_verdict_circular_beside_a_counterexample() {
+    let dynamic = Dynamic::with("workflow", 3);
+    let mut asked = request(&dynamic, COMPOSITION);
+    asked.assumptions = vec![node(&dynamic, "Head")];
+    asked.premises.liveness_dependencies.clear();
+    asked.premises.fairness.clear();
+    asked.guarantees = vec![
+        guarantee(&dynamic, "Reject", ClauseForm::Safety, &["Head", "Block"]),
+        guarantee(&dynamic, "New", ClauseForm::Safety, &["Tail"]),
+        guarantee(&dynamic, "Tail", ClauseForm::Safety, &["New"]),
+    ];
+    let composition = decided(compose(&dynamic, &asked));
+    assert_eq!(composition.cycles.len(), 1);
+    assert_eq!(composition.counterexamples.len(), 1);
+    assert_eq!(composition.verdict(), Verdict::Circular);
+}
+
+#[test]
+#[trace("TC-200", "FR-200-AC-8")]
+fn a_request_of_the_wrong_kind_is_refused() {
+    let dynamic = Dynamic::with("workflow", 3);
+    let declarations = dynamic.linked().declarations();
+    assert_eq!(
+        composition_refusal(decide(&[declarations], &request(&dynamic, REFINEMENT))),
+        DispositionRefusal::NotAComposition
+    );
+    let (mut boundary, calls) = serving(proved());
+    let mut carrying = request(&dynamic, REFINEMENT);
+    carrying.guarantees = request(&dynamic, COMPOSITION).guarantees;
+    assert_eq!(
+        refused(one(&mut boundary, &dynamic, &carrying)),
+        DispositionRefusal::RefinementCarriesCompositionInputs
+    );
+    let mut premised = request(&dynamic, REFINEMENT);
+    premised.premises = request(&dynamic, COMPOSITION).premises;
+    assert_eq!(
+        refused(one(&mut boundary, &dynamic, &premised)),
+        DispositionRefusal::RefinementCarriesCompositionInputs
+    );
+    assert_eq!(calls.len(), 0);
+}
+
+#[test]
+#[trace("TC-200", "FR-200-AC-9")]
+fn only_relied_guarantees_block_success_but_any_cycle_is_circular() {
+    let dynamic = Dynamic::with("workflow", 3);
+    let mut asked = request(&dynamic, COMPOSITION);
+    let mut idle = guarantee(&dynamic, "Block", ClauseForm::Safety, &[]);
+    idle.label = ItemLabel::Inconclusive;
+    asked.guarantees.push(idle);
+    assert_eq!(
+        decided(compose(&dynamic, &asked)).verdict(),
+        Verdict::Proved
+    );
+    asked.guarantees.push(guarantee(
+        &dynamic,
+        "BagNew",
+        ClauseForm::Safety,
+        &["BagNew"],
+    ));
+    assert_eq!(
+        decided(compose(&dynamic, &asked)).verdict(),
+        Verdict::Circular
+    );
+}
+
 // ---------------------------------------------------------------- TC-204
 
 fn retaining(
@@ -1118,8 +1187,13 @@ fn a_counterexample_replays_and_an_altered_one_does_not() {
     let mut other_step = counter.clone();
     other_step.path[0].uses = node(&dynamic, "Block");
     assert!(!other_step.replay(&asked));
+    // Repointed to another valid premise, which another guarantee discharges.
     let mut other_premise = counter.clone();
-    other_premise.premise.index = 1;
+    other_premise.premise = PremiseRef {
+        list: PremiseList::Relies,
+        index: 0,
+    };
+    assert_eq!(asked.premises.relies.len(), 1);
     assert!(!other_premise.replay(&asked));
     let mut other_offer = counter.clone();
     other_offer.offered.push(node(&dynamic, "Block"));
@@ -1141,4 +1215,98 @@ fn proofs_using_only_offered_assumptions_are_not_incompatible() {
     let composition = decided(compose(&dynamic, &asked));
     assert!(composition.counterexamples.is_empty());
     assert_eq!(composition.verdict(), Verdict::Proved);
+}
+
+#[test]
+#[trace("TC-204", "FR-204-AC-11")]
+fn the_counterexample_does_not_depend_on_order_or_on_the_relied_guarantees_label() {
+    let dynamic = Dynamic::with("workflow", 3);
+    let asked = needing_tail(&dynamic, false);
+    let found = decided(compose(&dynamic, &asked)).counterexamples;
+    assert_eq!(found.len(), 1);
+    // Reversing the declared guarantees and the nodes a proof used changes nothing.
+    let mut reversed = asked.clone();
+    reversed.guarantees.reverse();
+    for guarantee in &mut reversed.guarantees {
+        guarantee.uses.reverse();
+    }
+    assert_eq!(decided(compose(&dynamic, &reversed)).counterexamples, found);
+    // Two unoffered nodes: the same one is named in either order.
+    let mut two = asked.clone();
+    two.guarantees[1].uses = vec![node(&dynamic, "Tail"), node(&dynamic, "Block")];
+    let mut two_reversed = two.clone();
+    two_reversed.guarantees[1].uses.reverse();
+    assert_eq!(
+        decided(compose(&dynamic, &two)).counterexamples,
+        decided(compose(&dynamic, &two_reversed)).counterexamples
+    );
+    // A relied guarantee that is not `proved` still yields it.
+    let mut unproved = asked.clone();
+    unproved.guarantees[1].label = ItemLabel::Inconclusive;
+    let composition = decided(compose(&dynamic, &unproved));
+    assert_eq!(composition.counterexamples, found);
+    assert_eq!(composition.verdict(), Verdict::Incompatible);
+    // So does one that reaches the unoffered node through a cycle member.
+    let mut through = needing_tail(&dynamic, false);
+    through.assumptions = vec![node(&dynamic, "Head")];
+    through.guarantees = vec![
+        guarantee(&dynamic, "Reject", ClauseForm::Safety, &["Tail"]),
+        guarantee(&dynamic, "Tail", ClauseForm::Safety, &["Reject", "Block"]),
+    ];
+    through.premises.liveness_dependencies.clear();
+    let composition = decided(compose(&dynamic, &through));
+    let [counter] = composition.counterexamples.as_slice() else {
+        panic!("one counterexample");
+    };
+    assert_eq!(counter.unoffered(), Some(&node(&dynamic, "Block")));
+    assert_eq!(counter.path.len(), 2);
+    assert!(counter.replay(&through));
+}
+
+#[test]
+#[trace("TC-204", "FR-204-AC-12")]
+fn a_forged_counterexample_fails_replay() {
+    let dynamic = Dynamic::with("workflow", 3);
+    let asked = needing_tail(&dynamic, false);
+    let counter = decided(compose(&dynamic, &asked)).counterexamples[0].clone();
+    assert!(counter.replay(&asked));
+    // An environment or fairness premise is never relied on.
+    for list in [PremiseList::Environment, PremiseList::Fairness] {
+        let mut forged = counter.clone();
+        forged.premise = PremiseRef { list, index: 0 };
+        assert!(!forged.replay(&asked), "{list:?}");
+    }
+    // The first guarantee is liveness, but the list needs a safety one.
+    let mut other_form = asked.clone();
+    other_form.premises.relies = vec![node(&dynamic, "New")];
+    let mut forged = counter.clone();
+    forged.premise = PremiseRef {
+        list: PremiseList::Relies,
+        index: 0,
+    };
+    assert!(!forged.replay(&other_form));
+    // A path that returns to a guarantee on it.
+    let mut looping = asked;
+    looping.guarantees = vec![
+        guarantee(&dynamic, "Reject", ClauseForm::Safety, &["New"]),
+        guarantee(&dynamic, "New", ClauseForm::Safety, &["Reject", "Block"]),
+    ];
+    looping.premises.liveness_dependencies.clear();
+    let step = |from: &str, to: &str| filament_protocol::composition::DependencyStep {
+        guarantee: node(&dynamic, from),
+        uses: node(&dynamic, to),
+    };
+    let mut forged = counter;
+    forged.premise = PremiseRef {
+        list: PremiseList::Relies,
+        index: 0,
+    };
+    forged.path = vec![
+        step("Reject", "New"),
+        step("New", "Reject"),
+        step("Reject", "New"),
+    ];
+    assert!(!forged.replay(&looping));
+    forged.path = vec![step("Reject", "New"), step("New", "Block")];
+    assert!(forged.replay(&looping));
 }

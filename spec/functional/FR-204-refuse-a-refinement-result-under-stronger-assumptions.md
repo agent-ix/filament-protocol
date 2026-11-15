@@ -23,17 +23,19 @@ When a claim would rest on an assumption identity absent from the request's assu
 
 ## Inputs
 
-A requested `refinement` claim (FR-301) with its assumption identities and states (FR-030-AC-4), and the backend's returned result with the assumption identities it retains.
+A requested `refinement` claim (FR-301) with its assumption identities and states (FR-030-AC-4), and the backend's returned result with the assumption identities it retains. A requested `composition` claim (FR-200) with its offered assumptions, its declared guarantees and the nodes each proof used.
 
 ## Outputs
 
-The disposition carried under FR-202 when every retained assumption identity is among the request's, or one refusal of that disposition under FR-030 naming each extra assumption identity.
+The disposition carried under FR-202 when every retained assumption identity is among the request's, or one refusal of that disposition under FR-030 naming each extra assumption identity. For a composition, the counterexample: the premise, the offered assumptions and the proof path to the first unoffered node.
 
 ## Behavior
 
 - When the proof of a guarantee a premise relies on, through any chain of sibling guarantees, used a node that is neither a declared guarantee nor an offered assumption, the library shall return the composition as incompatible with a counterexample for that premise.
+- The library shall find the counterexample for every relied-on guarantee before judging that guarantee's label or availability, by the shortest proof path with ties broken by node order, so that it does not depend on the order of the declared guarantees or of the nodes a proof used, and so that a relied-on guarantee that is itself not `proved`, or reaches the unoffered node through an unproved or cycle-member guarantee, still yields it.
+- The library shall name an incompatible composition after a circular one (FR-203) and before an unproved one.
 - The library shall build the counterexample as a pair: the offered side, the request's assumptions, and the relied side, the path of proof edges from the relied-on guarantee to the first unoffered node.
-- The library shall let the counterexample be replayed against the request: each step is a declared proof edge, the steps chain, the path starts at the premise's discharger and ends at a node that is neither a declared guarantee nor offered.
+- The library shall let the counterexample be replayed against the request: the premise is a `relies` or `liveness_dependencies` premise, the path starts at that premise's discharger and the discharger's form matches the list, each step is a declared proof edge, the steps chain, no guarantee repeats on the path, the offered side is the request's, and the path ends at a node that is neither a declared guarantee nor offered.
 - The library shall reuse no FSL witness type for this counterexample, because FSL's assumption witness is state-based and the composition has no state.
 - The library shall read an incompatible composition as `completed`, `violated`, `decisive-witness` with no success value (FR-040).
 - The library shall leave a premise whose proof reaches only offered assumptions out of any counterexample, whether or not the request offers assumptions no proof used.
@@ -62,6 +64,8 @@ The library decides inclusion of identities only. Whether one assumption entails
 | FR-204-AC-8 | Given a composition whose relied-on guarantee used an assumption the request did not offer, directly or through a sibling guarantee, the composition is incompatible, carries a counterexample naming the premise, the offered assumptions and the path to the unoffered node, and is not success. | Test (TC-204) |
 | FR-204-AC-9 | The counterexample replays against its request, and altering a step, the premise or the offered side makes the replay fail. | Test (TC-204) |
 | FR-204-AC-10 | A composition whose relied-on proofs use only offered assumptions is not incompatible, whether or not the request offers assumptions no proof used. | Test (TC-204) |
+| FR-204-AC-11 | The counterexample and the verdict do not change when the declared guarantees or the nodes a proof used are reordered, and a relied-on guarantee that is not `proved`, or that reaches the unoffered node through an unproved or cycle-member guarantee, still yields the counterexample. | Test (TC-204) |
+| FR-204-AC-12 | A counterexample repointed to another valid premise, to a `environment` or `fairness` premise, to a path with a repeated guarantee or to a guarantee of the other form fails replay. | Test (TC-204) |
 
 ## Dependencies
 
