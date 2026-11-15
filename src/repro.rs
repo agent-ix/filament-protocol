@@ -94,7 +94,7 @@
 //! `Default` and for nothing else.
 //!
 //! ```
-//! use quire_protocol::repro::{CorpusIdentity, ReproductionInputs, Seed, ToolchainIdentity};
+//! use filament_protocol::repro::{CorpusIdentity, ReproductionInputs, Seed, ToolchainIdentity};
 //!
 //! let record = ReproductionInputs::nothing_offered()
 //!     .with_seed(Seed::new(0))
@@ -106,44 +106,44 @@
 //! ```
 //!
 //! ```compile_fail
-//! let _ = quire_protocol::repro::Seed::default();
+//! let _ = filament_protocol::repro::Seed::default();
 //! ```
 //!
 //! ```compile_fail
-//! let _ = quire_protocol::repro::ToolchainIdentity::default();
+//! let _ = filament_protocol::repro::ToolchainIdentity::default();
 //! ```
 //!
 //! ```compile_fail
-//! let _ = quire_protocol::repro::CorpusIdentity::default();
+//! let _ = filament_protocol::repro::CorpusIdentity::default();
 //! ```
 //!
 //! ```compile_fail
-//! let _ = quire_protocol::repro::ReproductionRecord::default();
+//! let _ = filament_protocol::repro::ReproductionRecord::default();
 //! ```
 //!
 //! ```compile_fail
-//! let _ = quire_protocol::repro::ReproductionInputs::default();
+//! let _ = filament_protocol::repro::ReproductionInputs::default();
 //! ```
 //!
 //! # Proof that display text can never become an identity
 //!
 //! ```compile_fail
-//! let _: quire_protocol::repro::ToolchainIdentity = "rustc 1.98.0".parse().unwrap();
+//! let _: filament_protocol::repro::ToolchainIdentity = "rustc 1.98.0".parse().unwrap();
 //! ```
 //!
 //! ```compile_fail
-//! let _ = quire_protocol::repro::CorpusIdentity::from("corpus a1b2".to_string());
+//! let _ = filament_protocol::repro::CorpusIdentity::from("corpus a1b2".to_string());
 //! ```
 //!
 //! # Proof that the two run identities are not interchangeable
 //!
 //! ```compile_fail
-//! use quire_protocol::repro::{CorpusIdentity, ReproductionInputs};
+//! use filament_protocol::repro::{CorpusIdentity, ReproductionInputs};
 //! ReproductionInputs::nothing_offered().with_toolchain(CorpusIdentity::new(b"c", "c"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::repro::{ReproductionInputs, ToolchainIdentity};
+//! use filament_protocol::repro::{ReproductionInputs, ToolchainIdentity};
 //! ReproductionInputs::nothing_offered().with_corpus(ToolchainIdentity::new(b"t", "t"));
 //! ```
 

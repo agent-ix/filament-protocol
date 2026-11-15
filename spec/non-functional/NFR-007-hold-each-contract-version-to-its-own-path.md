@@ -4,19 +4,19 @@ title: "Hold each contract version to its own entry point"
 type: NFR
 quality_attribute: compatibility
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-013
+  - target: ix://agent-ix/filament-protocol/FR-013
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-004
+  - target: ix://agent-ix/filament-protocol/NFR-004
     type: depends_on
 ---
 # NFR-007: Hold each contract version to its own entry point
@@ -171,11 +171,11 @@ mutation cannot be run today is recorded as unexecutable, not as passing.
 
 ## Status
 
-Implemented. QSL `/1` and `/2` are both pinned at `6c8c401`; the default handoff
+Implemented. FSL `/1` and `/2` are both pinned at `6c8c401`; the default handoff
 lanes execute both cross-version directions and every inherited selection axis.
 SC-06a passes the identical 23-case version-1 corpus at Protocol `0e5ec292`
 (before `/2`) and `5ce9070e` (the revision adding it), while source comparison
-shows the root `/1` signature/body and QSL `/1` refusal types unchanged.
+shows the root `/1` signature/body and FSL `/1` refusal types unchanged.
 The current paired reader test changes artifact, contract, baseline, producer,
 language, source, dependency and model selections independently; `/1` and `/2`
 both refuse each one, while the `/2` temporal axes remain separately enumerated.

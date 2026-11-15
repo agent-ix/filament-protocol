@@ -6,7 +6,7 @@ use core::fmt;
 use super::catalog::RetainedBytes;
 use super::{CauseDetail, SourceLocation};
 
-/// Stable member identity for the closed `quire.protocol/refusal/1` cause set.
+/// Stable member identity for the closed `filament.protocol/refusal/1` cause set.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum ProtocolCauseKind {
     /// A required definition is absent.
@@ -46,7 +46,7 @@ impl ProtocolCauseKind {
         Self::ProjectionFindingLoss,
     ];
 
-    /// Stable spelling under `quire.protocol/refusal/1`.
+    /// Stable spelling under `filament.protocol/refusal/1`.
     #[must_use]
     pub const fn as_str(self) -> &'static str {
         match self {
@@ -389,7 +389,7 @@ impl UnsupportedSourceContract {
 /// One refusal cause. The three namespaces cannot be substituted by type.
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub enum RefusalCause {
-    /// Protocol-owned `quire.protocol/refusal/1` cause.
+    /// Protocol-owned `filament.protocol/refusal/1` cause.
     Protocol(ProtocolCause),
     /// Exact source-owned cause under a selected known contract.
     Source(SourceCause),

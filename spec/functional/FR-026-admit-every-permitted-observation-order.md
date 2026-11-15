@@ -3,27 +3,27 @@ id: FR-026
 title: "Admit every permitted observation order"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: part_of
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-059
+  - target: ix://agent-ix/filament-specification/FR-059
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-216
+  - target: ix://agent-ix/filament-specification/FR-216
     type: references
-  - target: ix://agent-ix/quire-specification/FR-220
+  - target: ix://agent-ix/filament-specification/FR-220
     type: references
-  - target: ix://agent-ix/quire-specification/FR-221
+  - target: ix://agent-ix/filament-specification/FR-221
     type: references
-  - target: ix://agent-ix/quire-specification/FR-230
+  - target: ix://agent-ix/filament-specification/FR-230
     type: references
-  - target: ix://agent-ix/quire-specification/FR-250
+  - target: ix://agent-ix/filament-specification/FR-250
     type: references
-  - target: ix://agent-ix/quire-specification/FR-252
+  - target: ix://agent-ix/filament-specification/FR-252
     type: references
-  - target: ix://agent-ix/quire-specification/FR-260
+  - target: ix://agent-ix/filament-specification/FR-260
     type: references
 ---
 # FR-026: Admit every permitted observation order
@@ -89,9 +89,9 @@ across channels is never inferred.
 
 ### Accepted owner rulings
 
-QSpec #31/#40 fixes the five-component FR-216 premise, its exact FIFO binder and
+FSpec #31/#40 fixes the five-component FR-216 premise, its exact FIFO binder and
 typed expression scope, the complete FR-220 graph identity and FR-296 admitted-
-observation identity. QSL's accepted native-temporal contract supplies the
+observation identity. FSL's accepted native-temporal contract supplies the
 typed equal-time order key and authority; FR-289 supplies the only admitted
 half-open-to-inclusive boundary conversion. Missing, foreign or unrepresentable
 keys/boundaries refuse. Permutation equivalence is therefore componentwise over
@@ -106,7 +106,7 @@ accepted identities and never inferred from ingestion order or timestamps.
   presentations are drawn from.
 - [FR-041](./FR-041-agree-across-batch-and-incremental-paths.md) is the sibling
   that owns batch/incremental path agreement.
-- `ix://agent-ix/quire-specification/FR-059` establishes that the evaluator
+- `ix://agent-ix/filament-specification/FR-059` establishes that the evaluator
   accepts any observation order consistent with the authored partial order and
   channel premises.
 - `IT-002` scenario SC-05c verifies this requirement's equal-time permutation at

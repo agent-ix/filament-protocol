@@ -13,7 +13,7 @@ use crate::ByteDigest;
 
 use super::purity::PureAssessment;
 
-const REGISTRATION_IDENTITY_DOMAIN: &[u8] = b"quire.protocol.compensation-registration/v1";
+const REGISTRATION_IDENTITY_DOMAIN: &[u8] = b"filament.protocol.compensation-registration/v1";
 
 /// Immutable owner maxima. A caller can lower but never raise them.
 pub const OWNER_MAX: Limits = Limits {
@@ -698,7 +698,7 @@ impl AttemptOutcome {
 /// Disposition of one concrete compensation business effect.
 ///
 /// This is intentionally not an [`AttemptOutcome`]: a repeated attempt and a
-/// second established business-effect key are different QSpec FR-058 facts.
+/// second established business-effect key are different FSpec FR-058 facts.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum EffectDisposition {
     /// A second concrete business effect claimed one singleton occurrence.
@@ -919,7 +919,7 @@ impl AttemptLedger {
     /// singleton occurrence and is retained as
     /// [`EffectDisposition::Duplicate`]. An effect an attempt names again,
     /// as a redelivered observation does, is retained once: a duplicate
-    /// delivery is not a duplicate business effect (QSpec FR-058). The result
+    /// delivery is not a duplicate business effect (FSpec FR-058). The result
     /// holds at most one fact for each admitted attempt, so it is bounded by
     /// the ledger. A registration whose effect is a declared finite
     /// population of related effects is not modelled here.

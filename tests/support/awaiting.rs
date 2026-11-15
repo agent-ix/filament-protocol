@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! A checked package whose protocol declares an `await` (TC-154): recipe R's
 //! unit with an armed event, an `await ... within [0,29]` matching a `Seen`
-//! event, and the clock the await selects. Written by QSL's writer and
+//! event, and the clock the await selects. Written by FSL's writer and
 //! admitted by Contract IR's reader.
 
-use quire_contract_model::{CheckedNodeId, CheckedPackageReadLimits};
-use quire_protocol::checked_package::{admit, HandoffFiles};
-use quire_protocol::link::{link, LinkedProtocol};
-use quire_spec_language::checked_handoff::Corpus;
+use filament_contract_model::{CheckedNodeId, CheckedPackageReadLimits};
+use filament_protocol::checked_package::{admit, HandoffFiles};
+use filament_protocol::link::{link, LinkedProtocol};
+use filament_spec_language::checked_handoff::Corpus;
 
 use super::handoff::{join_budget, request, written_request};
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! TC-166: `realizability` claims dispatched to QSL's real `protocol-analysis`
+//! TC-166: `realizability` claims dispatched to FSL's real `protocol-analysis`
 //! engine, with no stand-in (FR-150, TL-387 AC1).
 
 mod support {
@@ -11,30 +11,30 @@ mod support {
 
 use std::convert::Infallible;
 
-use ix_trace_rs::trace;
-use qsl_analyze::protocol_analysis::manifest::BACKEND_ID;
-use qsl_analyze::protocol_analysis::ProtocolAnalysisArtifact;
-use qsl_replay::protocol_analysis::{AnalysisOutcome, RealizabilityCounterexample};
-use qsl_replay::{SettlementBasis, Truth};
-use qsl_route::ProviderOrigin;
-use quire_protocol::dispatch::{
+use filament_protocol::dispatch::{
     dispatch, Answer, BackendResult, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
 };
-use quire_protocol::disposition::ClaimSettlement;
-use quire_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, QslEngine};
+use filament_protocol::disposition::ClaimSettlement;
+use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, FslEngine};
+use fsl_analyze::protocol_analysis::manifest::BACKEND_ID;
+use fsl_analyze::protocol_analysis::ProtocolAnalysisArtifact;
+use fsl_replay::protocol_analysis::{AnalysisOutcome, RealizabilityCounterexample};
+use fsl_replay::{SettlementBasis, Truth};
+use fsl_route::ProviderOrigin;
+use ix_trace_rs::trace;
 use support::projection::{claim_of, Asked, CANCELLED, PICK};
 use support::realizability::Realizability;
 
 fn settle(fixture: &Realizability) -> EngineResult {
     let mut boundary: ProviderBoundary<'_, Asked, Answer<EngineResult, Infallible>> =
         ProviderBoundary::new();
-    let engine = QslEngine::new(fixture.package(), |_: &Binding<(), (), ()>| {
+    let engine = FslEngine::new(fixture.package(), |_: &Binding<(), (), ()>| {
         EngineRequest::Realizability(Box::new(fixture.request()))
     })
-    .expect("QSL's linked engines register");
+    .expect("FSL's linked engines register");
     boundary
         .register(
-            engine_descriptor(ProviderOrigin::Linked).expect("QSL's own descriptor"),
+            engine_descriptor(ProviderOrigin::Linked).expect("FSL's own descriptor"),
             engine,
         )
         .expect("the registration is accepted");

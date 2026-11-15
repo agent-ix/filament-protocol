@@ -57,7 +57,7 @@
 //!
 //! # A's enums are `#[non_exhaustive]`, so one wildcard arm is compulsory
 //!
-//! Nothing above changes the fact that `quire_spec_language`'s `Error` is
+//! Nothing above changes the fact that `filament_spec_language`'s `Error` is
 //! `#[non_exhaustive]`: the compiler *requires* a final arm on every downstream
 //! `match`. C-05 makes that arm retain A's complete typed `Error` and its stable
 //! machine code rather than a `Debug` rendering. A future A variant therefore
@@ -76,7 +76,7 @@
 //! reading native source.
 
 /// Versioned contract for Protocol-owned refusal domains, stages, and causes.
-pub const CONTRACT: &str = "quire.protocol/refusal/1";
+pub const CONTRACT: &str = "filament.protocol/refusal/1";
 
 /// Diagnostic-catalog selection and the B-owned refusal-code catalog. Owner
 /// chunks: **C-01** (the code catalog and the carried selection) and **C-02**
@@ -115,7 +115,7 @@ use catalog::{CatalogSelection, RefusalCode, RetainedBytes};
 ///
 /// ```compile_fail
 /// use std::str::FromStr;
-/// use quire_protocol::refusal::RefusalDomain;
+/// use filament_protocol::refusal::RefusalDomain;
 /// // There is no `FromStr` for a refusal domain, so this does not compile.
 /// let _domain = RefusalDomain::from_str("admission");
 /// ```
@@ -469,7 +469,7 @@ pub enum Unavailability {
 /// constructor from a path, and no search over display names.
 ///
 /// ```compile_fail
-/// use quire_protocol::refusal::SourceLocation;
+/// use filament_protocol::refusal::SourceLocation;
 /// // A display name is not a location: there is no such constructor.
 /// let _location = SourceLocation::from("src/lib.rs");
 /// ```
@@ -717,7 +717,7 @@ impl ResourceUsage {
     pub(crate) fn protocol(contract: &'static str, measures: &[(&'static str, usize)]) -> Self {
         Self {
             protocol: AccountingRecord {
-                owner: RetainedBytes::new(b"agent-ix/quire-protocol"),
+                owner: RetainedBytes::new(b"agent-ix/filament-protocol"),
                 contract: RetainedBytes::new(contract.as_bytes()),
                 measures: measures
                     .iter()

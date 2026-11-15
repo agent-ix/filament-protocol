@@ -3,17 +3,17 @@ id: FR-021
 title: "Distinguish compensation commit-ordering violations"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-020
+  - target: ix://agent-ix/filament-protocol/FR-020
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-057
+  - target: ix://agent-ix/filament-specification/FR-057
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-233
+  - target: ix://agent-ix/filament-specification/FR-233
     type: references
-  - target: ix://agent-ix/quire-specification/FR-234
+  - target: ix://agent-ix/filament-specification/FR-234
     type: references
-  - target: ix://agent-ix/quire-specification/FR-237
+  - target: ix://agent-ix/filament-specification/FR-237
     type: references
 ---
 # FR-021: Distinguish compensation commit-ordering violations
@@ -28,8 +28,8 @@ When the commit ordering is read, the evaluator SHALL take it from the authored 
 ## Inputs
 
 A compensation registration typed by
-`ix://agent-ix/quire-specification/FR-233`, commit observations against the
-commit boundary typed by `ix://agent-ix/quire-specification/FR-237`, compensation
+`ix://agent-ix/filament-specification/FR-233`, commit observations against the
+commit boundary typed by `ix://agent-ix/filament-specification/FR-237`, compensation
 observations, and the authored causal order carried by the linked representation
 of [FR-002](./FR-002-link-finite-protocol-representation.md).
 
@@ -76,7 +76,7 @@ permitting commit".
 
 ### Accepted owner ruling
 
-Quire Specification #31 fixes the static boundary key, FR-221 occurrence and
+Filament Specification #31 fixes the static boundary key, FR-221 occurrence and
 FR-287 commit-observation key. Only the exact non-`never` commit selected by one
 compensation is forbidding; another commit is irrelevant, while `commit never`
 selects no earlier cutoff and establishes no unbounded closure. Protocol adopts
@@ -87,5 +87,5 @@ that exhaustive rule without another disposition field.
 - [FR-003](./FR-003-assess-compensation-state.md) aggregates this requirement.
 - [FR-020](./FR-020-register-compensation-once-per-effect.md) supplies the
   registration whose ordering is checked.
-- `ix://agent-ix/quire-specification/FR-057` establishes the commit-ordering
+- `ix://agent-ix/filament-specification/FR-057` establishes the commit-ordering
   check and the three distinct violations.

@@ -3,14 +3,14 @@ id: TC-147
 title: "Admit protocol refinement dispatch"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-301
+  - target: ix://agent-ix/filament-protocol/FR-301
     type: verifies
 ---
 # TC-147: Admit protocol refinement dispatch
 
 ## Description
 
-Verify that a requested refinement claim is dispatched to QSL's refinement
+Verify that a requested refinement claim is dispatched to FSL's refinement
 backend and its result carried once FR-176 and FR-177 are admitted, that it never
 borrows the complete-global-conformance premise set as its own evidence, that
 its absence path preserves the independent global conformance result, and that
@@ -20,7 +20,7 @@ refusal error.
 ## Test Procedure
 
 Evaluate a monitorable protocol with a requested refinement claim, using a
-test QSL refinement backend that returns known sentinel results, under three
+test FSL refinement backend that returns known sentinel results, under three
 conditions: (1) FR-176/FR-177 admitted with a satisfying implementation/
 specification pair, (2) FR-176/FR-177 admitted with a violating pair, and (3)
 no accepted FR-292 refinement backend. For each, also request finite global

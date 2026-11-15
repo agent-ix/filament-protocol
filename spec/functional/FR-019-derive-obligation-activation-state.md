@@ -3,30 +3,30 @@ id: FR-019
 title: "Derive obligation activation state"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-055
+  - target: ix://agent-ix/filament-specification/FR-055
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-230
+  - target: ix://agent-ix/filament-specification/FR-230
     type: references
-  - target: ix://agent-ix/quire-specification/FR-231
+  - target: ix://agent-ix/filament-specification/FR-231
     type: references
-  - target: ix://agent-ix/quire-specification/FR-232
+  - target: ix://agent-ix/filament-specification/FR-232
     type: references
-  - target: ix://agent-ix/quire-specification/FR-244
+  - target: ix://agent-ix/filament-specification/FR-244
     type: references
-  - target: ix://agent-ix/quire-specification/FR-253
+  - target: ix://agent-ix/filament-specification/FR-253
     type: references
-  - target: ix://agent-ix/quire-specification/FR-479
+  - target: ix://agent-ix/filament-specification/FR-479
     type: depends_on
 ---
 # FR-019: Derive obligation activation state
 
 ## Description
 
-When a linked protocol carries an admitted trigger observation for an obligation, the evaluator SHALL report that obligation's activation as exactly one member of the `ix://agent-ix/quire-specification/FR-244` vocabulary.
+When a linked protocol carries an admitted trigger observation for an obligation, the evaluator SHALL report that obligation's activation as exactly one member of the `ix://agent-ix/filament-specification/FR-244` vocabulary.
 When the trigger scope is authoritatively closed and complete with no admitted trigger, the evaluator SHALL report `inactive` rather than absence, a default or a truth value.
 When the trigger scope is open, or trigger evidence is missing or refused, the evaluator SHALL report `activation-unknown` rather than `inactive`.
 When any of the obligation's workflow, role, effect, predicate, capture, choice-visibility evidence or evaluation-anchor identities is substituted, the evaluator SHALL refuse the activation binding.
@@ -35,8 +35,8 @@ When activation is derived, the evaluator SHALL execute no business action.
 
 ## Inputs
 
-A linked finite protocol representation (FR-002), QSL's strict version-two
-temporal request/result facts, and QObs's authority-qualified admitted subject.
+A linked finite protocol representation (FR-002), FSL's strict version-two
+temporal request/result facts, and FObs's authority-qualified admitted subject.
 Protocol validates those owner facts against its linked definition and control,
 then retains its constructor-private complete event-triggered `FR-479` activation
 binding. The binding carries the exact qualified definition, declaration-local
@@ -49,7 +49,7 @@ choice-visibility evidence or anchor is not a production input.
 ## Outputs
 
 One activation state per obligation instance, drawn from
-`ix://agent-ix/quire-specification/FR-244`, carrying the obligation's exact
+`ix://agent-ix/filament-specification/FR-244`, carrying the obligation's exact
 retained dependency identities; or a refusal naming the substituted identity
 axis.
 
@@ -62,9 +62,9 @@ or unknown obligation as satisfied or demonstrated"; `FR-055` Outputs adds that
 the consumer and adds none.
 
 The obligation instance being reported on is
-`ix://agent-ix/quire-specification/FR-230`; its activation label vocabulary is
-`ix://agent-ix/quire-specification/FR-244`; the machine that enters each label is
-`ix://agent-ix/quire-specification/FR-231`. This requirement re-spells none of
+`ix://agent-ix/filament-specification/FR-230`; its activation label vocabulary is
+`ix://agent-ix/filament-specification/FR-244`; the machine that enters each label is
+`ix://agent-ix/filament-specification/FR-231`. This requirement re-spells none of
 them.
 
 Absence is not a state. An obligation whose activation has not been reported has
@@ -83,7 +83,7 @@ one from independently supplied static and runtime fragments.
 | ID | Criteria | Verification |
 | --- | --- | --- |
 | FR-019-AC-1 | An established admitted trigger reports `triggered`, an absent trigger under authoritatively closed and complete input reports `inactive`, and an unavailable trigger under open or incomplete input reports `activation-unknown`. | Test (TC-003) |
-| FR-019-AC-2 | Independently substituting the workflow, role, effect, predicate, capture, choice-visibility evidence (choice, owner or visible set, read from QSL's checked accessor) or evaluation-anchor identity refuses the activation binding and names the substituted axis. | Test (TC-003) |
+| FR-019-AC-2 | Independently substituting the workflow, role, effect, predicate, capture, choice-visibility evidence (choice, owner or visible set, read from FSL's checked accessor) or evaluation-anchor identity refuses the activation binding and names the substituted axis. | Test (TC-003) |
 | FR-019-AC-3 | An `inactive` or `activation-unknown` activation is readable as neither satisfied nor demonstrated, and neither is evidence that recovery behavior was exercised. | Test (TC-003) |
 | FR-019-AC-4 | An obligation with no reported activation compares only to absence and receives no default activation value. | Test (TC-003) |
 | FR-019-AC-5 | No business-action invocation occurs on any activation path, including the refusing ones. | Test (TC-003) |
@@ -105,29 +105,29 @@ evaluation anchor refuses the binding."
 
 ### Accepted owner ruling
 
-QSpec #40 fixes the rule: a closed complete trigger scope with no admitted
+FSpec #40 fixes the rule: a closed complete trigger scope with no admitted
 trigger is `inactive`; an open scope or missing/refused trigger evidence is
 `activation-unknown`. Completeness, execution and progress/closure remain
 independent. A false admitted guard creates no obligation instance and no
 activation value. The implementation imports that ruling and invents no
 pre-report lifecycle state.
 
-QSpec adds FR-479 and closes the event-triggered bridge: an
+FSpec adds FR-479 and closes the event-triggered bridge: an
 activation binding is the exact source for a dynamic FR-230 instance. This
 library owns the graph-validated binding operation and does not define a
-parallel QObs/QSL join. QSL `2736b62` retains FR-053's strict v2 views with the
+parallel FObs/FSL join. FSL `2736b62` retains FR-053's strict v2 views with the
 checked activation state, immutable captures, evaluation anchor and FR-054
-strict `/3` activation mapping; QSL retains
-no QObs subject or protocol control, so it cannot construct the binding. The
-opaque trigger remains byte-exact for comparison to QObs's qualified subject.
+strict `/3` activation mapping; FSL retains
+no FObs subject or protocol control, so it cannot construct the binding. The
+opaque trigger remains byte-exact for comparison to FObs's qualified subject.
 
 ## Dependencies
 
 - [FR-003](./FR-003-assess-compensation-state.md) aggregates this requirement.
 - [FR-002](./FR-002-link-finite-protocol-representation.md) supplies the linked
   representation the trigger and captures are read from.
-- `ix://agent-ix/quire-specification/FR-055` establishes activation, its
+- `ix://agent-ix/filament-specification/FR-055` establishes activation, its
   independence from truth and the no-business-action rule.
-- `ix://agent-ix/quire-specification/FR-479` establishes the complete
+- `ix://agent-ix/filament-specification/FR-479` establishes the complete
   event-triggered activation binding required before Protocol can construct an
   assessed obligation.

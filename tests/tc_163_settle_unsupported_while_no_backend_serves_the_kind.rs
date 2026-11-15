@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! TC-163: projection and realizability claims settled `unsupported` while no
-//! QSL backend serves the kind (FR-153).
+//! FSL backend serves the kind (FR-153).
 
 mod support {
     pub mod dynamic;
@@ -8,14 +8,14 @@ mod support {
     pub mod standin;
 }
 
-use ix_trace_rs::trace;
-use qsl_replay::{SettlementBasis, Truth};
-use qsl_semantics::check::Capability;
-use quire_protocol::closure::AssessmentExecution;
-use quire_protocol::dispatch::{
+use filament_protocol::closure::AssessmentExecution;
+use filament_protocol::dispatch::{
     dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, ProtocolClaimKind, ProtocolOutcome,
 };
-use quire_protocol::disposition::{ClaimSettlement, Disposition, UnsupportedCause, Warning};
+use filament_protocol::disposition::{ClaimSettlement, Disposition, UnsupportedCause, Warning};
+use fsl_replay::{SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
+use ix_trace_rs::trace;
 use support::dynamic::Dynamic;
 use support::standin::{always, id, request, serve, Boundary, Sentinel};
 
@@ -24,7 +24,7 @@ const REALIZABILITY: ProtocolClaimKind = ProtocolClaimKind::Realizability;
 
 fn unsupported(
     outcome: ProtocolOutcome<Sentinel, support::standin::Bind>,
-) -> quire_protocol::disposition::UnsupportedDisposition<support::standin::Bind> {
+) -> filament_protocol::disposition::UnsupportedDisposition<support::standin::Bind> {
     match outcome {
         ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::Unsupported(
             disposition,

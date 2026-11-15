@@ -4,25 +4,25 @@ title: "Reproduce semantic results"
 type: NFR
 quality_attribute: reliability
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-003
+  - target: ix://agent-ix/filament-protocol/US-003
     type: derives_from
-  - target: ix://agent-ix/quire-specification/NFR-021
+  - target: ix://agent-ix/filament-specification/NFR-021
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: constrains
 ---
 # NFR-001: Reproduce semantic results
@@ -77,7 +77,7 @@ compare bytes, ordered typed outcomes, and complete provenance.
 
 ## Dependencies
 
-- `ix://agent-ix/quire-specification/NFR-021` is the formal-clause source.
+- `ix://agent-ix/filament-specification/NFR-021` is the formal-clause source.
 - [FR-001](../functional/FR-001-admit-selected-protocol-profile.md).
 - [FR-002](../functional/FR-002-link-finite-protocol-representation.md).
 - [FR-003](../functional/FR-003-assess-compensation-state.md).

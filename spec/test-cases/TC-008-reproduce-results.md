@@ -3,7 +3,7 @@ id: TC-008
 title: "Reproduce results under equivalent presentations"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/NFR-001
+  - target: ix://agent-ix/filament-protocol/NFR-001
     type: verifies
 ---
 # TC-008: Reproduce results under equivalent presentations

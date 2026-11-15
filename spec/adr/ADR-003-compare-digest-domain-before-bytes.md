@@ -4,13 +4,13 @@ title: "Compare the digest domain before the bytes"
 type: ADR
 status: accepted
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-015
+  - target: ix://agent-ix/filament-protocol/FR-015
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/IT-001
+  - target: ix://agent-ix/filament-protocol/IT-001
     type: relates_to
-  - target: ix://agent-ix/quire-specification/FR-201
+  - target: ix://agent-ix/filament-specification/FR-201
     type: depends_on
 ---
 # ADR-003: Compare the digest domain before the bytes
@@ -34,7 +34,7 @@ as "changed source, dependency, observation, profile, result, or adapter bytes
 retain an accepted identity".
 
 The earlier `FR-201-canonical-identity-domain` contract supplied that rule and
-vocabulary. QSpec #520 withdrew its digest-domain criteria and now defines
+vocabulary. FSpec #520 withdrew its digest-domain criteria and now defines
 structural identities; this ADR's remaining selection concerns only the
 producer-owned artifact digest described by QP FR-015.
 

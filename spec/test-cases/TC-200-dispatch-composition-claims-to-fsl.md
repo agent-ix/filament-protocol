@@ -1,16 +1,16 @@
 ---
 id: TC-200
-title: "Dispatch composition claims to QSL's composition backend"
+title: "Dispatch composition claims to FSL's composition backend"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-200
+  - target: ix://agent-ix/filament-protocol/FR-200
     type: verifies
 ---
-# TC-200: Dispatch composition claims to QSL's composition backend
+# TC-200: Dispatch composition claims to FSL's composition backend
 
 ## Description
 
-Verify dispatch of a composition claim to a recording stand-in for the QSL call boundary, the unsupported path with no accepted backend, independence of other claims and the absence of any local discharge, with a stand-in for the QSL call boundary and no local analysis.
+Verify dispatch of a composition claim to a recording stand-in for the FSL call boundary, the unsupported path with no accepted backend, independence of other claims and the absence of any local discharge, with a stand-in for the FSL call boundary and no local analysis.
 
 ## Test Procedure
 

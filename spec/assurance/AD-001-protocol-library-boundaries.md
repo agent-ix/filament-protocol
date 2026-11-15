@@ -4,53 +4,53 @@ title: Complete Protocol implementation architecture
 type: ArchitectureDescription
 status: accepted
 owner: agent-ix-protocol-owner
-system: quire-protocol Rust library
+system: filament-protocol Rust library
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-002
+  - target: ix://agent-ix/filament-protocol/ADR-002
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-004
+  - target: ix://agent-ix/filament-protocol/ADR-004
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-005
+  - target: ix://agent-ix/filament-protocol/ADR-005
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-006
+  - target: ix://agent-ix/filament-protocol/ADR-006
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-007
+  - target: ix://agent-ix/filament-protocol/ADR-007
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-009
+  - target: ix://agent-ix/filament-protocol/ADR-009
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-010
+  - target: ix://agent-ix/filament-protocol/ADR-010
     type: references
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-301
+  - target: ix://agent-ix/filament-protocol/FR-301
     type: realizes
-  - target: ix://agent-ix/quire-protocol/FR-302
+  - target: ix://agent-ix/filament-protocol/FR-302
     type: realizes
 ---
 # Complete Protocol implementation architecture
 
 ## System Boundary
 
-`quire-protocol` is the pure Rust consumer and assessment library between exact
+`filament-protocol` is the pure Rust consumer and assessment library between exact
 external producer contracts and two derived output boundaries. It resolves the
-contracts selected for one request, admits a versioned QSL compiled protocol,
-binds its static requirements to exact QObs runtime values, evaluates
+contracts selected for one request, admits a versioned FSL compiled protocol,
+binds its static requirements to exact FObs runtime values, evaluates
 compensation and conformance without performing business work, produces strict
 canonical Protocol results, and optionally projects those results to E02.
 
@@ -58,8 +58,8 @@ External responsibility is explicit:
 
 | Responsibility outside Protocol | Owner |
 | --- | --- |
-| grammar, source compiler, compiled protocol and native-temporal evaluator | QSL |
-| observation collection and observation authority | QObs |
+| grammar, source compiler, compiled protocol and native-temporal evaluator | FSL |
+| observation collection and observation authority | FObs |
 | TL syntax/evaluation and native/TL correspondence | TL libraries / Contract-IR |
 | producer-process execution | Engineering Assurance |
 | evidence storage/indexing and catalogue operations | Quoin |
@@ -83,15 +83,15 @@ ownership; and refusal/resource/reproduction fixes cross-cutting behavior.
 
 ```text
 contract resolution
-  |-- QSL /1 -> version-1 admission -> static link regression
-  `-- QSL /2 -> version-2 admission -> static definition + runtime bindings
+  |-- FSL /1 -> version-1 admission -> static link regression
+  `-- FSL /2 -> version-2 admission -> static definition + runtime bindings
                                              |
                                              v
                                       exact linked graph
                                              |
-QObs runtime subjects/relationships --------+----> compensation
-QObs authority facts -----------------------+          |
-QSL native-temporal facts ------------------+----> FR-479 activation binding
+FObs runtime subjects/relationships --------+----> compensation
+FObs authority facts -----------------------+          |
+FSL native-temporal facts ------------------+----> FR-479 activation binding
                                                         |
                                                         v
                                                conformance kernel
@@ -125,12 +125,12 @@ for that exact owner contract version; the frozen `/1` facade exception below is
 not an integration adapter and admits no other external value.
 
 Manifest keys name owner contract versions, not repositories or informal roles.
-The manifest may comprise QSL compiled-protocol `/1` and `/2`, QSL native-
-temporal request/result contracts, QObs runtime and authority contracts,
+The manifest may comprise FSL compiled-protocol `/1` and `/2`, FSL native-
+temporal request/result contracts, FObs runtime and authority contracts,
 Engineering Assurance producer-execution contracts, accepted E02 draft-2, and
 the accepted Quoin protocol-scenario intake contract. Each operation declares
 and resolves only the exact contract versions it consumes; no request is forced
-to offer both QSL versions or an unused integration. Protocol-owned binding,
+to offer both FSL versions or an unused integration. Protocol-owned binding,
 result, mapping and scenario-record contracts have no external entry. QCI is
 downstream of the Protocol result map and therefore has no Protocol intake
 entry.
@@ -139,12 +139,12 @@ The exact presently selected entry vocabulary is:
 
 | Adapter | Required contract keys |
 | --- | --- |
-| QSL compiled `/1` | `quire.compiled-protocol/1` |
-| QSL compiled `/2` | `quire.compiled-protocol/2` |
-| QSL temporal | `quire.native-temporal-request/v1`, `quire.native-temporal-result/v1` |
-| QObs runtime/authority | `quire.observation.record/v2`, `population/v2`, `explicit-members/v1`, `position-ledger/v1`, `clock-binding/v1`, `partial-fact/v1`, `capture-environment/v1`, `progress-assertion/v1`, `activation-scope-authority/v1`, `closure-assertion/v1`, `completeness-assertion/v1`, `result-availability/v1`, `quire.observation-authority/v1`, `quire.observation-authority/v2`, and `quire.observation-authority-lineage/v1` under the QObs owner namespace. Repair and aggregate-query are typed unsupported Protocol capabilities, not manifest keys. |
+| FSL compiled `/1` | `filament.compiled-protocol/1` |
+| FSL compiled `/2` | `filament.compiled-protocol/2` |
+| FSL temporal | `filament.native-temporal-request/v1`, `filament.native-temporal-result/v1` |
+| FObs runtime/authority | `filament.observation.record/v2`, `population/v2`, `explicit-members/v1`, `position-ledger/v1`, `clock-binding/v1`, `partial-fact/v1`, `capture-environment/v1`, `progress-assertion/v1`, `activation-scope-authority/v1`, `closure-assertion/v1`, `completeness-assertion/v1`, `result-availability/v1`, `filament.observation-authority/v1`, `filament.observation-authority/v2`, and `filament.observation-authority-lineage/v1` under the FObs owner namespace. Repair and aggregate-query are typed unsupported Protocol capabilities, not manifest keys. |
 | Engineering Assurance | `engineering-assurance.producer-execution-request/v1`, `engineering-assurance.producer-execution-result/v1` |
-| E02 | `quire-verification/e02-draft-2` |
+| E02 | `filament-verification/e02-draft-2` |
 | Quoin | the not-yet-accepted Protocol scenario-intake contract |
 
 The adapter source compiles an independent accepted owner, contract-version and
@@ -176,21 +176,21 @@ The public path is version explicit:
 The already published root `admit_and_link(bytes, expected, limits)` remains an
 explicit legacy `/1` compatibility facade with its frozen signature and refusal
 set. It delegates only to `/1` admission and static linking and is not an
-integration boundary: it cannot consume QObs, QSL native-temporal, Engineering
+integration boundary: it cannot consume FObs, FSL native-temporal, Engineering
 Assurance, E02 or Quoin values. New integration and full-assessment entry points
 require resolved capabilities. This compatibility exception is narrow and
 testable; it neither mints a capability nor bypasses resolution for any external
 value used by an assessment.
 
-Version-2 linking consumes one admitted QSL package, one accepted
-`quire.protocol.binding-definition/1`, one
-`quire.protocol.runtime-binding/1`, and a caller-owned definition registry. The
+Version-2 linking consumes one admitted FSL package, one accepted
+`filament.protocol.binding-definition/1`, one
+`filament.protocol.runtime-binding/1`, and a caller-owned definition registry. The
 static definition targets one exact admitted declaration and retains its
 independent artifact selection, each role's exact FR-217 internality, and each
 slot's selected producer authority, producer-local kind and correspondence.
 Relationship slots additionally retain their selected declaration and ordered
 endpoint requirements. The runtime set targets that exact static definition and
-contains imported QObs `QualifiedSubject`, `Relationship` and
+contains imported FObs `QualifiedSubject`, `Relationship` and
 `RequiredRelationship` values; it defines no local copy of their wire shape.
 
 Static requirements and runtime instances use non-interchangeable Rust types.
@@ -200,9 +200,9 @@ remain distinct. Runtime wrappers retain the complete FR-287 key and use private
 constructors that validate the slot. A source handle, table ordinal, display
 name or static requirement never becomes a runtime identity.
 
-The graph projector matches QSL's closed typed enums exhaustively and retains
+The graph projector matches FSL's closed typed enums exhaustively and retains
 the complete typed declaration. It never serializes to generic JSON and deletes
-selected keys. Exact QSL `ProtocolNumber`, rational, interval, value expression,
+selected keys. Exact FSL `ProtocolNumber`, rational, interval, value expression,
 type, guard, branch, join, iteration, channel, compensation and finish content
 is retained. Numeric fingerprints are forbidden as consistency content.
 Presentation metadata and source loci are stored separately from semantic
@@ -253,7 +253,7 @@ ambiguous or contradictory identity is a refusal. Assessment invokes no
 business operation or compensation.
 
 Recovery evaluation accepts no public callback. The production evaluator walks
-only the admitted QSL typed recovery expression selected by the registration,
+only the admitted FSL typed recovery expression selected by the registration,
 using its resolved state/temporal capability and exact captured values. A
 recognized expression evaluates under the request accountant; an unknown or
 out-of-profile expression returns the typed unsupported disposition, and a
@@ -261,13 +261,13 @@ source evaluator refusal or resource-incomplete outcome is retained without
 conversion. Test-only relation doubles remain crate-private and cannot enter a
 production Engine.
 
-Protocol's activation boundary derives each complete QSpec FR-479 binding from
-one linked control, QObs's authority-qualified subject, and QSL's strict v2
+Protocol's activation boundary derives each complete FSpec FR-479 binding from
+one linked control, FObs's authority-qualified subject, and FSL's strict v2
 request/result facts. It validates the binding against the exact linked
 definition/control before its clause subject and semantic trigger derive an
 FR-230 obligation; a table coordinate, timestamp, arrival order or caller-built
 model cannot substitute. One deterministic `ConformanceKernel` then consumes
-the linked graph, compensation snapshot, QObs authority facts, QSL native-
+the linked graph, compensation snapshot, FObs authority facts, FSL native-
 temporal results and those Protocol-owned bindings. Batch and incremental APIs
 are frontends over that kernel.
 Incremental readiness follows authored causal prerequisites and exact semantic
@@ -308,10 +308,10 @@ the constructor for `ValidatedResult` from external bytes.
 
 The borrowed `MappedResultView` is the sole Contract-IR result boundary. QCI's
 accepted FR-025 predicate bridge consumes Protocol leaf-result views to build
-checked Boolean valuations; QCI FR-026 then constructs sibling QSL-native and TL
+checked Boolean valuations; QCI FR-026 then constructs sibling FSL-native and TL
 inputs from those valuations and joins the two formula-wide owner results. A
 Protocol predicate-result view is not itself a native-temporal result. Protocol
-consumes QSL native-temporal results directly and never consumes QCI's join;
+consumes FSL native-temporal results directly and never consumes QCI's join;
 reversing that edge would create a package and semantic-authority cycle.
 
 E02 projection accepts a `ValidatedResult` and the complete FR-062 obligation,
@@ -358,8 +358,8 @@ each indivisible unit, and no later unit starts after expiry.
 
 External owners keep their own dimensions and accounting versions. Protocol
 passes their exact limits, retains their returned usage separately, and never
-mirrors or sums an owner accumulation rule. QSL `f1700a9` publishes
-`protocol_artifact::work::Dimension::accumulation()`; the QSL adapter calls that
+mirrors or sums an owner accumulation rule. FSL `f1700a9` publishes
+`protocol_artifact::work::Dimension::accumulation()`; the FSL adapter calls that
 accessor and removes Protocol's current local mirror. Scenario evidence records
 each owner/version/dimension separately.
 
@@ -384,17 +384,17 @@ affected identity or refuses.
 4. Use RFC 8785 only in identity/digest domains whose owning requirement selects
    it. Componentwise keys and exact producer bytes are never replaced by a JCS
    hash or locally canonicalized copy.
-5. Keep QObs facts flowing into Protocol, Protocol results flowing into QCI and
+5. Keep FObs facts flowing into Protocol, Protocol results flowing into QCI and
    E02, Engineering Assurance executing producers, and Quoin retaining evidence.
    No reverse edge or local substitute is allowed.
 6. Apply one transactional state model, one refusal envelope and one Protocol
    resource accountant across the path.
-7. Projection, realizability, composition and refinement are decided by QSL
-   (ADR-010). This library dispatches each claim kind to QSL's backend,
+7. Projection, realizability, composition and refinement are decided by FSL
+   (ADR-010). This library dispatches each claim kind to FSL's backend,
    [FR-301](../functional/FR-301-admit-protocol-refinement-dispatch.md) for
    refinement, carries the result unchanged, and uses the same closed dispatch,
    premise-binding and unsupported-absence discipline FR-005, FR-029 and
-   FR-030 apply to every claim kind. A kind QSL has no backend for settles
+   FR-030 apply to every claim kind. A kind FSL has no backend for settles
    `unsupported`, never false, satisfied or successful.
 
 ## Conformance Rules
@@ -417,22 +417,22 @@ affected identity or refuses.
 ## Risks
 
 - **E02 owner — immediate:** qverify implements
-  `quire-verification/e02-draft-2`, but its interface-decision document still
+  `filament-verification/e02-draft-2`, but its interface-decision document still
   calls the cross-repository contract provisional while its prerequisite
   tickets are closed. Task-007 remains blocked until the owner reconciles that
   contradiction and asserts the exact accepted revision; tracked by
-  `agent-ix/quire-verification#32`.
+  `agent-ix/filament-verification#32`.
 - **Quoin owner — immediate:** Quoin now has a Rust workspace and evidence
   storage, but no structured operation can carry FR-017's complete protocol-
   scenario record. Task-018/Task-011 remain blocked on that exact intake
   contract; tracked by `agent-ix/quoin#519`.
-- **Compensation authority — immediate:** QSpec FR-236 publishes five outcome
+- **Compensation authority — immediate:** FSpec FR-236 publishes five outcome
   labels but does not partition them between per-attempt and aggregate recovery
   facts. The affected Task-003 mapping cases remain blocked on an accepted owner
   ruling; Protocol will not infer a partition. Tracked by
-  `agent-ix/quire-specification#57`; other compensation work can land.
+  `agent-ix/filament-specification#57`; other compensation work can land.
 - **Contract-IR owner — delivered:** QCI #71 / PR #78 (`69ec82b`) implements
-  FR-026. Its native/TL join consumes QSL-native and TL result views, while its
+  FR-026. Its native/TL join consumes FSL-native and TL result views, while its
   FR-025 predicate bridge consumes Protocol leaf-result views. It is downstream
   evidence for QS #1, not a remaining Protocol production dependency.
 - **Protocol owner — Task-008:** the current code exposes two resource-guard
@@ -440,20 +440,20 @@ affected identity or refuses.
 - **Dependency owner — every consuming task:** accepted git pins, licenses and
   artifact rights must be recorded before use. `publish = false` and absence of
   a registry release are intentional and not blockers.
-- **Separating-witness owner — in progress:** `agent-ix/quire-specification#114`
+- **Separating-witness owner — in progress:** `agent-ix/filament-specification#114`
   mints the family-neutral `native-run-result/2` separating-witness record
   (deciding element, index, value path, trace position).
   [FR-302](../functional/FR-302-carry-trace-position-witness.md) defines this
-  repository's `quire.protocol.result/v1-draft.2` carrier for that record; the
+  repository's `filament.protocol.result/v1-draft.2` carrier for that record; the
   physical schema and reader/producer code that emit it land under
-  `agent-ix/quire-protocol#80` once #114 is accepted, and this repository
+  `agent-ix/filament-protocol#80` once #114 is accepted, and this repository
   publishes no draft-2 schema file before then. Tracked by
-  `agent-ix/quire-specification#114` and `agent-ix/quire-protocol#80`.
-- **Result-wire version owner — in progress:** QSpec FR-352's cross-repo note
-  assigns the `quire.protocol.result` draft-revision bump to
-  `agent-ix/quire-protocol#96`, while QSpec FR-240-AC-1 still fixes
-  `contractVersion` at exactly `quire.protocol.result/v1-draft.1`.
+  `agent-ix/filament-specification#114` and `agent-ix/filament-protocol#80`.
+- **Result-wire version owner — in progress:** FSpec FR-352's cross-repo note
+  assigns the `filament.protocol.result` draft-revision bump to
+  `agent-ix/filament-protocol#96`, while FSpec FR-240-AC-1 still fixes
+  `contractVersion` at exactly `filament.protocol.result/v1-draft.1`.
   [FR-302](../functional/FR-302-carry-trace-position-witness.md) states
   `v1-draft.2` under that assignment; FR-240-AC-1's matching amendment is owed
   upstream and Protocol will not restate it locally. Tracked by
-  `agent-ix/quire-specification#114`.
+  `agent-ix/filament-specification#114`.

@@ -6,12 +6,12 @@ mod support {
     pub mod handoff;
 }
 
+use filament_protocol::declarations::{Capacity, JoinPolicy, Ordering};
+use filament_protocol::link::link;
+use fsl_package::protocol_view::{delivery, queue_capacity, Delivery, QueueCapacity};
+use fsl_package::{RoleLifetime, RoleReplication};
+use fsl_semantics::check::{ChannelOverflow, CheckedOutstanding, LossSelector};
 use ix_trace_rs::trace;
-use qsl_package::protocol_view::{delivery, queue_capacity, Delivery, QueueCapacity};
-use qsl_package::{RoleLifetime, RoleReplication};
-use qsl_semantics::check::{ChannelOverflow, CheckedOutstanding, LossSelector};
-use quire_protocol::declarations::{Capacity, JoinPolicy, Ordering};
-use quire_protocol::link::link;
 use support::dynamic::Dynamic;
 
 const UNTIL: &str = "until(input = input and R = R)";
@@ -185,7 +185,7 @@ fn every_channel_field_equals_the_checked_node_and_the_owners_accessors() {
             .iter()
             .find(|n| n.node_id == id)
             .unwrap();
-        // QSL's own accessors, read from the same checked nodes.
+        // FSL's own accessors, read from the same checked nodes.
         assert_eq!(Ok(declared.delivery), delivery(node), "{}", expected.name);
         assert_eq!(declared.delivery, expected.delivery, "{}", expected.name);
         let queue = dynamic
@@ -224,7 +224,7 @@ fn a_symbolic_capacity_stays_its_authored_name() {
     assert_eq!(declared.capacity, Capacity::Symbolic("Bound".into()));
 }
 
-fn join_of(dynamic: &Dynamic, name: &str) -> quire_protocol::declarations::JoinDeclaration {
+fn join_of(dynamic: &Dynamic, name: &str) -> filament_protocol::declarations::JoinDeclaration {
     let id = dynamic.named("control", name);
     dynamic
         .linked()
@@ -296,7 +296,7 @@ fn a_predicate_join_and_an_all_join_with_no_rule_link_as_declared() {
     assert_eq!(predicate.threshold(), None);
     assert!(
         predicate.outstanding.is_some(),
-        "QSL refuses an unruled predicate join"
+        "FSL refuses an unruled predicate join"
     );
     assert_eq!(join_of(&dynamic, "AllUnruled").outstanding, None);
 }

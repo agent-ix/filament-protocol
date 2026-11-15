@@ -3,19 +3,19 @@ id: FR-023
 title: "Preserve compensation attempt and effect distinctness"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-020
+  - target: ix://agent-ix/filament-protocol/FR-020
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-058
+  - target: ix://agent-ix/filament-specification/FR-058
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-226
+  - target: ix://agent-ix/filament-specification/FR-226
     type: references
-  - target: ix://agent-ix/quire-specification/FR-233
+  - target: ix://agent-ix/filament-specification/FR-233
     type: references
-  - target: ix://agent-ix/quire-specification/FR-235
+  - target: ix://agent-ix/filament-specification/FR-235
     type: references
-  - target: ix://agent-ix/quire-specification/FR-236
+  - target: ix://agent-ix/filament-specification/FR-236
     type: references
 ---
 # FR-023: Preserve compensation attempt and effect distinctness
@@ -23,7 +23,7 @@ relationships:
 ## Description
 
 When several compensation observations relate to one registration, the evaluator SHALL retain each attempt and each established compensation effect as separate subjects with their own identities.
-When an attempt outcome is reported, the evaluator SHALL report it as an exact member of the `ix://agent-ix/quire-specification/FR-236` vocabulary.
+When an attempt outcome is reported, the evaluator SHALL report it as an exact member of the `ix://agent-ix/filament-specification/FR-236` vocabulary.
 When a failed attempt is followed by a successful retry, the evaluator SHALL retain both attempts rather than replacing the first.
 When a send, a receive, a delivery, an attempt or a compensating-operation invocation succeeds, the evaluator SHALL NOT read that success as an established compensation effect.
 When an attempt outcome has not been established, the evaluator SHALL leave it absent rather than defaulting it to `pending`, `failed` or any other member.
@@ -31,10 +31,10 @@ When an attempt outcome has not been established, the evaluator SHALL leave it a
 ## Inputs
 
 A compensation registration typed by
-`ix://agent-ix/quire-specification/FR-233`, compensation attempts typed by
-`ix://agent-ix/quire-specification/FR-235`, compensation effects typed by
-`ix://agent-ix/quire-specification/FR-226`, and per-attempt outcomes drawn from
-`ix://agent-ix/quire-specification/FR-236`.
+`ix://agent-ix/filament-specification/FR-233`, compensation attempts typed by
+`ix://agent-ix/filament-specification/FR-235`, compensation effects typed by
+`ix://agent-ix/filament-specification/FR-226`, and per-attempt outcomes drawn from
+`ix://agent-ix/filament-specification/FR-236`.
 
 ## Outputs
 
@@ -81,12 +81,12 @@ under [FR-024](./FR-024-decide-recovery-only-by-authored-relation.md).
 
 ### Accepted identities and remaining owner gate
 
-Quire Specification #28 defines distinct authored FR-287 keys for compensation
+Filament Specification #28 defines distinct authored FR-287 keys for compensation
 attempt and business effect. Exact replay of one key is idempotent; a second
 effect key bound to the same singleton occurrence is the duplicate-business-
 effect outcome; reusing one key with different bindings refuses.
 
-QSpec #57 resolves FR-236 on QSpec main `478afa2`. Per-attempt and
+FSpec #57 resolves FR-236 on FSpec main `478afa2`. Per-attempt and
 recovery-relation facts each admit `failed`, `timed-out`, `pending`, and
 `successful` in their distinct subject domains; `duplicate` is only a
 duplicate-business-effect fact. Absence remains absent and no attempt outcome
@@ -99,5 +99,5 @@ authorizes a recovery result.
   registration.
 - [FR-024](./FR-024-decide-recovery-only-by-authored-relation.md) owns the
   recovery decision a successful outcome does not supply.
-- `ix://agent-ix/quire-specification/FR-058` establishes the distinctness rules
+- `ix://agent-ix/filament-specification/FR-058` establishes the distinctness rules
   and the outcome vocabulary.

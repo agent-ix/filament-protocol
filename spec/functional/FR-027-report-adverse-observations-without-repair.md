@@ -3,29 +3,29 @@ id: FR-027
 title: "Report adverse observations without repair"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: part_of
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-059
+  - target: ix://agent-ix/filament-specification/FR-059
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-210
+  - target: ix://agent-ix/filament-specification/FR-210
     type: references
-  - target: ix://agent-ix/quire-specification/FR-213
+  - target: ix://agent-ix/filament-specification/FR-213
     type: references
-  - target: ix://agent-ix/quire-specification/FR-220
+  - target: ix://agent-ix/filament-specification/FR-220
     type: references
-  - target: ix://agent-ix/quire-specification/FR-224
+  - target: ix://agent-ix/filament-specification/FR-224
     type: references
-  - target: ix://agent-ix/quire-specification/FR-226
+  - target: ix://agent-ix/filament-specification/FR-226
     type: references
-  - target: ix://agent-ix/quire-specification/FR-230
+  - target: ix://agent-ix/filament-specification/FR-230
     type: references
-  - target: ix://agent-ix/quire-specification/FR-260
+  - target: ix://agent-ix/filament-specification/FR-260
     type: references
-  - target: ix://agent-ix/quire-specification/FR-262
+  - target: ix://agent-ix/filament-specification/FR-262
     type: references
 ---
 # FR-027: Report adverse observations without repair
@@ -88,7 +88,7 @@ implicit option-none."
 
 ### Accepted owner rulings
 
-QSpec #28/#31/#40 supplies complete FR-287 workflow, delivery and effect keys,
+FSpec #28/#31/#40 supplies complete FR-287 workflow, delivery and effect keys,
 FR-296 admitted-observation identity, and FR-262's closed `resolved`, `missing`,
 `conflicting`, `ambiguous` relationship outcomes with ordered endpoint keys.
 A repeated delivery of one send, a replay of one observation, a distinct
@@ -104,6 +104,6 @@ path or arrival position.
   requirement is part of.
 - [FR-011](./FR-011-consumer-identity-discipline.md) states the ordering
   obligation this requirement discharges by naming an owner.
-- `ix://agent-ix/quire-specification/FR-059` establishes that the evaluator
+- `ix://agent-ix/filament-specification/FR-059` establishes that the evaluator
   reports unexpected, missing, misordered, duplicated and wrongly correlated
   events without repairing them.

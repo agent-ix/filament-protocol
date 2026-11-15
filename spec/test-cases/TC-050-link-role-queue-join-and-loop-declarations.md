@@ -3,11 +3,11 @@ id: TC-050
 title: "Link role, queue, join and loop declarations"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-050
+  - target: ix://agent-ix/filament-protocol/FR-050
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-051
+  - target: ix://agent-ix/filament-protocol/FR-051
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-052
+  - target: ix://agent-ix/filament-protocol/FR-052
     type: verifies
 ---
 # TC-050: Link role, queue, join and loop declarations

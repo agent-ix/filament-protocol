@@ -4,13 +4,13 @@ title: "Producer immutability is an owner assertion, not a consumer check"
 type: ADR
 status: accepted
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-001
+  - target: ix://agent-ix/filament-protocol/NFR-001
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/AD-001
+  - target: ix://agent-ix/filament-protocol/AD-001
     type: depends_on
 ---
 # ADR-004: Producer immutability is an owner assertion, not a consumer check
@@ -123,7 +123,7 @@ Assurance, E02, Quoin — the owner's assertion is the only thing standing behin
 the pin. Nothing local falsifies it.
 
 **Entry status is per contract.** FR-009's architecture-baseline table records
-the QSL, QObs, Engineering Assurance and qverify contracts as pinned, and only
+the FSL, FObs, Engineering Assurance and qverify contracts as pinned, and only
 the Quoin Protocol scenario-intake entry as unresolved. The Protocol-owned
 schema, two-status model, digest recomputation, per-key refusal, entry
 independence, sidecar non-authority and bounded resolver are implemented; each

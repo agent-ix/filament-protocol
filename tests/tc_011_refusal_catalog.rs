@@ -4,18 +4,18 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use ix_trace_rs::trace;
-use quire_protocol::refusal::catalog::{
+use filament_protocol::refusal::catalog::{
     audit, is_code_shape, lookup, malformation, unregistered_literals, CatalogDefect, CodeEntry,
     CodeModule, MalformedCode, Provenance, RefusalCode, UnregisteredLiteral, ENVELOPE_CODES,
     EXEMPT_LITERALS, REGISTRY, UNSUPPORTED_SOURCE_CONTRACT,
 };
-use quire_protocol::refusal::{RefusalDomain, RetryDecision};
+use filament_protocol::refusal::{RefusalDomain, RetryDecision};
+use ix_trace_rs::trace;
 
 const FIRST: CodeModule = CodeModule {
     root: "test",
     owner: "Task-017-a",
-    module_path: "quire_protocol::refusal",
+    module_path: "filament_protocol::refusal",
     entries: &[CodeEntry {
         provenance: Provenance::Minted,
         code: "test.shared-code",
@@ -28,7 +28,7 @@ const FIRST: CodeModule = CodeModule {
 const SECOND: CodeModule = CodeModule {
     root: "test",
     owner: "Task-017-b",
-    module_path: "quire_protocol::refusal",
+    module_path: "filament_protocol::refusal",
     entries: &[CodeEntry {
         provenance: Provenance::Minted,
         code: "test.shared-code",
@@ -41,7 +41,7 @@ const SECOND: CodeModule = CodeModule {
 const STRAYING_ROOT: CodeModule = CodeModule {
     root: "assessment",
     owner: "Task-017-stray",
-    module_path: "quire_protocol::refusal",
+    module_path: "filament_protocol::refusal",
     entries: &[CodeEntry {
         provenance: Provenance::Minted,
         code: "result.claimed.elsewhere",
@@ -54,7 +54,7 @@ const STRAYING_ROOT: CodeModule = CodeModule {
 const MIXED_DOMAINS: CodeModule = CodeModule {
     root: "assessment",
     owner: "Task-017-mixed",
-    module_path: "quire_protocol::refusal",
+    module_path: "filament_protocol::refusal",
     entries: &[
         CodeEntry {
             provenance: Provenance::Minted,
@@ -76,7 +76,7 @@ const MIXED_DOMAINS: CodeModule = CodeModule {
 const MALFORMED_MODULE: CodeModule = CodeModule {
     root: "refusal",
     owner: "Task-017-malformed",
-    module_path: "quire_protocol::refusal",
+    module_path: "filament_protocol::refusal",
     entries: &[CodeEntry {
         provenance: Provenance::Minted,
         code: "refusal.Bad_Code",
@@ -108,7 +108,7 @@ fn all_rust_sources() -> Vec<PathBuf> {
 
 fn module_sources(module_path: &str) -> String {
     let relative = module_path
-        .strip_prefix("quire_protocol::")
+        .strip_prefix("filament_protocol::")
         .unwrap_or_else(|| panic!("{module_path} is not a path inside this crate"))
         .replace("::", "/");
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");

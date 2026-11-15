@@ -2,31 +2,31 @@
 //! FR-101: the captures of an obligation activation, bound as ordered,
 //! immutable, atomic occurrences.
 //!
-//! The values are the owner's. QSL's checked-package evaluation (FR-045)
+//! The values are the owner's. FSL's checked-package evaluation (FR-045)
 //! returns, for each authored capture and at the inclusive activation
 //! boundary, a slot outcome; this module binds those outcomes and evaluates no
 //! capture expression of its own, so a supplied value that differs from what
 //! the authored expression would give locally is the bound value. One capture
-//! without a value refuses the whole activation and binds none. QSL's
+//! without a value refuses the whole activation and binds none. FSL's
 //! `Unsupported::Capture`, a capture of the protocol clause itself, is
 //! FR-057's and never reported from here.
 
-use quire_contract_model::CheckedNodeId;
-use quire_exact::Value;
-use quire_observation::authority::TemporalBoundary;
+use filament_contract_model::CheckedNodeId;
+use filament_exact::Value;
+use filament_observation::authority::TemporalBoundary;
 
 use crate::compensation::activate::Binding;
 use crate::compensation::purity::PureAssessment;
 use crate::slot::SlotOutcome;
 
-/// QSL's evaluation of one authored capture at one boundary.
+/// FSL's evaluation of one authored capture at one boundary.
 #[derive(Debug)]
 pub struct CaptureSupply {
     /// The authored capture.
     pub capture: CheckedNodeId,
     /// The boundary the value was evaluated at.
     pub boundary: TemporalBoundary,
-    /// QSL's slot outcome, unchanged.
+    /// FSL's slot outcome, unchanged.
     pub evaluation: SlotOutcome,
 }
 
@@ -62,7 +62,7 @@ impl CaptureOccurrence {
         &self.capture
     }
 
-    /// The bound value, exactly as QSL supplied it.
+    /// The bound value, exactly as FSL supplied it.
     #[must_use]
     pub const fn value(&self) -> &Value {
         &self.value
@@ -74,7 +74,7 @@ impl CaptureOccurrence {
 /// after activation:
 ///
 /// ```compile_fail
-/// fn change(mut captures: quire_protocol::captures::ActivationCaptures) {
+/// fn change(mut captures: filament_protocol::captures::ActivationCaptures) {
 ///     captures.occurrences.clear();
 /// }
 /// ```
@@ -108,9 +108,9 @@ impl ActivationCaptures {
 /// Why one capture could not be bound.
 #[derive(Debug)]
 pub enum CaptureFailure {
-    /// QSL supplied nothing for the authored capture.
+    /// FSL supplied nothing for the authored capture.
     Missing,
-    /// QSL supplied a value for a capture the activation does not author, or
+    /// FSL supplied a value for a capture the activation does not author, or
     /// more times than it authors it.
     Unauthored,
     /// The value was evaluated at another boundary than the activation's.
@@ -118,7 +118,7 @@ pub enum CaptureFailure {
         /// The boundary of the supply.
         supplied: TemporalBoundary,
     },
-    /// The capture has no value: QSL's outcome, unchanged.
+    /// The capture has no value: FSL's outcome, unchanged.
     Undefined {
         /// The outcome.
         outcome: SlotOutcome,
@@ -160,7 +160,7 @@ fn completed(outcome: SlotOutcome) -> Result<Value, Box<SlotOutcome>> {
 }
 
 /// Bind the captures of `activation`, whose authored captures are `authored`
-/// in order, from QSL's `supplied` evaluations at `boundary`. Each supply
+/// in order, from FSL's `supplied` evaluations at `boundary`. Each supply
 /// answers the authored capture it names, whatever order it arrives in; the
 /// occurrences are in authored order.
 ///

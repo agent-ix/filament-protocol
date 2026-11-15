@@ -1,41 +1,41 @@
 ---
 id: FR-150
-title: "Dispatch local-projection and realizability claims to QSL's backend"
+title: "Dispatch local-projection and realizability claims to FSL's backend"
 type: FR
 relationships:
-  - { target: ix://agent-ix/quire-protocol/US-001, type: implements }
-  - { target: ix://agent-ix/quire-protocol/ADR-010, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-002, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-005, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-029, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-030, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-301, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-153, type: references }
-  - { target: ix://agent-ix/quire-specification/FR-060, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-241, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-290, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-292, type: depends_on }
-  - { target: ix://agent-ix/quire-spec-language/ADR-017, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/US-001, type: implements }
+  - { target: ix://agent-ix/filament-protocol/ADR-010, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-002, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-005, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-029, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-030, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-301, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-153, type: references }
+  - { target: ix://agent-ix/filament-specification/FR-060, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-241, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-290, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-292, type: depends_on }
+  - { target: ix://agent-ix/filament-spec-language/ADR-017, type: depends_on }
 ---
-# FR-150: Dispatch local-projection and realizability claims to QSL's backend
+# FR-150: Dispatch local-projection and realizability claims to FSL's backend
 
 ## Description
 
-When a `local-projection` or `realizability` claim is requested and an accepted QSL analysis backend serves that claim kind, the dispatcher SHALL send the claim to that backend and carry its result unchanged.
+When a `local-projection` or `realizability` claim is requested and an accepted FSL analysis backend serves that claim kind, the dispatcher SHALL send the claim to that backend and carry its result unchanged.
 
 ## Inputs
 
-One requested `local-projection` or `realizability` claim with its admitted fragment, optional named backend, assumptions and source identities; the FR-002 linked graph, used only to bind the returned result to source identities; and the QSL registry snapshot, from which `ix://agent-ix/quire-specification/FR-290` computes the claim's candidate set.
+One requested `local-projection` or `realizability` claim with its admitted fragment, optional named backend, assumptions and source identities; the FR-002 linked graph, used only to bind the returned result to source identities; and the FSL registry snapshot, from which `ix://agent-ix/filament-specification/FR-290` computes the claim's candidate set.
 
-The registry snapshot is QSL's, not a capability table of this library. A test installs its stand-in backend as a registration in that snapshot at the FR-331 provider boundary. The dispatcher receives no caller callback and the closed built-in table of FR-005 gains no entry for it.
+The registry snapshot is FSL's, not a capability table of this library. A test installs its stand-in backend as a registration in that snapshot at the FR-331 provider boundary. The dispatcher receives no caller callback and the closed built-in table of FR-005 gains no entry for it.
 
 ## Outputs
 
-One disposition per requested claim (FR-029), carrying the backend's result, refusal or `unsupported` cause in QSL's own vocabulary, bound to the exact fragment, backend, assumptions and source identities the claim was requested against (FR-030).
+One disposition per requested claim (FR-029), carrying the backend's result, refusal or `unsupported` cause in FSL's own vocabulary, bound to the exact fragment, backend, assumptions and source identities the claim was requested against (FR-030).
 
 ## Behavior
 
-- The dispatcher shall take the candidate set of the claim from QSL's registry snapshot under `ix://agent-ix/quire-specification/FR-290`.
+- The dispatcher shall take the candidate set of the claim from FSL's registry snapshot under `ix://agent-ix/filament-specification/FR-290`.
 - When FR-290 settles the claim with exactly one candidate, the dispatcher shall send the claim to that candidate's backend.
 - The dispatcher shall not select among several candidates.
 - The dispatcher shall carry an FR-290 settlement of the candidate table (`ambiguous-backend`, `unknown-backend`, or an empty candidate set per FR-153) unchanged and send the claim to no backend.
@@ -64,29 +64,29 @@ One disposition per requested claim (FR-029), carrying the backend's result, ref
 | FR-150-AC-9 | Given the same two stand-ins, a request naming one of them sends the claim to that stand-in only, and the result is identical under every registration order. | Test (TC-160) |
 | FR-150-AC-10 | Given a request naming no backend and one stand-in serving the claim kind, the disposition records that stand-in as the backend selected, and a disposition settled without a selected backend records none. | Test (TC-160) |
 | FR-150-AC-11 | Given a second provider registered for a backend identity that already has one, the registration is refused and the first provider is the one called. | Test (TC-160) |
-| FR-150-AC-12 | Given QSL's own `protocol-analysis` engine registered under QSL's descriptor, with no stand-in, a `local-projection` claim over a checked protocol is decided by that engine: a sound projection settles truth `satisfied` and a refuted one truth `violated`, each carrying QSL's result and the selected backend `protocol-analysis`. | Test (TC-164) |
-| FR-150-AC-13 | Given the same registration, the separating-witness record of a refuted `local-projection` result equals the record QSL's counterexample holds, unchanged. | Test (TC-164) |
-| FR-150-AC-14 | Given QSL's linked engine registered and a corpus of three-role workflows, projecting onto each role settles the truth the engine decides for it: a workflow whose branches the warehouse can tell apart or merge satisfies for every role, and one whose branches it cannot tell apart is refuted for the warehouse only. | Test (TC-165) |
+| FR-150-AC-12 | Given FSL's own `protocol-analysis` engine registered under FSL's descriptor, with no stand-in, a `local-projection` claim over a checked protocol is decided by that engine: a sound projection settles truth `satisfied` and a refuted one truth `violated`, each carrying FSL's result and the selected backend `protocol-analysis`. | Test (TC-164) |
+| FR-150-AC-13 | Given the same registration, the separating-witness record of a refuted `local-projection` result equals the record FSL's counterexample holds, unchanged. | Test (TC-164) |
+| FR-150-AC-14 | Given FSL's linked engine registered and a corpus of three-role workflows, projecting onto each role settles the truth the engine decides for it: a workflow whose branches the warehouse can tell apart or merge satisfies for every role, and one whose branches it cannot tell apart is refuted for the warehouse only. | Test (TC-165) |
 | FR-150-AC-15 | Given the same registration and a request of one `local-projection` claim and one `global-conformance` result, the global result is returned unchanged beside the engine's projection result. | Test (TC-165) |
-| FR-150-AC-16 | Given QSL's linked engine registered and a `realizability` claim over a checked protocol whose branches every role can tell apart, the engine decides it: truth `satisfied`, basis `closed-scope`, QSL's result carried and the selected backend `protocol-analysis`. | Test (TC-166) |
-| FR-150-AC-17 | Given the same registration and a protocol with a hidden choice, the claim settles truth `violated` with basis `decisive-counterexample`, and the result's separating-witness record equals the one QSL's indistinguishable-histories counterexample holds, unchanged. | Test (TC-166) |
+| FR-150-AC-16 | Given FSL's linked engine registered and a `realizability` claim over a checked protocol whose branches every role can tell apart, the engine decides it: truth `satisfied`, basis `closed-scope`, FSL's result carried and the selected backend `protocol-analysis`. | Test (TC-166) |
+| FR-150-AC-17 | Given the same registration and a protocol with a hidden choice, the claim settles truth `violated` with basis `decisive-counterexample`, and the result's separating-witness record equals the one FSL's indistinguishable-histories counterexample holds, unchanged. | Test (TC-166) |
 
 ## Adopted vocabulary
 
 | Noun | Upstream object | Identity kind |
 | --- | --- | --- |
-| Protocol claim kind (`local-projection`, `realizability`) | `ix://agent-ix/quire-specification/FR-290` | value |
-| Analysis backend | `ix://agent-ix/quire-specification/FR-292` | authored |
-| Candidate table and backend selection | `ix://agent-ix/quire-specification/FR-290` | value |
-| Assessment-execution disposition (`failed`) | `ix://agent-ix/quire-specification/FR-241` | value |
+| Protocol claim kind (`local-projection`, `realizability`) | `ix://agent-ix/filament-specification/FR-290` | value |
+| Analysis backend | `ix://agent-ix/filament-specification/FR-292` | authored |
+| Candidate table and backend selection | `ix://agent-ix/filament-specification/FR-290` | value |
+| Assessment-execution disposition (`failed`) | `ix://agent-ix/filament-specification/FR-241` | value |
 
 ## Dependencies
 
-- [ADR-010](../adr/ADR-010-consume-qsl-protocol-analysis-own-assessment-and-dispatch.md) fixes that this library dispatches the two claim kinds and implements neither decision procedure.
-- `ix://agent-ix/quire-specification/FR-290` supplies the candidate table and its settlements, which this requirement carries and does not restate.
+- [ADR-010](../adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md) fixes that this library dispatches the two claim kinds and implements neither decision procedure.
+- `ix://agent-ix/filament-specification/FR-290` supplies the candidate table and its settlements, which this requirement carries and does not restate.
 - [FR-002](./FR-002-link-finite-protocol-representation.md) supplies the linked graph whose source identities bind the returned result.
 - [FR-005](./FR-005-dispatch-independent-protocol-claims.md), [FR-029](./FR-029-return-one-disposition-per-requested-claim.md) and [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) supply closed dispatch, independence and premise binding.
-- [FR-153](./FR-153-settle-unsupported-while-no-qsl-backend-serves-the-kind.md) states the empty-candidate settlement.
+- [FR-153](./FR-153-settle-unsupported-while-no-fsl-backend-serves-the-kind.md) states the empty-candidate settlement.
 - [FR-301](./FR-301-admit-protocol-refinement-dispatch.md) states the same dispatch-and-carry rule for the `refinement` claim kind.
-- `ix://agent-ix/quire-specification/FR-060` states the independence of global conformance from the advanced claims.
-- QSL ADR-017 fixes the protocol boundary of the checked package this library reads.
+- `ix://agent-ix/filament-specification/FR-060` states the independence of global conformance from the advanced claims.
+- FSL ADR-017 fixes the protocol boundary of the checked package this library reads.

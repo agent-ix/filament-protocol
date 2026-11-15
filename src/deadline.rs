@@ -7,15 +7,15 @@
 //! `within [lower, upper]`, both bounds inside, counted from the anchor of the
 //! admitted `after` observation of that wait: the window does not exist until
 //! that observation is admitted. That observation is the one the record links
-//! to the wait's anchor node (QSL's checked await accessor) and workflow
-//! instance (QSpec FR-260-AC-5, FR-260-AC-6, FR-260-AC-9); a caller attributes nothing. The timeout branch is selected only
+//! to the wait's anchor node (FSL's checked await accessor) and workflow
+//! instance (FSpec FR-260-AC-5, FR-260-AC-6, FR-260-AC-9); a caller attributes nothing. The timeout branch is selected only
 //! when the awaited scope's progress is `closed` through the deadline and the
 //! input completeness is `complete`, two separate owner facts that never stand
 //! in for each other (FR-028).
 //!
 //! Nothing here evaluates a constraint, a clock or an expression: the
-//! constraint outcome is QSL's slot outcome, progress and completeness are the
-//! QObs owner views, and the window is the one QSL publishes on the checked
+//! constraint outcome is FSL's slot outcome, progress and completeness are the
+//! FObs owner views, and the window is the one FSL publishes on the checked
 //! `await` node, which the progress view's FR-289 boundary and clock must name. A
 //! settlement is keyed by the waiting instance, never by the static branch.
 //! Results are immutable; a settled timeout that a later observation, progress
@@ -24,10 +24,12 @@
 
 use core::ops::RangeInclusive;
 
-use quire_contract_model::CheckedNodeId;
-use quire_exact::Integer;
-use quire_observation::authority::{completeness, observation, progress, BoundaryRef, OpenClosed};
-use quire_observation::Anchor;
+use filament_contract_model::CheckedNodeId;
+use filament_exact::Integer;
+use filament_observation::authority::{
+    completeness, observation, progress, BoundaryRef, OpenClosed,
+};
+use filament_observation::Anchor;
 
 use crate::closure::{AssessmentExecution, TruthDisposition};
 use crate::compensation::purity::PureAssessment;
@@ -40,7 +42,7 @@ use crate::slot::SlotOutcome;
 /// Why a wait cannot be settled. Nothing is guessed or repaired.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum WaitRefusal {
-    /// QSL's occurrence schema does not key this wait: the workflow identity,
+    /// FSL's occurrence schema does not key this wait: the workflow identity,
     /// the control or the repeat ordinals are refused.
     Key(HistoryRefusal),
     /// The control is not an `await` the linked protocol declares.
@@ -61,7 +63,7 @@ pub enum WaitRefusal {
     AnchorMalformed,
     /// The observation is not linked to the checked anchor node and the
     /// workflow instance of the wait, so it is unavailable as the wait's
-    /// `after` observation (QSpec FR-260-AC-5, FR-260-AC-6).
+    /// `after` observation (FSpec FR-260-AC-5, FR-260-AC-6).
     ObservationUnlinked(Unlinked),
     /// The subject key offered for the wait does not carry the waiting
     /// workflow instance's identity.
@@ -97,14 +99,14 @@ pub struct WaitKey {
 
 impl WaitKey {
     /// The waiting instance of the `await` at `control` in `workflow`, keyed
-    /// through QSL's occurrence schema (QSL FR-384): this library's identities
-    /// are exact bytes, QSL's workflow identity is non-empty UTF-8 of at most
+    /// through FSL's occurrence schema (FSL FR-384): this library's identities
+    /// are exact bytes, FSL's workflow identity is non-empty UTF-8 of at most
     /// 4096 bytes, and there is one repeat ordinal for each enclosing `repeat`.
     ///
     /// # Errors
     ///
     /// [`WaitRefusal::UndeclaredAwait`] for a control that is not a declared
-    /// `await`; [`WaitRefusal::Key`] when QSL's schema refuses the key.
+    /// `await`; [`WaitRefusal::Key`] when FSL's schema refuses the key.
     pub fn new(
         declarations: &Declarations,
         control: &CheckedNodeId,
@@ -158,7 +160,7 @@ pub struct Deadline {
 
 impl Deadline {
     /// The window `declaration` authors, counted from the anchor of the
-    /// admitted `after` observation, on the QObs clock `clock_identity` that
+    /// admitted `after` observation, on the FObs clock `clock_identity` that
     /// the caller's clock selection binds to the authored clock, in `family`.
     ///
     /// # Errors
@@ -335,7 +337,7 @@ impl ProgressWindow {
     }
 }
 
-/// How a response's bound constraint stands, read from QSL's slot outcome.
+/// How a response's bound constraint stands, read from FSL's slot outcome.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Constraint {
     /// The awaited message binds no constraint.
@@ -691,9 +693,9 @@ impl Wait {
     /// A wait on the `await` that `declaration` authors, keyed by `key`, assessed under the
     /// pure-assessment witness: no business operation is reachable from any
     /// settlement path. The window opens when the `after` observation is
-    /// admitted, on the QObs clock `clock_identity` in `family`; an
+    /// admitted, on the FObs clock `clock_identity` in `family`; an
     /// observation is that of `declaration`'s anchor when the link's role mapping resolves
-    /// its binding to the anchor node QSL publishes on the checked `await`.
+    /// its binding to the anchor node FSL publishes on the checked `await`.
     ///
     /// # Errors
     ///
@@ -862,7 +864,7 @@ impl Wait {
         };
         let unselected = |truth| settlement(Verdict::NotSelected(truth));
         // Without the `after` observation the wait is not triggered, and
-        // `pending` requires activation `triggered` (QSpec FR-242, FR-061).
+        // `pending` requires activation `triggered` (FSpec FR-242, FR-061).
         let Some(deadline) = &self.deadline else {
             return Some(unselected(Some(TruthDisposition::Unavailable)));
         };

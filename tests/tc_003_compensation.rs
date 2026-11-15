@@ -5,37 +5,37 @@ use std::cell::Cell;
 use std::num::NonZeroU32;
 use std::sync::OnceLock;
 
-use ix_trace_rs::trace;
-use qsl_package::protocol_view::{control_operation, ChoiceVisibility, ControlOperation};
-use quire_contract_model::{CheckedNodeId, CheckedNodePathSegment, CheckedPackageReadLimits};
-use quire_protocol::bounds::inventory::{
+use filament_contract_model::{CheckedNodeId, CheckedNodePathSegment, CheckedPackageReadLimits};
+use filament_protocol::bounds::inventory::{
     production_inventory, Budget, BudgetDimension, OperationOutcome, ResourceAccountant,
 };
-use quire_protocol::checked_package::{admit, HandoffFiles};
-use quire_protocol::compensation::activate::{
+use filament_protocol::checked_package::{admit, HandoffFiles};
+use filament_protocol::compensation::activate::{
     assess as assess_activation, Activation, Binding, ChoiceVisibilityEvidence, Guard,
     IdentityAxis, TriggerEvidence,
 };
-use quire_protocol::compensation::algebra::{
+use filament_protocol::compensation::algebra::{
     assess_ordering, AttemptAdmission, AttemptFact, AttemptLedger, AttemptOutcome, AuthoredOrder,
     CausalEdge, CompensationEffectFact, Definition, EffectDisposition, ForwardFact,
     Limits as AlgebraLimits, Milestone, MissingOrderingInput, OrderingViolation,
     RecoveryRelationOutcome, Registry, Resource as AlgebraResource,
 };
-use quire_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
-use quire_protocol::compensation::recovery::{
+use filament_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
+use filament_protocol::compensation::recovery::{
     Decision as RecoveryDecision, Fact as RecoveryFact, Limits as RecoveryLimits, MissingInput,
     State,
 };
-use quire_protocol::compensation::{
+use filament_protocol::compensation::{
     compose, compose_bounded, Availability, Limits as CompositionLimits, Parts,
     Resource as CompositionResource, UnavailableCause,
 };
-use quire_protocol::ids::{
+use filament_protocol::ids::{
     AttemptId, CommitId, DefinitionId, DeliveryId, EffectId, ReceiveId, RecoveryId, RegistrationId,
     RoleInstanceId, SendId, WorkflowInstanceId,
 };
-use quire_spec_language::checked_handoff::Corpus;
+use filament_spec_language::checked_handoff::Corpus;
+use fsl_package::protocol_view::{control_operation, ChoiceVisibility, ControlOperation};
+use ix_trace_rs::trace;
 
 #[path = "support/handoff.rs"]
 #[allow(dead_code)]
@@ -88,7 +88,7 @@ fn node(name: &str) -> CheckedNodeId {
     }
 }
 
-/// Recipe R's `choice` control evidence, read through QSL's accessor from the
+/// Recipe R's `choice` control evidence, read through FSL's accessor from the
 /// checked package.
 fn recipe_choice() -> &'static ChoiceVisibilityEvidence {
     static EVIDENCE: OnceLock<ChoiceVisibilityEvidence> = OnceLock::new();
@@ -155,7 +155,7 @@ fn binding(views: &ScopeViews) -> Binding {
 fn registered(
     surface: &Surface,
     bound: Option<NonZeroU32>,
-) -> quire_protocol::compensation::algebra::Registration {
+) -> filament_protocol::compensation::algebra::Registration {
     let forward = effect("effect:forward");
     let definition = Definition {
         identity: DefinitionId::new(b"definition:compensation", "compensation definition"),
@@ -716,7 +716,7 @@ fn state(identity: &str, value: &str) -> State {
 )]
 fn recovery_fact(
     recovery: &RecoveryId,
-    registration: &quire_protocol::compensation::algebra::Registration,
+    registration: &filament_protocol::compensation::algebra::Registration,
     commit: &CommitId,
     compensation_effect: &EffectId,
     target: &State,

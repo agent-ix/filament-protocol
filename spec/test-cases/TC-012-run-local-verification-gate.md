@@ -3,7 +3,7 @@ id: TC-012
 title: "Run the local verification gate and refuse an undefined lane"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/NFR-004
+  - target: ix://agent-ix/filament-protocol/NFR-004
     type: verifies
 ---
 # TC-012: Run the local verification gate and refuse an undefined lane
@@ -24,7 +24,7 @@ literal `target-codex-backends` directory, inspect `Cargo.toml` for a
 tracked Rust `cfg` attribute and `cfg!` macro. Confirm that the crate declares no feature and runs exactly one lane. Confirm that the current `cfg(test)` sites are selected by `clippy --all-targets` and `test`, and
 that the current `cfg(unix)` test is selected on the admitted local Unix target;
 claim no unexecuted target. With `CARGO_BUILD_JOBS=1` under
-`flock /tmp/quire-heavy-check.lock`, run `cargo fmt --all -- --check`,
+`flock /tmp/filament-heavy-check.lock`, run `cargo fmt --all -- --check`,
 `cargo clippy --locked --all-targets --target-dir target-codex-backends -- -D
 warnings`, `cargo test --locked --target-dir target-codex-backends` and
 `env RUSTDOCFLAGS="-D warnings" cargo doc --locked --no-deps --target-dir

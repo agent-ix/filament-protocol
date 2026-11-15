@@ -18,30 +18,30 @@ mod observation_owner;
 
 use std::sync::OnceLock;
 
-use ix_trace_rs::trace;
-use qsl_eval::value::{ProtocolSlot, ProtocolSuppliedValue, ProtocolSupply, SuppliedValue};
-use qsl_package::protocol_view::ChoiceVisibility;
-use qsl_package::{BarePackage, BareSupply, ProtocolSlotDescriptor};
-use qsl_semantics::check::wire_id::WireGraph;
-use quire_contract_model::{CheckedNodeId, CheckedNodePathSegment, CheckedPackageReadLimits};
-use quire_exact::{FieldValue, Integer, Meter, NodeKey, Value, ValueType};
-use quire_observation::authority::{observation, TemporalBoundary};
-use quire_observation::{Anchor, ClockRange, QualifiedSubject, SubjectIdentity, SubjectKind};
-use quire_protocol::captures::{bind_captures, CaptureFailure, CaptureSupply};
-use quire_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
-use quire_protocol::closure::{AssessmentExecution, TruthDisposition};
-use quire_protocol::compensation::activate::{Binding, ChoiceVisibilityEvidence};
-use quire_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
-use quire_protocol::deadline::{
+use filament_contract_model::{CheckedNodeId, CheckedNodePathSegment, CheckedPackageReadLimits};
+use filament_exact::{FieldValue, Integer, Meter, NodeKey, Value, ValueType};
+use filament_observation::authority::{observation, TemporalBoundary};
+use filament_observation::{Anchor, ClockRange, QualifiedSubject, SubjectIdentity, SubjectKind};
+use filament_protocol::captures::{bind_captures, CaptureFailure, CaptureSupply};
+use filament_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
+use filament_protocol::closure::{AssessmentExecution, TruthDisposition};
+use filament_protocol::compensation::activate::{Binding, ChoiceVisibilityEvidence};
+use filament_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
+use filament_protocol::deadline::{
     assess, AfterAnchor, Branch, ClockFamily, Constraint, Contradiction, Deadline, Verdict, Wait,
     WaitAssessment, WaitFact, WaitKey, WaitRefusal,
 };
-use quire_protocol::declarations::AwaitDeclaration;
-use quire_protocol::dynamics::ObservationRef;
-use quire_protocol::ids::{EffectId, RoleInstanceId, WorkflowInstanceId};
-use quire_protocol::observation_link::{Link, RoleMapping, Unlinked};
-use quire_protocol::slot::{evaluate, SlotOutcome};
-use quire_spec_language::checked_handoff::Corpus;
+use filament_protocol::declarations::AwaitDeclaration;
+use filament_protocol::dynamics::ObservationRef;
+use filament_protocol::ids::{EffectId, RoleInstanceId, WorkflowInstanceId};
+use filament_protocol::observation_link::{Link, RoleMapping, Unlinked};
+use filament_protocol::slot::{evaluate, SlotOutcome};
+use filament_spec_language::checked_handoff::Corpus;
+use fsl_eval::value::{ProtocolSlot, ProtocolSuppliedValue, ProtocolSupply, SuppliedValue};
+use fsl_package::protocol_view::ChoiceVisibility;
+use fsl_package::{BarePackage, BareSupply, ProtocolSlotDescriptor};
+use fsl_semantics::check::wire_id::WireGraph;
+use ix_trace_rs::trace;
 
 use awaiting::Awaiting;
 use handoff::{join_budget, written};
@@ -243,7 +243,7 @@ fn settle_unanchored(who: &str, facts: &[WaitFact]) -> WaitAssessment {
     .expect("settles")
 }
 
-fn current(assessment: &WaitAssessment) -> &quire_protocol::deadline::Settlement {
+fn current(assessment: &WaitAssessment) -> &filament_protocol::deadline::Settlement {
     assessment.results().last().expect("a result").settlement()
 }
 
@@ -1027,7 +1027,7 @@ fn an_after_observation_against_an_earlier_progress_view_is_refused() {
     );
 }
 
-/// The anchor is the target of the `after` that QSL's checked await accessor
+/// The anchor is the target of the `after` that FSL's checked await accessor
 /// publishes on the `await` node.
 #[trace("TC-154", "FR-100-AC-23")]
 #[test]
@@ -1128,11 +1128,11 @@ fn the_subject_key_is_compared_whole() {
     );
 }
 
-/// QSL's occurrence schema keys the wait: an undeclared control, a wrong
+/// FSL's occurrence schema keys the wait: an undeclared control, a wrong
 /// number of repeat ordinals and an unkeyable workflow identity are refused.
 #[trace("TC-154", "FR-100-AC-12")]
 #[test]
-fn the_wait_is_keyed_through_qsl_s_occurrence_schema() {
+fn the_wait_is_keyed_through_fsl_s_occurrence_schema() {
     // A wait is built only for the declaration its key names.
     let mut elsewhere_declaration = declaration().clone();
     elsewhere_declaration.control = node("NotAnAwait");
@@ -1172,7 +1172,7 @@ fn the_wait_is_keyed_through_qsl_s_occurrence_schema() {
         ),
         Err(WaitRefusal::Key(_))
     ));
-    // QSL keys a workflow by non-empty UTF-8 of at most 4096 bytes.
+    // FSL keys a workflow by non-empty UTF-8 of at most 4096 bytes.
     for bytes in [Vec::new(), vec![0xff, 0xfe], vec![b'a'; 4097]] {
         let refused = WaitKey::new(declarations, &control(), workflow(&bytes), Vec::new());
         assert!(
@@ -1376,7 +1376,7 @@ fn guard_outcome(ready: Option<bool>) -> SlotOutcome {
                     .expect("Notice"),
             )
         }
-        None => SuppliedValue::Unavailable(quire_semantic_value::catalog::CatalogCode::new(
+        None => SuppliedValue::Unavailable(filament_semantic_value::catalog::CatalogCode::new(
             "unavailable_observation",
             "missing-required-artifact",
         )),
@@ -1418,7 +1418,7 @@ fn admitted() -> AdmittedHandoff {
     .expect("R admits")
 }
 
-/// One capture QSL left unavailable among three refuses the activation, binds
+/// One capture FSL left unavailable among three refuses the activation, binds
 /// none and names that capture.
 #[trace("TC-154", "FR-101-AC-3")]
 #[test]
@@ -1520,7 +1520,7 @@ fn only_the_activation_boundary_binds() {
     ));
 }
 
-/// QSL supplies a value that differs from what the authored expression gives
+/// FSL supplies a value that differs from what the authored expression gives
 /// when it is evaluated locally; the bound value is the supplied one.
 #[trace("TC-154", "FR-101-AC-5")]
 #[test]
@@ -1538,10 +1538,10 @@ fn the_supplied_value_is_bound_not_a_local_result() {
         .expect("binds")
     };
     // What the authored guard gives for a trigger that is not ready (the guard
-    // is true then), computed by QSL here.
+    // is true then), computed by FSL here.
     let local = bind(guard_outcome(Some(false)));
     assert!(is_boolean(local.occurrences()[0].value(), true));
-    // What QSL supplied at the activation boundary, for another trigger.
+    // What FSL supplied at the activation boundary, for another trigger.
     let supplied = bind(guard_outcome(Some(true)));
     assert!(is_boolean(supplied.occurrences()[0].value(), false));
 }
@@ -1560,11 +1560,11 @@ fn the_supplied_value_is_bound_not_a_local_result() {
 #[trace("TC-170")]
 #[test]
 fn a_refund_unanswered_by_its_deadline_is_compensated_by_a_retried_refund() {
-    use quire_protocol::compensation::algebra::{
+    use filament_protocol::compensation::algebra::{
         AttemptAdmission, AttemptFact, AttemptLedger, AttemptOutcome, Definition, ForwardFact,
         Limits as AlgebraLimits, Registry,
     };
-    use quire_protocol::ids::{AttemptId, DefinitionId};
+    use filament_protocol::ids::{AttemptId, DefinitionId};
     use std::num::NonZeroU32;
 
     let views = scope_views(TAG);

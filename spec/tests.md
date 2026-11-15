@@ -3,82 +3,82 @@ id: TM-001
 title: "Protocol implementation acceptance"
 type: TestMatrix
 relationships:
-  - { target: ix://agent-ix/quire-protocol/FR-001, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-002, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-003, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-004, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-005, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-006, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-007, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-008, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-009, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-010, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-011, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-012, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-013, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-014, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-015, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-016, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-017, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-018, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-019, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-020, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-021, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-022, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-023, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-024, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-025, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-026, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-027, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-028, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-029, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-030, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-031, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-032, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-033, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-034, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-035, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-036, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-037, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-038, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-039, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-040, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-041, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-042, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-043, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-044, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-045, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-046, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-047, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-050, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-051, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-052, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-053, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-054, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-055, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-056, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-057, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-058, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-059, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-100, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-101, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-150, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-151, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-152, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-153, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-200, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-201, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-202, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-203, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-204, type: references }
-  - { target: ix://agent-ix/quire-protocol/NFR-001, type: references }
-  - { target: ix://agent-ix/quire-protocol/NFR-002, type: references }
-  - { target: ix://agent-ix/quire-protocol/NFR-003, type: references }
-  - { target: ix://agent-ix/quire-protocol/NFR-004, type: references }
-  - { target: ix://agent-ix/quire-protocol/NFR-005, type: references }
-  - { target: ix://agent-ix/quire-protocol/NFR-006, type: references }
-  - { target: ix://agent-ix/quire-protocol/NFR-007, type: references }
-  - { target: ix://agent-ix/quire-protocol/NFR-008, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-001, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-002, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-003, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-004, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-005, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-006, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-007, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-008, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-009, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-010, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-011, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-012, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-013, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-014, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-015, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-016, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-017, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-018, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-019, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-020, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-021, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-022, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-023, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-024, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-025, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-026, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-027, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-028, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-029, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-030, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-031, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-032, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-033, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-034, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-035, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-036, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-037, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-038, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-039, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-040, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-041, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-042, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-043, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-044, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-045, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-046, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-047, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-050, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-051, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-052, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-053, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-054, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-055, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-056, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-057, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-058, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-059, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-100, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-101, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-150, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-151, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-152, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-153, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-200, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-201, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-202, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-203, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-204, type: references }
+  - { target: ix://agent-ix/filament-protocol/NFR-001, type: references }
+  - { target: ix://agent-ix/filament-protocol/NFR-002, type: references }
+  - { target: ix://agent-ix/filament-protocol/NFR-003, type: references }
+  - { target: ix://agent-ix/filament-protocol/NFR-004, type: references }
+  - { target: ix://agent-ix/filament-protocol/NFR-005, type: references }
+  - { target: ix://agent-ix/filament-protocol/NFR-006, type: references }
+  - { target: ix://agent-ix/filament-protocol/NFR-007, type: references }
+  - { target: ix://agent-ix/filament-protocol/NFR-008, type: references }
 ---
 ## Overview
 
@@ -105,7 +105,7 @@ separate work.
 
 ### Stage 1 of the checked-package repoint (QSL-1549)
 
-QSL main removed the `wire::Package` admission, the compiled-protocol readers,
+FSL main removed the `wire::Package` admission, the compiled-protocol readers,
 `native_temporal`, `state` and `ByteDigest`. The first repoint stage therefore
 deleted every consumer of them and their tests: the link layer, the version-2
 model, the assessment, the conformance kernel, the claim dispatch, the result
@@ -165,7 +165,7 @@ in Domain Object Coverage instead.
 | --- | --- | --- | --- |
 | FR-001 | FR-001-AC-1, FR-001-AC-2, FR-001-AC-3, FR-001-AC-4, FR-001-AC-5 | no living test for AC-1..AC-5 | ⛔ Retired — every test of this row's 5 criteria was deleted in QSL-1549 stage 1 with the implementation it exercised (successor: FR-043). |
 | FR-002 | FR-002-AC-1, FR-002-AC-2, FR-002-AC-3, FR-002-AC-4, FR-002-AC-5 | no living test for AC-1..AC-5 | ⛔ Retired — every test of this row's 5 criteria was deleted in QSL-1549 stage 1 with the implementation it exercised (successor: FR-044). |
-| FR-003 | FR-003-AC-1, FR-003-AC-2, FR-003-AC-3, FR-003-AC-4, FR-003-AC-5, FR-003-AC-6, FR-003-AC-7 | TC-003 (AC-1..AC-7); TC-009 (AC-7) | ✅ Implemented — TC-003's eight tests exercise the compensation kernels (activation, registration, attempt and effect accounting, commit ordering, retry bound, recovery) over QObs views with zero action calls. Aggregate view of FR-019..FR-025; evaluation through the checked package returns with FR-045. |
+| FR-003 | FR-003-AC-1, FR-003-AC-2, FR-003-AC-3, FR-003-AC-4, FR-003-AC-5, FR-003-AC-6, FR-003-AC-7 | TC-003 (AC-1..AC-7); TC-009 (AC-7) | ✅ Implemented — TC-003's eight tests exercise the compensation kernels (activation, registration, attempt and effect accounting, commit ordering, retry bound, recovery) over FObs views with zero action calls. Aggregate view of FR-019..FR-025; evaluation through the checked package returns with FR-045. |
 | FR-004 | FR-004-AC-1, FR-004-AC-2, FR-004-AC-3, FR-004-AC-4 | no living test for AC-1..AC-4 | ⛔ Retired — every test of this row's 4 criteria was deleted in QSL-1549 stage 1 with the implementation it exercised (successor: FR-046). |
 | FR-005 | FR-005-AC-1, FR-005-AC-2, FR-005-AC-3, FR-005-AC-4, FR-005-AC-5 | no living test for AC-1..AC-5 | ⛔ Retired — every test of this row's 5 criteria was deleted in QSL-1549 stage 1 with the implementation it exercised. |
 | FR-006 | FR-006-AC-1..AC-7, FR-006-AC-9 | no living test for AC-1..AC-7, AC-9 | ⛔ Retired — every test of this row's 8 criteria was deleted in QSL-1549 stage 1 with the implementation it exercised. |
@@ -174,7 +174,7 @@ in Domain Object Coverage instead.
 | FR-009 | FR-009-AC-1..FR-009-AC-9 | TC-013 (AC-1..AC-9) | 🚧 In progress — TC-013's twelve version-lock tests execute the resolver controls of all nine criteria with deterministic bounded request-bound capabilities. The aggregate criteria stay in progress until concrete producer integrations run; the IT-001 and IT-002 procedures that named them are retired. |
 | FR-019 | FR-019-AC-1..AC-5 | TC-003 (AC-1..AC-5) | ✅ Implemented — exact activation, false, unavailable and identity-substitution paths (including choice-visibility evidence) execute without business action. |
 | FR-020 | FR-020-AC-1..AC-5 | TC-003 (AC-1..AC-5) | ✅ Implemented — registration retains the complete FR-288/compensation-handle/FR-287 key and exact replay adds nothing. |
-| FR-021 | FR-021-AC-1..AC-4 | TC-003 (AC-1..AC-4) | ✅ Implemented — strict QObs observation and position-ledger views preserve all three commit-ordering violations distinctly. |
+| FR-021 | FR-021-AC-1..AC-4 | TC-003 (AC-1..AC-4) | ✅ Implemented — strict FObs observation and position-ledger views preserve all three commit-ordering violations distinctly. |
 | FR-022 | FR-022-AC-1..AC-5 | TC-003 (AC-1..AC-5) | ✅ Implemented — the initial attempt counts, the authored finite bound admits exactly, and one-over refuses transactionally. |
 | FR-023 | FR-023-AC-1..AC-6 | TC-003 (AC-1..AC-5); TC-169 (AC-6) | ✅ Implemented — AC-6 decides a duplicate business effect from effect identity, not delivery; attempts, independently established related effects and their closed outcome domains remain separately typed and retained. |
 | FR-024 | FR-024-AC-1..AC-6 | no living test for AC-1..AC-6 | ⛔ Retired — every test of this row's 6 criteria was deleted in QSL-1549 stage 1 with the implementation it exercised (successor: FR-045). |
@@ -196,34 +196,34 @@ in Domain Object Coverage instead.
 | FR-040 | FR-040-AC-1..AC-4 | TC-011 (AC-1..AC-2); no living test for AC-3..AC-4 | 🚧 Planned — 2 of 4 criteria have a living traced test; 2 designated to tests deleted in QSL-1549 stage 1. |
 | FR-041 | FR-041-AC-1..AC-4 | no living test for AC-1..AC-4 | ⛔ Retired — every test of this row's 4 criteria was deleted in QSL-1549 stage 1 with the implementation it exercised. |
 | FR-042 | FR-042-AC-1..AC-6 | no living test for AC-1..AC-6 | ⛔ Retired — every test of this row's 6 criteria was deleted in QSL-1549 stage 1 with the implementation it exercised. |
-| FR-301 | FR-301-AC-1..AC-6 | TC-147 (AC-1..AC-6) | 🚧 Planned — refinement dispatch is implemented (FR-200..FR-204, `assume_guarantee`) but no test is tagged FR-301-AC-1..AC-6 or TC-147, and no linked QSL engine serves `refinement` (QSL implements FR-176/FR-177, ADR-010). |
-| FR-302 | FR-302-AC-1..AC-5 | TC-148 (AC-1..AC-5) | 🚧 Planned — no test is tagged FR-302-AC-1..AC-5 or TC-148. The dispatcher carries a decisive `realizability` witness unchanged and refuses one without it (FR-152, TC-162, TC-166); QSL's engine carries its witness on its own analysis artifact, not on `native-run-result/2`, so the `v1-draft.2` carrier and AC-4 are blocked on QSL-1898. |
+| FR-301 | FR-301-AC-1..AC-6 | TC-147 (AC-1..AC-6) | 🚧 Planned — refinement dispatch is implemented (FR-200..FR-204, `assume_guarantee`) but no test is tagged FR-301-AC-1..AC-6 or TC-147, and no linked FSL engine serves `refinement` (FSL implements FR-176/FR-177, ADR-010). |
+| FR-302 | FR-302-AC-1..AC-5 | TC-148 (AC-1..AC-5) | 🚧 Planned — no test is tagged FR-302-AC-1..AC-5 or TC-148. The dispatcher carries a decisive `realizability` witness unchanged and refuses one without it (FR-152, TC-162, TC-166); FSL's engine carries its witness on its own analysis artifact, not on `native-run-result/2`, so the `v1-draft.2` carrier and AC-4 are blocked on QSL-1898. |
 | FR-043 | FR-043-AC-1..AC-8 | TC-149 (AC-1..AC-8) | ✅ Implemented — TC-149's eight tests admit the three packages of recipe R, replay the 30-case standard mutation corpus, and carry the reader's, the selection's and the identity and equality files' refusals unchanged. |
 | FR-044 | FR-044-AC-1..AC-7 | TC-150 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests. AC-1 compares lists and edges with `protocol_view`/`causal_relation`; AC-2 forbids local edge construction; AC-3 checks the consumer-owned refusals with their node ids and loci and that the linker builds no owner refusal; AC-4 checks absent, carrier and non-protocol refusals; AC-5 checks the checked-package signature and retired types; AC-6 checks the linker names no window view and links without a window package member; AC-7 checks, over recipe R, distinct concurrent branch identities and join edges, unordered branches that all reach the join, no new edge from reordered clock-selection input, and the retained selected clock binding. |
-| FR-045 | FR-045-AC-1..AC-8 | TC-151 (AC-1, AC-3, AC-4, AC-6, AC-8); no living test for AC-2, AC-5, AC-7 | 🚧 In progress — 5 of 8 criteria have a living traced test over `BarePackage`'s slot call (QSL FR-531, FR-533): AC-1 covers the guard and retry rows, the unavailable binder, the wrongly typed value and the meter one below usage; AC-3 the unavailable retry binders, the value-asserted mappings of every non-Boolean owner outcome and the absence of Boolean coercion; AC-4 the `attempts maximum` bound of 3 admitting three attempts and refusing the fourth; AC-6 the retired names; AC-8 the per-binder charge log. Owed: R's `recovery.predicate` slots cannot be evaluated because QSL's bare projection faults on the `sum(receipt in ...)` binder (`reader-expression-binder-is-admitted`), so AC-1's recovery rows, AC-2's restated recovery assertions and AC-3's recovery supplies wait on that QSL fix; an unsupported-construct row has no input in R; AC-5 has no denied-syscall harness; AC-7 ends because AC-8's gate is met. The retry bound is read from the node's `attempts` argument directly because QSL's `protocol_view` has no accessor for it. |
-| FR-046 | FR-046-AC-1..AC-7 | TC-152 (AC-1, AC-2, AC-3, AC-4, AC-6); no living test for AC-5, AC-7 | 🚧 In progress — 5 of 7 criteria have a living traced test over `EvidencePackage::from_package`: AC-1 the record equals QSL's result for R's two named clauses and changes with a valuation, AC-2 and AC-3 no retired contract string or `native_temporal` in source, AC-4 six reachable causes of QSL FR-516's table come back by name with nothing charged, AC-6 a missing or withdrawn anchor settles as a missing non-value. Owed: AC-4 does not cover the causes a request over R cannot reach; AC-5 has no input, since the reader refuses the name rows that would give the one bytes-route construction refusal (`AmbiguousName`); AC-7 (the retained `temporal::` surface and `Position.instance_valuations`) has no test; AC-6's IT-002 scenarios are not redone (see FR-047-AC-3). The request is built by the caller: no mapping from observation evidence to `EvidenceRequest` is specified. |
-| FR-047 | FR-047-AC-1..AC-4 | TC-153 (AC-1, AC-2, AC-4); no living test for AC-3 | 🚧 In progress — 3 of 4 criteria have a living traced test: no `quire_spec_language::number`, no `handoff-writer` feature or retired format identity in source, and no checksum, seal or `ArtifactRef` (the planner ruled for removal). AC-3 is owed: IT-001 and IT-002 are still the retired procedures, and their scenarios have no counterpart table against recipe R yet. |
-| FR-050 | FR-050-AC-1..AC-4 | TC-050 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests over a package compiled by QSL's writer: roles are read through QSL's occurrence schema (lifetime kinds, `max`, static role without a bound). |
-| FR-051 | FR-051-AC-1..AC-4 | TC-050 (AC-1..AC-3); TC-168 (AC-4) | ✅ Implemented — AC-4 carries each channel's sender, receiver and message type; all 3 other criteria have living traced tests: delivery and capacity equal QSL's accessors, a symbolic capacity stays its name, every channel carries an authored overflow policy. |
+| FR-045 | FR-045-AC-1..AC-8 | TC-151 (AC-1, AC-3, AC-4, AC-6, AC-8); no living test for AC-2, AC-5, AC-7 | 🚧 In progress — 5 of 8 criteria have a living traced test over `BarePackage`'s slot call (FSL FR-531, FR-533): AC-1 covers the guard and retry rows, the unavailable binder, the wrongly typed value and the meter one below usage; AC-3 the unavailable retry binders, the value-asserted mappings of every non-Boolean owner outcome and the absence of Boolean coercion; AC-4 the `attempts maximum` bound of 3 admitting three attempts and refusing the fourth; AC-6 the retired names; AC-8 the per-binder charge log. Owed: R's `recovery.predicate` slots cannot be evaluated because FSL's bare projection faults on the `sum(receipt in ...)` binder (`reader-expression-binder-is-admitted`), so AC-1's recovery rows, AC-2's restated recovery assertions and AC-3's recovery supplies wait on that FSL fix; an unsupported-construct row has no input in R; AC-5 has no denied-syscall harness; AC-7 ends because AC-8's gate is met. The retry bound is read from the node's `attempts` argument directly because FSL's `protocol_view` has no accessor for it. |
+| FR-046 | FR-046-AC-1..AC-7 | TC-152 (AC-1, AC-2, AC-3, AC-4, AC-6); no living test for AC-5, AC-7 | 🚧 In progress — 5 of 7 criteria have a living traced test over `EvidencePackage::from_package`: AC-1 the record equals FSL's result for R's two named clauses and changes with a valuation, AC-2 and AC-3 no retired contract string or `native_temporal` in source, AC-4 six reachable causes of FSL FR-516's table come back by name with nothing charged, AC-6 a missing or withdrawn anchor settles as a missing non-value. Owed: AC-4 does not cover the causes a request over R cannot reach; AC-5 has no input, since the reader refuses the name rows that would give the one bytes-route construction refusal (`AmbiguousName`); AC-7 (the retained `temporal::` surface and `Position.instance_valuations`) has no test; AC-6's IT-002 scenarios are not redone (see FR-047-AC-3). The request is built by the caller: no mapping from observation evidence to `EvidenceRequest` is specified. |
+| FR-047 | FR-047-AC-1..AC-4 | TC-153 (AC-1, AC-2, AC-4); no living test for AC-3 | 🚧 In progress — 3 of 4 criteria have a living traced test: no `filament_spec_language::number`, no `handoff-writer` feature or retired format identity in source, and no checksum, seal or `ArtifactRef` (the planner ruled for removal). AC-3 is owed: IT-001 and IT-002 are still the retired procedures, and their scenarios have no counterpart table against recipe R yet. |
+| FR-050 | FR-050-AC-1..AC-4 | TC-050 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests over a package compiled by FSL's writer: roles are read through FSL's occurrence schema (lifetime kinds, `max`, static role without a bound). |
+| FR-051 | FR-051-AC-1..AC-4 | TC-050 (AC-1..AC-3); TC-168 (AC-4) | ✅ Implemented — AC-4 carries each channel's sender, receiver and message type; all 3 other criteria have living traced tests: delivery and capacity equal FSL's accessors, a symbolic capacity stays its name, every channel carries an authored overflow policy. |
 | FR-052 | FR-052-AC-1..AC-4 | TC-050 (AC-1..AC-3); TC-168 (AC-4) | ✅ Implemented — AC-4 carries a choice's owner and visible set; the 3 other criteria have living traced tests: each join policy, a predicate join and unruled joins, and a loop's invariant and variant by node. |
 | FR-053 | FR-053-AC-1..AC-11 | TC-051 (AC-1..AC-11) | ✅ Implemented — all 11 criteria have living traced tests over the library's `RoleFact` input. |
 | FR-054 | FR-054-AC-1..AC-9 | TC-052 (AC-1..AC-9) | ✅ Implemented — all 9 criteria have living traced tests over the library's `ChannelFact` input; a loss is judged against the queue. |
 | FR-055 | FR-055-AC-1..AC-10 | TC-053 (AC-1..AC-10) | ✅ Implemented — all 10 criteria have living traced tests over the library's `JoinFact` input, one occurrence per workflow and repeat ordinals. |
 | FR-056 | FR-056-AC-1..AC-7 | TC-054 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests over the library's `LoopFact` input. |
-| FR-057 | FR-057-AC-1..AC-4 | TC-055 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests; the cause is QSL's typed `Unsupported`, or its catalog code, or unrecognised bytes retained. |
-| FR-058 | FR-058-AC-1..AC-3 | TC-055 (AC-1..AC-3) | ✅ Implemented — all 3 criteria have living traced tests over QSL's `RequiresBound`. |
+| FR-057 | FR-057-AC-1..AC-4 | TC-055 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests; the cause is FSL's typed `Unsupported`, or its catalog code, or unrecognised bytes retained. |
+| FR-058 | FR-058-AC-1..AC-3 | TC-055 (AC-1..AC-3) | ✅ Implemented — all 3 criteria have living traced tests over FSL's `RequiresBound`. |
 | FR-059 | FR-059-AC-1..AC-4 | TC-054 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests; `Undischarged` is the only status. |
-| FR-100 | FR-100-AC-1..AC-24 | TC-154 | ✅ Implemented — closes V1-PROT-019 timeout branches; the owner facts are QObs progress and completeness views and QSL's slot outcome. |
-| FR-101 | FR-101-AC-1..AC-5 | TC-154 (AC-1..AC-5) | ✅ Implemented — all 5 criteria have living traced tests; closes V1-PROT-019 captures; the values are QSL's slot outcomes, bound without evaluation. |
-| FR-150 | FR-150-AC-1..AC-17 | TC-160 (AC-1..AC-11); TC-164 (AC-12, AC-13); TC-165 (AC-14, AC-15); TC-166 (AC-16, AC-17) | ✅ Implemented — AC-1..AC-11 have living traced tests against a stand-in registered at the provider boundary; AC-12..AC-15 run QSL's real `protocol-analysis` engine for `local-projection` (IT-004). AC-16 and AC-17 run `realizability` on the real engine (TC-166), over a subject built from QSL's public front end. |
-| FR-151 | FR-151-AC-1..AC-9 | TC-161 (AC-1..AC-6, AC-8); TC-168 (AC-7); no living test for AC-9 | 🚧 Partial — 8 of 9 criteria have living traced tests; AC-9 (role internality) is blocked: QSpec FR-465 gives a role no internality member (against FR-050 and FR-211), so QSL's read view publishes none. |
-| FR-152 | FR-152-AC-1..AC-7 | TC-162 (AC-1..AC-5, AC-7); no living test for AC-6 | 🚧 Partial — 6 of 7 criteria have living traced tests; AC-6 awaits quire-specification's FR-249 derived-artifact identity rule and FR-062 `resultId` rule (`ix://agent-ix/quire-specification/FR-249`, `ix://agent-ix/quire-specification/FR-062`). |
-| FR-153 | FR-153-AC-1..AC-8 | TC-163 (AC-1..AC-7); TC-164 (AC-8) | ✅ Implemented — AC-1..AC-7 have living traced tests with no backend and with a later-registered stand-in; AC-8 runs QSL's real engine. |
-| FR-200 | FR-200-AC-1..AC-6 | TC-200 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no QSL engine linked today serves `composition` or `refinement`. |
-| FR-201 | FR-201-AC-1..AC-6 | TC-201 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no QSL engine linked today serves `composition` or `refinement`. |
-| FR-202 | FR-202-AC-1..AC-7 | TC-202 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no QSL engine linked today serves `composition` or `refinement`. |
-| FR-203 | FR-203-AC-1..AC-6 | TC-203 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no QSL engine linked today serves `composition` or `refinement`. |
-| FR-204 | FR-204-AC-1..AC-7 | TC-204 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no QSL engine linked today serves `composition` or `refinement`. |
+| FR-100 | FR-100-AC-1..AC-24 | TC-154 | ✅ Implemented — closes V1-PROT-019 timeout branches; the owner facts are FObs progress and completeness views and FSL's slot outcome. |
+| FR-101 | FR-101-AC-1..AC-5 | TC-154 (AC-1..AC-5) | ✅ Implemented — all 5 criteria have living traced tests; closes V1-PROT-019 captures; the values are FSL's slot outcomes, bound without evaluation. |
+| FR-150 | FR-150-AC-1..AC-17 | TC-160 (AC-1..AC-11); TC-164 (AC-12, AC-13); TC-165 (AC-14, AC-15); TC-166 (AC-16, AC-17) | ✅ Implemented — AC-1..AC-11 have living traced tests against a stand-in registered at the provider boundary; AC-12..AC-15 run FSL's real `protocol-analysis` engine for `local-projection` (IT-004). AC-16 and AC-17 run `realizability` on the real engine (TC-166), over a subject built from FSL's public front end. |
+| FR-151 | FR-151-AC-1..AC-9 | TC-161 (AC-1..AC-6, AC-8); TC-168 (AC-7); no living test for AC-9 | 🚧 Partial — 8 of 9 criteria have living traced tests; AC-9 (role internality) is blocked: FSpec FR-465 gives a role no internality member (against FR-050 and FR-211), so FSL's read view publishes none. |
+| FR-152 | FR-152-AC-1..AC-7 | TC-162 (AC-1..AC-5, AC-7); no living test for AC-6 | 🚧 Partial — 6 of 7 criteria have living traced tests; AC-6 awaits filament-specification's FR-249 derived-artifact identity rule and FR-062 `resultId` rule (`ix://agent-ix/filament-specification/FR-249`, `ix://agent-ix/filament-specification/FR-062`). |
+| FR-153 | FR-153-AC-1..AC-8 | TC-163 (AC-1..AC-7); TC-164 (AC-8) | ✅ Implemented — AC-1..AC-7 have living traced tests with no backend and with a later-registered stand-in; AC-8 runs FSL's real engine. |
+| FR-200 | FR-200-AC-1..AC-6 | TC-200 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no FSL engine linked today serves `composition` or `refinement`. |
+| FR-201 | FR-201-AC-1..AC-6 | TC-201 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no FSL engine linked today serves `composition` or `refinement`. |
+| FR-202 | FR-202-AC-1..AC-7 | TC-202 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no FSL engine linked today serves `composition` or `refinement`. |
+| FR-203 | FR-203-AC-1..AC-6 | TC-203 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no FSL engine linked today serves `composition` or `refinement`. |
+| FR-204 | FR-204-AC-1..AC-7 | TC-204 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a stand-in registered at the provider boundary; no FSL engine linked today serves `composition` or `refinement`. |
 
 Behavioural totals across these 61 rows: 372 acceptance criteria, of which 195 carry a living traced test (the criteria `quire matrix` computes as tagged). `quire matrix` computes no retired or planned split, so none is stated.
 
@@ -266,10 +266,10 @@ Non-functional totals across these 8 rows: 53 acceptance criteria, of which 19 c
 
 | Integration Test | Boundary | Requirements | Status |
 | --- | --- | --- | --- |
-| IT-001 version 1 | Native compiler `quire.compiled-protocol/1` artifact to protocol library | FR-001, FR-002, FR-009, FR-013, FR-016, FR-017, NFR-002, NFR-005 | ⛔ Retired — the IT-001/IT-002 procedures were deleted in QSL-1549 stage 1; FR-047-AC-3 owns their replacement on recipe R. |
+| IT-001 version 1 | Native compiler `filament.compiled-protocol/1` artifact to protocol library | FR-001, FR-002, FR-009, FR-013, FR-016, FR-017, NFR-002, NFR-005 | ⛔ Retired — the IT-001/IT-002 procedures were deleted in QSL-1549 stage 1; FR-047-AC-3 owns their replacement on recipe R. |
 | IT-001 version 2 | Native compiler version 2 artifact to protocol library | FR-001-AC-5, FR-002-AC-5, FR-009, FR-013-AC-4, FR-017, NFR-002, NFR-005, NFR-007 | ⛔ Retired — the IT-001/IT-002 procedures were deleted in QSL-1549 stage 1; FR-047-AC-3 owns their replacement on recipe R. |
 | IT-002 | Observation and temporal facts to protocol evaluator/result | FR-003, FR-004, FR-006, FR-009, FR-017, FR-026, FR-041, NFR-002, NFR-005 | ⛔ Retired — the IT-001/IT-002 procedures were deleted in QSL-1549 stage 1; FR-047-AC-3 owns their replacement on recipe R. |
-| IT-004 | Projection claims through QSL's linked protocol analysis engine | FR-150 | ✅ Implemented — TC-164 and TC-165 run it for `local-projection` and TC-166 for `realizability`; `composition` and `refinement` have no linked QSL engine. |
+| IT-004 | Projection claims through FSL's linked protocol analysis engine | FR-150 | ✅ Implemented — TC-164 and TC-165 run it for `local-projection` and TC-166 for `realizability`; `composition` and `refinement` have no linked FSL engine. |
 | IT-003 | Protocol result through Engineering Assurance, E02, and Quoin | FR-006, FR-007, FR-009, FR-014, FR-017, FR-039, FR-040, NFR-002, NFR-003, NFR-005 | ⛔ Unexecutable — Engineering Assurance and the exact qverify E02 consumer graph are delivered, but Quoin has no Protocol scenario-record intake, so all owed scenarios score zero rather than passing. |
 | IT-005 | Reference workflow corpora over the Protocol-owned cells | FR-019..FR-023, FR-050..FR-056, FR-100 | ✅ Implemented — each corpus names the living tests that run it; the timed-refund end-to-end example and the correlated-workflow cells are not covered (V1-PROT inventory). |
 
@@ -315,49 +315,49 @@ a coverage claim in this matrix.
 | TC-052 | Assess queue capacity, overflow outcome and order | Property | P0 | FR-054 | ✅ Implemented — its tests carry every criterion of the rows above. |
 | TC-053 | Assess join settlement per policy | Property | P0 | FR-055 | ✅ Implemented — its tests carry every criterion of the rows above. |
 | TC-054 | Assess loop bound and report proof as undischarged | Property | P0 | FR-056, FR-059 | ✅ Implemented — its tests carry every criterion of the rows above. |
-| TC-055 | Map QSL Unsupported and requires-bound outcomes to dispositions | Property | P0 | FR-057, FR-058 | ✅ Implemented — its tests carry every criterion of the rows above. |
+| TC-055 | Map FSL Unsupported and requires-bound outcomes to dispositions | Property | P0 | FR-057, FR-058 | ✅ Implemented — its tests carry every criterion of the rows above. |
 | TC-154 | Settle deadline branches and bind captures | Property | P0 | FR-100, FR-101 | ✅ Implemented — its tests carry every criterion of the rows above. |
-| TC-147 | Admit protocol refinement dispatch | Property | P0 | FR-301 | 🚧 Planned — no test is tagged with its 6 criteria; dispatch is implemented under FR-200..FR-204 and no linked QSL engine serves `refinement`. |
+| TC-147 | Admit protocol refinement dispatch | Property | P0 | FR-301 | 🚧 Planned — no test is tagged with its 6 criteria; dispatch is implemented under FR-200..FR-204 and no linked FSL engine serves `refinement`. |
 | TC-148 | Carry a trace-position witness on the protocol result wire | Property | P0 | FR-302 | 🚧 Planned — no test is tagged with its 5 criteria; blocked on the engine producing `native-run-result/2` (QSL-1898). |
-| TC-160 | Dispatch local-projection and realizability claims to QSL's backend | Property | P0 | FR-150 | ✅ Implemented — its tests carry every criterion of the row above. |
+| TC-160 | Dispatch local-projection and realizability claims to FSL's backend | Property | P0 | FR-150 | ✅ Implemented — its tests carry every criterion of the row above. |
 | TC-161 | Bind communication and visibility premises | Property | P0 | FR-151 | 🚧 Partial — its tests carry FR-151-AC-1..AC-6 and AC-8; AC-7 is TC-168's and AC-9 is blocked. |
 | TC-162 | Carry a projection or realizability witness joined to the linked graph | Property | P0 | FR-152 | 🚧 Partial — its tests carry FR-152-AC-1..AC-5 and AC-7; AC-6 is untagged. |
 | TC-163 | Settle projection and realizability claims unsupported while no backend serves the kind | Property | P0 | FR-153 | ✅ Implemented — its tests carry every criterion of the row above. |
-| TC-164 | Dispatch local-projection claims to QSL's protocol analysis engine | Property | P0 | FR-150, FR-153 | ✅ Implemented — its tests carry FR-150-AC-12, FR-150-AC-13 and FR-153-AC-8. |
-| TC-165 | Qualify local-projection over a workflow corpus on QSL's linked engine | Integration | P0 | FR-150 | ✅ Implemented — its tests carry FR-150-AC-14 and FR-150-AC-15; IT-004 is its procedure. |
-| TC-166 | Dispatch realizability claims to QSL's protocol analysis engine | Property | P0 | FR-150 | ✅ Implemented — its tests carry FR-150-AC-16 and FR-150-AC-17. |
+| TC-164 | Dispatch local-projection claims to FSL's protocol analysis engine | Property | P0 | FR-150, FR-153 | ✅ Implemented — its tests carry FR-150-AC-12, FR-150-AC-13 and FR-153-AC-8. |
+| TC-165 | Qualify local-projection over a workflow corpus on FSL's linked engine | Integration | P0 | FR-150 | ✅ Implemented — its tests carry FR-150-AC-14 and FR-150-AC-15; IT-004 is its procedure. |
+| TC-166 | Dispatch realizability claims to FSL's protocol analysis engine | Property | P0 | FR-150 | ✅ Implemented — its tests carry FR-150-AC-16 and FR-150-AC-17. |
 | TC-167 | Assess a finite reference workflow history on every dynamic axis | Integration | P0 | FR-053..FR-056 | ✅ Implemented — four tests: a conforming run, a faulty run, a run breaking one axis only, and a rebuilt history giving the same result; IT-005 is its procedure. |
-| TC-168 | Link channel ends and choices from QSL's read view | Property | P0 | FR-051, FR-052, FR-151 | ✅ Implemented — its tests carry FR-051-AC-4, FR-052-AC-4 and FR-151-AC-7. |
+| TC-168 | Link channel ends and choices from FSL's read view | Property | P0 | FR-051, FR-052, FR-151 | ✅ Implemented — its tests carry FR-051-AC-4, FR-052-AC-4 and FR-151-AC-7. |
 | TC-169 | Detect duplicate business effects independently of delivery | Property | P0 | FR-023 | ✅ Implemented — its test carries FR-023-AC-6. |
 | TC-170 | Run the timed-refund and compensated fan-out reference workflows end to end | Integration | P0 | FR-023, FR-100 | ✅ Implemented — one end-to-end run of each workflow; IT-005 is its procedure. |
-| TC-200 | Dispatch composition claims to QSL's composition backend | Property | P0 | FR-200 | ✅ Implemented — its tests carry every FR-200 criterion, against a stand-in; no linked QSL engine serves the kinds. |
-| TC-201 | Bind composition dispositions to their premise lists and component subjects | Property | P0 | FR-201 | ✅ Implemented — its tests carry every FR-201 criterion, against a stand-in; no linked QSL engine serves the kinds. |
-| TC-202 | Carry composition and refinement results without reinterpretation | Property | P0 | FR-202 | ✅ Implemented — its tests carry every FR-202 criterion, against a stand-in; no linked QSL engine serves the kinds. |
-| TC-203 | Carry declared fixed-point cycles as typed unsupported | Property | P0 | FR-203 | ✅ Implemented — its tests carry every FR-203 criterion, against a stand-in; no linked QSL engine serves the kinds. |
-| TC-204 | Refuse a refinement result whose assumptions are stronger than the request's | Property | P0 | FR-204 | ✅ Implemented — its tests carry every FR-204 criterion, against a stand-in; no linked QSL engine serves the kinds. |
+| TC-200 | Dispatch composition claims to FSL's composition backend | Property | P0 | FR-200 | ✅ Implemented — its tests carry every FR-200 criterion, against a stand-in; no linked FSL engine serves the kinds. |
+| TC-201 | Bind composition dispositions to their premise lists and component subjects | Property | P0 | FR-201 | ✅ Implemented — its tests carry every FR-201 criterion, against a stand-in; no linked FSL engine serves the kinds. |
+| TC-202 | Carry composition and refinement results without reinterpretation | Property | P0 | FR-202 | ✅ Implemented — its tests carry every FR-202 criterion, against a stand-in; no linked FSL engine serves the kinds. |
+| TC-203 | Carry declared fixed-point cycles as typed unsupported | Property | P0 | FR-203 | ✅ Implemented — its tests carry every FR-203 criterion, against a stand-in; no linked FSL engine serves the kinds. |
+| TC-204 | Refuse a refinement result whose assumptions are stronger than the request's | Property | P0 | FR-204 | ✅ Implemented — its tests carry every FR-204 criterion, against a stand-in; no linked FSL engine serves the kinds. |
 
 ## V1-PROT inventory
 
-Each Protocol-owned cell of `quire-specification/docs/v1-capability-inventory.md`, with the living evidence that backs it. "Stand-in" means the test runs against a double registered at the provider boundary, not a QSL engine. IT-005 names the corpora.
+Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory.md`, with the living evidence that backs it. "Stand-in" means the test runs against a double registered at the provider boundary, not a FSL engine. IT-005 names the corpora.
 
 | Cell | Evidence | State |
 | --- | --- | --- |
 | V1-PROT-001 finite roles | FR-050 (TC-050) | Backed |
 | V1-PROT-002 role instances | FR-053 (TC-051) | Backed |
 | V1-PROT-003 role binding | FR-044 (TC-150) | Backed for role authority; no test of endpoint binding |
-| V1-PROT-004 typed messages | FR-051-AC-4 (TC-168) | Partial: a channel's message type node is linked from QSL's view; no test of a payload's own type |
+| V1-PROT-004 typed messages | FR-051-AC-4 (TC-168) | Partial: a channel's message type node is linked from FSL's view; no test of a payload's own type |
 | V1-PROT-005 channels | FR-051 (TC-050, TC-168); FR-151-AC-7 (TC-168) | Backed |
 | V1-PROT-006 send, receipt, message, delivery, attempt identities | FR-023 (TC-003); FR-054 (TC-052); FR-018 (TC-017) | Backed in parts; no single identity-separation test |
-| V1-PROT-007 business correlation | quire-observation TC-005 (`tests/admission.rs`): resolved, missing, conflicting and ambiguous relationships; the link here needs the whole FR-287 subject key (TC-154) | Backed across repositories; correlation is QSpec's FR-111, implemented in quire-observation |
+| V1-PROT-007 business correlation | filament-observation TC-005 (`tests/admission.rs`): resolved, missing, conflicting and ambiguous relationships; the link here needs the whole FR-287 subject key (TC-154) | Backed across repositories; correlation is FSpec's FR-111, implemented in filament-observation |
 | V1-PROT-008 sequence | FR-044 (TC-150) | Backed |
 | V1-PROT-009 choice | FR-052-AC-4 (TC-168) | Partial: owner and visible set are linked; branch labels and composition have no living test |
 | V1-PROT-010 parallel and join | FR-052, FR-055 (TC-050, TC-053, TC-167) | Backed |
 | V1-PROT-011 bounded iteration | FR-056 (TC-054, TC-167) | Backed |
 | V1-PROT-012 dynamic roles | FR-053 (TC-051, TC-167) | Backed |
 | V1-PROT-013 queues | FR-054 (TC-052, TC-167) | Backed for finite capacity; symbolic capacity is typed unsupported (TC-055) |
-| V1-PROT-014 invariants and termination | FR-058, FR-059 (TC-054, TC-055) | Partial: undischarged and requires-bound carried; QSL owns the proof |
+| V1-PROT-014 invariants and termination | FR-058, FR-059 (TC-054, TC-055) | Partial: undischarged and requires-bound carried; FSL owns the proof |
 | V1-PROT-015 causal edges | FR-044 (TC-150); FR-021 (TC-003) | Backed |
-| V1-PROT-016 choice visibility | FR-052-AC-4 (TC-168); FR-019-AC-2 (TC-003); FR-151 (TC-161) | Partial: the visible set is carried, not enforced per affected role; role internality (FR-151-AC-9) is blocked on QSpec |
+| V1-PROT-016 choice visibility | FR-052-AC-4 (TC-168); FR-019-AC-2 (TC-003); FR-151 (TC-161) | Partial: the visible set is carried, not enforced per affected role; role internality (FR-151-AC-9) is blocked on FSpec |
 | V1-PROT-017 delivery premises | FR-051, FR-054 (TC-050, TC-052); FR-151 (TC-161) | Backed |
 | V1-PROT-018 state guards, temporal obligations | FR-045 (TC-151), FR-046 (TC-152) | Partial: 5 criteria without a living test (FR-045 AC-2, AC-5, AC-7; FR-046 AC-5, AC-7) |
 | V1-PROT-019 captures, timeout branches | FR-100, FR-101 (TC-154) | Backed |
@@ -368,14 +368,14 @@ Each Protocol-owned cell of `quire-specification/docs/v1-capability-inventory.md
 | V1-PROT-024 duplicate business effects | FR-023-AC-6 (TC-169) | Backed for a singleton effect; a declared population of related effects is not modelled |
 | V1-PROT-025 finite replay | TC-167; TC-008 | Partial: a rebuilt history gives the same dynamic-axis result; no test replays a serialized trace, and the whole-result replay is retired with FR-006 |
 | V1-PROT-026 global conformance | passthrough only (TC-165 AC-15) | Blocked: FR-004 composes FR-026, FR-027, FR-028 and FR-041, all retired with the evaluator (QSL-1549) and with no successor requirement, so nothing here produces a global-conformance result to test |
-| V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on QSL's engine |
-| V1-PROT-028 realizability | FR-150 (TC-166) | Backed on QSL's engine; witness carrier FR-302 is batch D |
-| V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204) | Stand-in; no linked QSL engine |
-| V1-PROT-030 refinement | FR-200..FR-204; FR-301 | Stand-in; no linked QSL engine; FR-301 has no tagged test |
+| V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on FSL's engine |
+| V1-PROT-028 realizability | FR-150 (TC-166) | Backed on FSL's engine; witness carrier FR-302 is batch D |
+| V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204) | Stand-in; no linked FSL engine |
+| V1-PROT-030 refinement | FR-200..FR-204; FR-301 | Stand-in; no linked FSL engine; FR-301 has no tagged test |
 | V1-PROT-031 no external effects | FR-025 (TC-003, TC-009) | Backed |
 | V1-RUN-003 protocol replay | TC-167; TC-050..TC-055 | Partial: the dynamic axes only |
 | V1-RUN-005, V1-RUN-006 independent axes | FR-014 (TC-011); TC-055, TC-154, TC-163 | Partial, and blocked for publication. Quoin #519 is closed and its intake (`quoin.protocol-scenario-intake/v1`, quoin-evidence) accepts a scenario record for IT-001..IT-003, but the canonical result (FR-006, FR-007) and the scenario record (FR-017) it carries are retired here with no successor, so there is no Protocol value to hand over |
-| V1-RUN-009 related workflow instances | quire-observation TC-005 (order and shipment relationships); TC-154 (a wait links only the instance whose whole subject key matches) | Partial: no payment-attempt or refund relationship test |
+| V1-RUN-009 related workflow instances | filament-observation TC-005 (order and shipment relationships); TC-154 (a wait links only the instance whose whole subject key matches) | Partial: no payment-attempt or refund relationship test |
 | V1-RUN-011 timed refund | TC-170 (in `tests/tc_154_settle_deadline_captures.rs`); FR-100, FR-101 | Backed on the generic deadline fixture: a timeout starts compensation, a response starts none; failed then successful refund attempt, one effect |
 | V1-RUN-012 compensated fan-out and join | TC-170 (`tests/tc_170_compensated_fan_out_join_run.rs`) | Backed: unsettled join, per-branch compensation, retried undo |
 
@@ -413,4 +413,4 @@ criterion is a zero inside it rather than a row removed from it.
 | Overall owed criteria | 487 | 241 | 0 | 0 |
 
 Passed means the criterion carries a living traced test in the current tree
-(241 of 487, the criteria `quire matrix` computes as tagged). Blocked is none: QSL delivered the evaluation entries that FR-045 and FR-046 wait on. The criteria not counted as passed include those that verify by Inspection or Analysis only and FR-014-AC-6, which waits on IT-003's Quoin scenario-record handoff; `quire matrix` computes no planned or retired split, so none is stated here.
+(241 of 487, the criteria `quire matrix` computes as tagged). Blocked is none: FSL delivered the evaluation entries that FR-045 and FR-046 wait on. The criteria not counted as passed include those that verify by Inspection or Analysis only and FR-014-AC-6, which waits on IT-003's Quoin scenario-record handoff; `quire matrix` computes no planned or retired split, so none is stated here.

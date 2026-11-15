@@ -10,22 +10,22 @@ mod support {
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use ix_trace_rs::trace;
-use qsl_eval::temporal::evidence::{
+use filament_contract_model::{
+    read_checked_package, CheckedNodeId, CheckedPackageDispatchResult, CheckedPackageReadLimits,
+};
+use filament_eval::{CallAdmissionFailure, CallFailure};
+use filament_exact::Meter;
+use filament_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
+use filament_protocol::evidence::{assess, package, EvidenceRecord, EvidenceRefusal};
+use filament_spec_language::checked_handoff::Corpus;
+use fsl_eval::temporal::evidence::{
     ActivationState, CompletenessRecord, EvidencePackage, EvidencePosition, EvidenceRef,
     EvidenceRequest, ExecutionDisposition, ExecutionOrigin, Payload, Relation,
     SemanticTriggerIdentity, TemporalEvidenceLimits, TraceBinding, TriggerEvidence,
 };
-use qsl_eval::temporal::{ClockCover, ProgressClosure, ProgressCompleteness, Valuation};
-use qsl_package::{BarePackage, BareSupply};
-use quire_contract_model::{
-    read_checked_package, CheckedNodeId, CheckedPackageDispatchResult, CheckedPackageReadLimits,
-};
-use quire_eval::{CallAdmissionFailure, CallFailure};
-use quire_exact::Meter;
-use quire_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
-use quire_protocol::evidence::{assess, package, EvidenceRecord, EvidenceRefusal};
-use quire_spec_language::checked_handoff::Corpus;
+use fsl_eval::temporal::{ClockCover, ProgressClosure, ProgressCompleteness, Valuation};
+use fsl_package::{BarePackage, BareSupply};
+use ix_trace_rs::trace;
 use support::handoff::{join_budget, written};
 use support::limits::UNLIMITED;
 
@@ -130,11 +130,11 @@ fn unlimited() -> Meter {
 }
 
 /// FR-046-AC-1: over R's clauses the record is the activation, truth,
-/// settlement and support QSL's evidence call reports, and a changed valuation
+/// settlement and support FSL's evidence call reports, and a changed valuation
 /// changes it.
 #[test]
 #[trace("FR-046-AC-1", "TC-152")]
-fn the_record_is_what_qsls_evidence_call_reports() {
+fn the_record_is_what_fsls_evidence_call_reports() {
     let admitted = handoff("event_position");
     let bare = bare(&admitted);
     let evidence = package(&bare, &mut join_budget()).expect("R's package constructs");
@@ -144,17 +144,17 @@ fn the_record_is_what_qsls_evidence_call_reports() {
         let asked = request(&evidence, clause, 3);
         let direct = evidence
             .evaluate_temporal_evidence(clause, &asked, &mut unlimited())
-            .expect("QSL's call");
+            .expect("FSL's call");
         let record = assess(&evidence, clause, &asked, &mut unlimited()).expect("the record");
         assert_eq!(record, EvidenceRecord::from(direct.result()));
         assert_eq!(record.activation, ActivationState::Active);
         assert_eq!(
             record.truth,
-            Some(qsl_eval::temporal::evidence::Truth::True)
+            Some(fsl_eval::temporal::evidence::Truth::True)
         );
         assert_eq!(
             record.settlement,
-            Some(qsl_eval::temporal::evidence::Settlement::ClosedScope)
+            Some(fsl_eval::temporal::evidence::Settlement::ClosedScope)
         );
         assert_eq!(record.support.len(), 3, "one supporting atom per position");
 
@@ -201,7 +201,7 @@ fn no_source_holds_a_retired_producer_contract() {
         .flat_map(|kind| {
             ["v1", "v2"]
                 .iter()
-                .map(move |version| format!("quire.native-temporal-{kind}/{version}"))
+                .map(move |version| format!("filament.native-temporal-{kind}/{version}"))
         })
         .collect();
     assert_eq!(retired.len(), 4);
@@ -248,7 +248,7 @@ fn cause(failure: &CallFailure) -> String {
     }
 }
 
-/// FR-046-AC-4: each cause of QSL FR-516's table that a request over R can
+/// FR-046-AC-4: each cause of FSL FR-516's table that a request over R can
 /// reach comes back by its name, unchanged, with nothing charged. The causes
 /// a request over R cannot reach are not claimed here.
 #[test]
@@ -275,8 +275,8 @@ fn call_refusals_keep_their_cause_names_and_charge_nothing() {
     let mut unknown_trigger = base.clone();
     unknown_trigger.trigger = Some(id("nobody"));
     let mut unknown_occurrence = base.clone();
-    unknown_occurrence.occurrence = Some(qsl_package::CheckedOccurrence {
-        role: qsl_package::CheckedOccurrenceRole::Claim,
+    unknown_occurrence.occurrence = Some(fsl_package::CheckedOccurrence {
+        role: fsl_package::CheckedOccurrenceRole::Claim,
         ordinal: 99,
     });
     let mut missing_mapping = base.clone();
@@ -297,7 +297,7 @@ fn call_refusals_keep_their_cause_names_and_charge_nothing() {
         let direct = evidence
             .evaluate_temporal_evidence(node, asked, &mut unlimited())
             .expect_err(expected);
-        assert_eq!(cause(&direct), expected, "QSL's own cause");
+        assert_eq!(cause(&direct), expected, "FSL's own cause");
         let Err(EvidenceRefusal::Call(failure)) = assess(&evidence, node, asked, &mut meter) else {
             panic!("{expected}: a call refusal");
         };
@@ -306,7 +306,7 @@ fn call_refusals_keep_their_cause_names_and_charge_nothing() {
             "{expected}: the refusal is carried unchanged"
         );
         assert!(
-            quire_exact::LimitKind::ALL
+            filament_exact::LimitKind::ALL
                 .iter()
                 .all(|kind| meter.consumed(*kind) == 0),
             "{expected}: nothing charged"
@@ -355,7 +355,7 @@ fn a_missing_anchor_settles_as_a_non_value_never_a_boolean() {
     let clause = &clauses(&evidence)[0];
     let base = request(&evidence, clause, 3);
     let held = assess(&evidence, clause, &base, &mut unlimited()).expect("a record");
-    assert_eq!(held.truth, Some(qsl_eval::temporal::evidence::Truth::True));
+    assert_eq!(held.truth, Some(fsl_eval::temporal::evidence::Truth::True));
 
     let mut no_anchor = base.clone();
     no_anchor.anchor = None;
@@ -374,7 +374,7 @@ fn a_missing_anchor_settles_as_a_non_value_never_a_boolean() {
         assert_eq!(record.activation, ActivationState::Unavailable, "{name}");
         assert_eq!(
             record.non_value.map(|value| value.kind),
-            Some(qsl_eval::temporal::evidence::NonValueKind::Missing),
+            Some(fsl_eval::temporal::evidence::NonValueKind::Missing),
             "{name}"
         );
     }

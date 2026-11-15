@@ -3,7 +3,7 @@ id: US-003
 title: "Attribute an outcome to pinned producer revisions"
 type: US
 relationships:
-  - target: ix://agent-ix/quire-protocol/StR-002
+  - target: ix://agent-ix/filament-protocol/StR-002
     type: traces_to
 ---
 # US-003: Attribute an outcome to pinned producer revisions

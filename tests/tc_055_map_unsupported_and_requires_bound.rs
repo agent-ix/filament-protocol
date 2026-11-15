@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! TC-055: QSL's `Unsupported` causes and requires-bound outcomes carried as
+//! TC-055: FSL's `Unsupported` causes and requires-bound outcomes carried as
 //! typed non-success dispositions (FR-057, FR-058).
 //!
-//! The stand-in answers at the call boundary into QSL (`QslBoundary`) and
+//! The stand-in answers at the call boundary into FSL (`FslBoundary`) and
 //! records every request it receives. A request carries the claim and nothing
-//! else, so a test over the recorded requests shows no bound reached QSL.
+//! else, so a test over the recorded requests shows no bound reached FSL.
 
 mod support {
     pub mod dynamic;
@@ -13,15 +13,15 @@ mod support {
 
 use std::collections::BTreeMap;
 
-use ix_trace_rs::trace;
-use qsl_eval::simulation::protocol::Unsupported;
-use qsl_eval::simulation::RequiresBound;
-use qsl_foundation::bound::{DomainKey, DomainKind};
-use qsl_semantics::family::ClaimExtent;
-use quire_protocol::disposition::{
-    settle_claims, AssessmentUnsupported, ClaimSettlement, Construct, Disposition, QslBoundary,
-    QslReport, UnsupportedCause, UnsupportedDisposition,
+use filament_protocol::disposition::{
+    settle_claims, AssessmentUnsupported, ClaimSettlement, Construct, Disposition, FslBoundary,
+    FslReport, UnsupportedCause, UnsupportedDisposition,
 };
+use fsl_eval::simulation::protocol::Unsupported;
+use fsl_eval::simulation::RequiresBound;
+use fsl_foundation::bound::{DomainKey, DomainKind};
+use fsl_semantics::family::ClaimExtent;
+use ix_trace_rs::trace;
 use support::dynamic::Dynamic;
 
 /// A requested claim: an identity and nothing a bound could ride on.
@@ -33,12 +33,12 @@ type Premises = (&'static str, &'static str);
 
 /// What the stand-in answers per claim.
 struct Standin {
-    answers: BTreeMap<&'static str, QslReport<&'static str>>,
+    answers: BTreeMap<&'static str, FslReport<&'static str>>,
     calls: Vec<Claim>,
 }
 
-impl QslBoundary<Claim, &'static str> for Standin {
-    fn report(&mut self, claim: &Claim) -> QslReport<&'static str> {
+impl FslBoundary<Claim, &'static str> for Standin {
+    fn report(&mut self, claim: &Claim) -> FslReport<&'static str> {
         self.calls.push(claim.clone());
         self.answers.get(claim.0).cloned().expect("an answer")
     }
@@ -48,8 +48,8 @@ fn premises(claim: &Claim) -> (Claim, Premises) {
     (claim.clone(), (claim.0, "exact-fragment"))
 }
 
-fn unsupported(cause: UnsupportedCause, construct: &Construct) -> QslReport<&'static str> {
-    QslReport::Unsupported {
+fn unsupported(cause: UnsupportedCause, construct: &Construct) -> FslReport<&'static str> {
+    FslReport::Unsupported {
         cause,
         construct: Some(construct.clone()),
     }
@@ -57,7 +57,7 @@ fn unsupported(cause: UnsupportedCause, construct: &Construct) -> QslReport<&'st
 
 #[test]
 #[trace("TC-055", "FR-057-AC-1")]
-fn each_adr_listed_cause_is_carried_by_its_qsl_name_with_the_constructs_node() {
+fn each_adr_listed_cause_is_carried_by_its_fsl_name_with_the_constructs_node() {
     let dynamic = Dynamic::with("workflow", 3);
     let construct = dynamic.construct(&dynamic.named("channel", "Symbolic"));
     let causes = [
@@ -83,7 +83,7 @@ fn each_adr_listed_cause_is_carried_by_its_qsl_name_with_the_constructs_node() {
         else {
             panic!("{cause:?}: {settled:?}");
         };
-        // QSL's own typed value, carried and compared as that value.
+        // FSL's own typed value, carried and compared as that value.
         assert_eq!(*carried, UnsupportedCause::Construct(cause));
         assert_eq!(format!("{carried:?}"), format!("Construct({cause:?})"));
         assert_eq!(
@@ -101,8 +101,8 @@ fn an_unsupported_claim_leaves_every_other_claim_exactly_as_it_was() {
     let construct = dynamic.construct(&dynamic.named("control", "Predicate"));
     let answers = |with_unsupported: bool| {
         let mut answers = BTreeMap::from([
-            ("first", QslReport::Result("proved")),
-            ("third", QslReport::Result("violated")),
+            ("first", FslReport::Result("proved")),
+            ("third", FslReport::Result("violated")),
         ]);
         if with_unsupported {
             answers.insert(
@@ -138,7 +138,7 @@ fn an_unsupported_claim_leaves_every_other_claim_exactly_as_it_was() {
 #[test]
 #[trace("TC-055", "FR-057-AC-3")]
 fn symbolic_capacity_and_predicate_joins_hold_no_derived_number_or_truth_value() {
-    use quire_protocol::dynamics::{
+    use filament_protocol::dynamics::{
         assess_channels, assess_joins, ChannelEvent, ChannelFact, ChannelOutcome, JoinEvent,
         JoinFact, JoinOutcome,
     };
@@ -195,7 +195,7 @@ fn an_unrecognised_cause_is_retained_unchanged_and_mapped_to_no_known_cause() {
         panic!("retained as unrecognised");
     };
     assert_eq!(retained.as_bytes(), offered);
-    // It equals no cause QSL defines, including the requested-capability one.
+    // It equals no cause FSL defines, including the requested-capability one.
     for known in [
         UnsupportedCause::Construct(Unsupported::SymbolicCapacity),
         UnsupportedCause::Assessment(AssessmentUnsupported::JoinPredicate),
@@ -219,7 +219,7 @@ fn an_unrecognised_cause_is_retained_unchanged_and_mapped_to_no_known_cause() {
     assert_eq!(carried.cause, cause);
 }
 
-/// A requires-bound outcome of QSL's own type over the three kinds the ticket
+/// A requires-bound outcome of FSL's own type over the three kinds the ticket
 /// names, keyed by a real checked node.
 fn requires_bound(dynamic: &Dynamic) -> (RequiresBound, [(DomainKey, DomainKind); 3]) {
     let node = dynamic.key(&dynamic.named("control", "Bounded"));
@@ -263,7 +263,7 @@ fn a_requires_bound_outcome_is_carried_unchanged_with_each_domain_kind_and_key()
     let mut standin = Standin {
         answers: BTreeMap::from([(
             claim.0,
-            QslReport::RequiresBound {
+            FslReport::RequiresBound {
                 outcome: outcome.clone(),
                 construct: Some(construct.clone()),
             },
@@ -292,14 +292,14 @@ fn a_requires_bound_outcome_is_carried_unchanged_with_each_domain_kind_and_key()
 
 #[test]
 #[trace("TC-055", "FR-058-AC-2")]
-fn no_call_into_qsl_carries_a_bound_and_no_disposition_field_holds_one() {
+fn no_call_into_fsl_carries_a_bound_and_no_disposition_field_holds_one() {
     let dynamic = Dynamic::with("workflow", 3);
     let (outcome, _) = requires_bound(&dynamic);
     let claim = Claim("safety");
     let mut standin = Standin {
         answers: BTreeMap::from([(
             claim.0,
-            QslReport::RequiresBound {
+            FslReport::RequiresBound {
                 outcome,
                 construct: Some(dynamic.construct(&dynamic.named("control", "Bounded"))),
             },
@@ -308,7 +308,7 @@ fn no_call_into_qsl_carries_a_bound_and_no_disposition_field_holds_one() {
     };
     let settled = settle_claims(&mut standin, &[premises(&claim)]);
     // Exactly one call, and what it received is the claim: `Claim` has no
-    // field a bound could ride on, and `QslBoundary::report` has no other
+    // field a bound could ride on, and `FslBoundary::report` has no other
     // parameter.
     assert_eq!(standin.calls, [claim]);
     let [ClaimSettlement::Disposition(Disposition::RequiresBound(carried))] = settled.as_slice()
@@ -316,8 +316,8 @@ fn no_call_into_qsl_carries_a_bound_and_no_disposition_field_holds_one() {
         panic!("{settled:?}");
     };
     // The disposition is destructured with no rest pattern: its fields are
-    // QSL's outcome, the construct and the premises, and nothing chosen here.
-    let quire_protocol::disposition::RequiresBoundDisposition {
+    // FSL's outcome, the construct and the premises, and nothing chosen here.
+    let filament_protocol::disposition::RequiresBoundDisposition {
         outcome: _,
         construct: _,
         premises,
@@ -332,7 +332,7 @@ fn claim_name() -> &'static str {
 #[test]
 #[trace("TC-055", "FR-058-AC-3")]
 fn a_requires_bound_claim_leaves_other_claims_and_the_closure_axes_unchanged() {
-    use quire_protocol::closure::{
+    use filament_protocol::closure::{
         ClosureState, DecisionScopeClosure, DecisionScopeProgress, GlobalConformanceClosure,
         ScopeAxis, ScopeState, SurroundingExecutionClosure, SurroundingExecutionProgress,
     };
@@ -352,13 +352,13 @@ fn a_requires_bound_claim_leaves_other_claims_and_the_closure_axes_unchanged() {
     let before = closure();
     let settle = |with_bound: bool| {
         let mut answers = BTreeMap::from([
-            ("conformance", QslReport::Result("conformant")),
-            ("progress", QslReport::Result("progressing")),
+            ("conformance", FslReport::Result("conformant")),
+            ("progress", FslReport::Result("progressing")),
         ]);
         if with_bound {
             answers.insert(
                 "safety",
-                QslReport::RequiresBound {
+                FslReport::RequiresBound {
                     outcome: outcome.clone(),
                     construct: Some(construct.clone()),
                 },

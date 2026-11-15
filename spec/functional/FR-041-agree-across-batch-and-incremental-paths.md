@@ -3,29 +3,29 @@ id: FR-041
 title: "Agree across batch and incremental paths"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: part_of
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-059
+  - target: ix://agent-ix/filament-specification/FR-059
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-240
+  - target: ix://agent-ix/filament-specification/FR-240
     type: references
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-242
+  - target: ix://agent-ix/filament-specification/FR-242
     type: references
-  - target: ix://agent-ix/quire-specification/FR-243
+  - target: ix://agent-ix/filament-specification/FR-243
     type: references
-  - target: ix://agent-ix/quire-specification/FR-247
+  - target: ix://agent-ix/filament-specification/FR-247
     type: references
-  - target: ix://agent-ix/quire-specification/FR-258
+  - target: ix://agent-ix/filament-specification/FR-258
     type: references
-  - target: ix://agent-ix/quire-specification/FR-260
+  - target: ix://agent-ix/filament-specification/FR-260
     type: references
-  - target: ix://agent-ix/quire-specification/FR-268
+  - target: ix://agent-ix/filament-specification/FR-268
     type: references
 ---
 # FR-041: Agree across batch and incremental paths
@@ -106,7 +106,7 @@ this repository's others.
 
 ### Accepted owner rulings
 
-QSpec #29/#40 fixes FR-296 observation identity, FR-284 progress/closure,
+FSpec #29/#40 fixes FR-296 observation identity, FR-284 progress/closure,
 FR-295 completeness, FR-243 settlement and FR-286 canonical-result identity.
 Both frontends compare the same accepted identities and values. Same identity
 with different bytes refuses; neither frontend derives readiness or lineage
@@ -123,7 +123,7 @@ from timestamp, map order, source position or result-key order.
   order-dependent within one of them.
 - [FR-014](./FR-014-typed-outcome-identity.md) supplies the typed outcome
   identity FR-041-AC-4 requires the divergence refusal to carry.
-- `ix://agent-ix/quire-specification/FR-059` establishes that batch replay and
+- `ix://agent-ix/filament-specification/FR-059` establishes that batch replay and
   settled incremental assessment over the same admitted facts produce the same
   semantic results.
 - `IT-002` scenarios SC-05a, SC-05b and SC-05d verify this requirement at the

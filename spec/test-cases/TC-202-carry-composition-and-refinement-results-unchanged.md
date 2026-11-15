@@ -3,14 +3,14 @@ id: TC-202
 title: "Carry composition and refinement results without reinterpretation"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-202
+  - target: ix://agent-ix/filament-protocol/FR-202
     type: verifies
 ---
 # TC-202: Carry composition and refinement results without reinterpretation
 
 ## Description
 
-Verify byte-equal carrying of certificates, paired counterexamples, witnesses, discharge records and causes, and the absence of derived axes, with a stand-in for the QSL call boundary and no local analysis.
+Verify byte-equal carrying of certificates, paired counterexamples, witnesses, discharge records and causes, and the absence of derived axes, with a stand-in for the FSL call boundary and no local analysis.
 
 ## Test Procedure
 

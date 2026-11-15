@@ -4,27 +4,27 @@ title: "Compiled-artifact consumer boundary"
 type: FR
 object: domain
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-007
+  - target: ix://agent-ix/filament-protocol/ADR-007
     type: references
-  - target: ix://agent-ix/quire-protocol/US-005
+  - target: ix://agent-ix/filament-protocol/US-005
     type: implements
-  - target: ix://agent-ix/quire-specification/FR-200
+  - target: ix://agent-ix/filament-specification/FR-200
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-012
+  - target: ix://agent-ix/filament-protocol/FR-012
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-013
+  - target: ix://agent-ix/filament-protocol/FR-013
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-015
+  - target: ix://agent-ix/filament-protocol/FR-015
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-016
+  - target: ix://agent-ix/filament-protocol/FR-016
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-017
+  - target: ix://agent-ix/filament-protocol/FR-017
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-018
+  - target: ix://agent-ix/filament-protocol/FR-018
     type: contains
 ---
 # FR-010: Compiled-artifact consumer boundary
@@ -42,8 +42,8 @@ discriminating what was offered from what was selected, refusing with a distinct
 typed identity, and composing the evidence a scenario carries to its handoff.
 
 It owns no protocol, temporal or observation semantics. Those are
-`ix://agent-ix/quire-specification`'s, which publishes them as the domain object
-layer under `FR-200-quire-assessment-domain`. This context references that layer
+`ix://agent-ix/filament-specification`'s, which publishes them as the domain object
+layer under `FR-200-filament-assessment-domain`. This context references that layer
 and never restates it. A noun this context redefines locally would be the "second
 locally authored profile" FR-001 exists to refuse.
 
@@ -91,11 +91,11 @@ same over-claim this context exists to prevent.
 
 | ID | Criteria | Verification |
 | --- | --- | --- |
-| FR-010-AC-1 | Every object specified in this context describes a consumer-to-producer relationship, and none restates a protocol, temporal or observation subject that `quire-specification` types. | Inspection |
-| FR-010-AC-2 | In each requirement that has had an adoption pass, every protocol, temporal or observation noun resolves to an `ix://agent-ix/quire-specification` reference rather than a local definition. FR-002 through FR-008 have each had one, together with every atomic part they contain. NFR-001, IT-002 and IT-003 have not, and carry no such reference; this criterion does not yet assert anything about them. | Inspection |
+| FR-010-AC-1 | Every object specified in this context describes a consumer-to-producer relationship, and none restates a protocol, temporal or observation subject that `filament-specification` types. | Inspection |
+| FR-010-AC-2 | In each requirement that has had an adoption pass, every protocol, temporal or observation noun resolves to an `ix://agent-ix/filament-specification` reference rather than a local definition. FR-002 through FR-008 have each had one, together with every atomic part they contain. NFR-001, IT-002 and IT-003 have not, and carry no such reference; this criterion does not yet assert anything about them. | Inspection |
 | FR-010-AC-3 | Where an upstream artifact records an open gap, a requirement depending on it cites the gap rather than supplying the missing identity, key or order locally. | Inspection |
 
 ## Dependencies
 
-- `ix://agent-ix/quire-specification/FR-200` supplies the identity discipline
+- `ix://agent-ix/filament-specification/FR-200` supplies the identity discipline
   this context conforms to and the object layer it references.

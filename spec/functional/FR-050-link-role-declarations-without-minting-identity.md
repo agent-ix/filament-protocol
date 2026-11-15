@@ -3,19 +3,19 @@ id: FR-050
 title: "Link role declarations without minting identity"
 type: FR
 relationships:
-  - { target: ix://agent-ix/quire-protocol/US-001, type: implements }
-  - { target: ix://agent-ix/quire-protocol/ADR-010, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-002, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-044, type: depends_on }
-  - { target: ix://agent-ix/quire-spec-language/ADR-027, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-051, type: references }
-  - { target: ix://agent-ix/quire-spec-language/FR-384, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/US-001, type: implements }
+  - { target: ix://agent-ix/filament-protocol/ADR-010, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-002, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-044, type: depends_on }
+  - { target: ix://agent-ix/filament-spec-language/ADR-027, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-051, type: references }
+  - { target: ix://agent-ix/filament-spec-language/FR-384, type: depends_on }
 ---
 # FR-050: Link role declarations without minting identity
 
 ## Description
 
-When the linked protocol is built from an admitted checked package, the library SHALL retain each authored role declaration (static, or replicated with its population, its `max` bound and its lifetime kind) as QSL's occurrence schema reads it from the checked package. QSL requires a `max` on every replicated role and spawns and retires by that bound and lifetime, so the library carries no separate spawn or retire control and no per-role activation rule: the activation rows of the clause stay those of FR-044. The library SHALL mint no role instance identity of its own.
+When the linked protocol is built from an admitted checked package, the library SHALL retain each authored role declaration (static, or replicated with its population, its `max` bound and its lifetime kind) as FSL's occurrence schema reads it from the checked package. FSL requires a `max` on every replicated role and spawns and retires by that bound and lifetime, so the library carries no separate spawn or retire control and no per-role activation rule: the activation rows of the clause stay those of FR-044. The library SHALL mint no role instance identity of its own.
 
 ## Inputs
 
@@ -23,14 +23,14 @@ An admitted checked package (FR-043) and the node id of a protocol clause, read 
 
 ## Outputs
 
-The linked representation carrying, per role, the checked node id and QSL's `RoleReplication` (static, or population, `max` and lifetime kind); or the typed `LinkRefusal` of FR-044.
+The linked representation carrying, per role, the checked node id and FSL's `RoleReplication` (static, or population, `max` and lifetime kind); or the typed `LinkRefusal` of FR-044.
 
 ## Behavior
 
-- The library shall read role replication through QSL's `protocol_occurrence_schemas_from_read`.
+- The library shall read role replication through FSL's `protocol_occurrence_schemas_from_read`.
 - The library shall not parse role replication from the node terms itself.
 - The library shall keep no table of its own.
-- The library shall carry a replicated role's `max` as the authored value (QSL requires one).
+- The library shall carry a replicated role's `max` as the authored value (FSL requires one).
 - The library shall carry a static role with no bound.
 - The library shall not substitute a default bound for a static role.
 - The library shall assign no instance identity at link time. A role instance identity exists only where an observation in the history names it (FR-053).
@@ -48,6 +48,6 @@ The linked representation carrying, per role, the checked node id and QSL's `Rol
 
 ## Dependencies
 
-- [ADR-010](../adr/ADR-010-consume-qsl-protocol-analysis-own-assessment-and-dispatch.md) fixes what this library owns for dynamic roles, bounded queues, joins and loops, and what QSL owns.
-- QSL ADR-027 states the step semantics this requirement does not restate; QSpec FR-170 and FR-171 state the thresholds and overflow rules the criteria cite.
-- QSL FR-384 states the occurrence schema and the runtime key this requirement reads and binds against; QSL owns both.
+- [ADR-010](../adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md) fixes what this library owns for dynamic roles, bounded queues, joins and loops, and what FSL owns.
+- FSL ADR-027 states the step semantics this requirement does not restate; FSpec FR-170 and FR-171 state the thresholds and overflow rules the criteria cite.
+- FSL FR-384 states the occurrence schema and the runtime key this requirement reads and binds against; FSL owns both.

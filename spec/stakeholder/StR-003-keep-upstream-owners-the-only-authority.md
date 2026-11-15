@@ -3,11 +3,11 @@ id: StR-003
 title: "Keep upstream owners the only authority for the nouns consumed here"
 type: StR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-015
+  - target: ix://agent-ix/filament-protocol/FR-015
     type: satisfied_by
 ---
 # StR-003: Keep upstream owners the only authority for the nouns consumed here
@@ -46,8 +46,8 @@ even when it is respected in fact.
 ## Stakeholders
 
 The primary stakeholders are the upstream formal-clause owner
-(`agent-ix/quire-specification`) and the native compiler producer team
-(`agent-ix/quire-spec-language`), whose accepted artifacts define what the nouns
+(`agent-ix/filament-specification`) and the native compiler producer team
+(`agent-ix/filament-spec-language`), whose accepted artifacts define what the nouns
 mean and how they are encoded. The observation, temporal, diagnostic-catalog, and
 E02 owners are affected parties on the same footing for their own vocabularies.
 The protocol library owner is the party constrained by the need.

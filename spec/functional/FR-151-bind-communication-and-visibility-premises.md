@@ -3,51 +3,51 @@ id: FR-151
 title: "Bind communication and visibility premises to projection and realizability dispositions"
 type: FR
 relationships:
-  - { target: ix://agent-ix/quire-protocol/US-001, type: implements }
-  - { target: ix://agent-ix/quire-protocol/ADR-010, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-030, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-044, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-050, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-058, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-150, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-216, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-217, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-242, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-243, type: depends_on }
-  - { target: ix://agent-ix/quire-spec-language/ADR-017, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/US-001, type: implements }
+  - { target: ix://agent-ix/filament-protocol/ADR-010, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-030, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-044, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-050, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-058, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-150, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-216, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-217, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-242, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-243, type: depends_on }
+  - { target: ix://agent-ix/filament-spec-language/ADR-017, type: depends_on }
 ---
 # FR-151: Bind communication and visibility premises to projection and realizability dispositions
 
 ## Description
 
-When a `local-projection` or `realizability` claim is dispatched, the dispatcher SHALL bind the communication and visibility premises of the claim's fragment to the disposition and hand them to QSL's backend, taking each from the checked package where QSL's read view publishes it.
+When a `local-projection` or `realizability` claim is dispatched, the dispatcher SHALL bind the communication and visibility premises of the claim's fragment to the disposition and hand them to FSL's backend, taking each from the checked package where FSL's read view publishes it.
 
 ## Inputs
 
 The channel premise (sender, receiver, message type, ordering policy and delivery policy) of every channel and the role internality of every role in the claim's admitted fragment; and the per-claim premises the requester supplied (FR-030).
 
-QSL's read view of the checked package (`ix://agent-ix/quire-spec-language/ADR-017`, read through FR-044) publishes each channel's ordering and delivery policy and each role declaration. It publishes a channel's sender, receiver and message type (FR-151-AC-7) but not a role's internality. Until QSL publishes it (FR-151-AC-9), the dispatcher forwards the internality as the requester states it and verifies none against the checked package.
+FSL's read view of the checked package (`ix://agent-ix/filament-spec-language/ADR-017`, read through FR-044) publishes each channel's ordering and delivery policy and each role declaration. It publishes a channel's sender, receiver and message type (FR-151-AC-7) but not a role's internality. Until FSL publishes it (FR-151-AC-9), the dispatcher forwards the internality as the requester states it and verifies none against the checked package.
 
 ## Outputs
 
-The premises as the backend received them, retained on the disposition (FR-030), or one FR-030 refusal of the disposition naming the absent or substituted premise. A disposition whose premise is absent, or whose QSL outcome is `Inconclusive`, carries no truth `satisfied` or `violated`.
+The premises as the backend received them, retained on the disposition (FR-030), or one FR-030 refusal of the disposition naming the absent or substituted premise. A disposition whose premise is absent, or whose FSL outcome is `Inconclusive`, carries no truth `satisfied` or `violated`.
 
-Upstream admission already refuses a checked-package channel with a missing component (`ix://agent-ix/quire-specification/FR-054` through `ix://agent-ix/quire-specification/FR-216`) and a role with absent internality (`ix://agent-ix/quire-specification/FR-217`), so the checked-package read view cannot lack a premise. The seam where a premise can still be absent is the requester's per-claim premise set, which can omit a premise for a channel or role of the fragment. The library owns that absence (FR-030 refusal, before dispatch). QSL's procedure owns the outcome it reaches when every premise is present but insufficient to decide (`Inconclusive`, ADR-010 gap G2).
+Upstream admission already refuses a checked-package channel with a missing component (`ix://agent-ix/filament-specification/FR-054` through `ix://agent-ix/filament-specification/FR-216`) and a role with absent internality (`ix://agent-ix/filament-specification/FR-217`), so the checked-package read view cannot lack a premise. The seam where a premise can still be absent is the requester's per-claim premise set, which can omit a premise for a channel or role of the fragment. The library owns that absence (FR-030 refusal, before dispatch). FSL's procedure owns the outcome it reaches when every premise is present but insufficient to decide (`Inconclusive`, ADR-010 gap G2).
 
 ## Behavior
 
 - The dispatcher shall hand the backend each channel's ordering and delivery policy and each role declaration exactly as the checked package authors them.
-- The dispatcher shall hand the backend each channel's sender, receiver and message type as the linked declaration carries them, and each component of the requester's premises that QSL's read view does not publish exactly as the requester stated it. `ChannelPremise::unread` holds nothing QSL publishes for a channel today; callers state `()`.
+- The dispatcher shall hand the backend each channel's sender, receiver and message type as the linked declaration carries them, and each component of the requester's premises that FSL's read view does not publish exactly as the requester stated it. `ChannelPremise::unread` holds nothing FSL publishes for a channel today; callers state `()`.
 - When the requester's ordering or delivery premise for a channel differs from the checked package's declaration of it, the dispatcher shall refuse that disposition under FR-030 naming the channel.
 - When the requester's premise differs from the checked package's declaration, the dispatcher shall invoke no backend for that claim.
 - The dispatcher shall retain on the disposition each premise it handed the backend.
 - When the requester's premise set omits a channel premise or a role internality of the fragment, the dispatcher shall refuse that disposition under FR-030 naming the absent premise.
 - When the requester's premise set omits a channel premise or a role internality of the fragment, the dispatcher shall invoke no backend for that claim.
 - The dispatcher shall supply no default, inferred or sampled premise.
-- The dispatcher shall assume no full observability of an `external` role (`ix://agent-ix/quire-specification/FR-217`).
-- When QSL's backend returns the `Inconclusive` verdict (QSL V-6, with its `InconclusiveCause`) or a requires-bound outcome (FR-058), the dispatcher shall carry it unchanged.
+- The dispatcher shall assume no full observability of an `external` role (`ix://agent-ix/filament-specification/FR-217`).
+- When FSL's backend returns the `Inconclusive` verdict (FSL V-6, with its `InconclusiveCause`) or a requires-bound outcome (FR-058), the dispatcher shall carry it unchanged.
 - The dispatcher shall give a disposition with an absent premise neither truth `satisfied` nor truth `violated`.
-- The dispatcher shall give a disposition whose QSL verdict is `Inconclusive` the truth and settlement basis the backend states, and neither truth `satisfied` nor truth `violated`.
+- The dispatcher shall give a disposition whose FSL verdict is `Inconclusive` the truth and settlement basis the backend states, and neither truth `satisfied` nor truth `violated`.
 
 ## Acceptance Criteria
 
@@ -59,24 +59,24 @@ Upstream admission already refuses a checked-package channel with a missing comp
 | FR-151-AC-4 | Given a requester premise set stating `external` for a role, the backend call carries `external` for it as stated and no premise implying that the role is fully observable. | Test (TC-161) |
 | FR-151-AC-5 | Given a stand-in that returns the `Inconclusive` verdict with a `BoundReached` `InconclusiveCause`, truth `pending` and basis `unsettled`, one that returns the same verdict with truth `satisfied`, and one that returns a requires-bound outcome, each disposition carries the outcome and the cause unchanged and holds neither truth `satisfied` nor truth `violated`, and the first holds truth `pending`. | Test (TC-161) |
 | FR-151-AC-6 | Given the request of FR-151-AC-3, the refused disposition holds neither truth `satisfied` nor truth `violated` and retains no value for the omitted premise, and the same request with the premise restored is sent to the stand-in with exactly the restored value. | Test (TC-161) |
-| FR-151-AC-7 | Given a fragment with channels, the stand-in backend's recorded call carries each channel's sender, receiver and message type equal to the checked package's, as QSL's read view publishes them. | Test (TC-168) |
-| FR-151-AC-9 | Given a fragment with roles, the stand-in backend's recorded call carries each role internality equal to the checked package's, as QSL's read view publishes it. | Blocked: QSpec FR-465 gives a role no internality member, and QSL's read view publishes none |
+| FR-151-AC-7 | Given a fragment with channels, the stand-in backend's recorded call carries each channel's sender, receiver and message type equal to the checked package's, as FSL's read view publishes them. | Test (TC-168) |
+| FR-151-AC-9 | Given a fragment with roles, the stand-in backend's recorded call carries each role internality equal to the checked package's, as FSL's read view publishes it. | Blocked: FSpec FR-465 gives a role no internality member, and FSL's read view publishes none |
 | FR-151-AC-8 | Given a request whose ordering premise for a channel differs from the checked package's declaration, and a second whose delivery premise differs, each disposition is refused under FR-030 naming the channel, the stand-in records no call, and every independent disposition is unchanged. | Test (TC-161) |
 
 ## Adopted vocabulary
 
 | Noun | Upstream object | Identity kind |
 | --- | --- | --- |
-| Channel premise (five components) | `ix://agent-ix/quire-specification/FR-216` | value |
-| Role internality | `ix://agent-ix/quire-specification/FR-217` | value |
-| Truth disposition | `ix://agent-ix/quire-specification/FR-242` | value |
-| Settlement basis | `ix://agent-ix/quire-specification/FR-243` | value |
+| Channel premise (five components) | `ix://agent-ix/filament-specification/FR-216` | value |
+| Role internality | `ix://agent-ix/filament-specification/FR-217` | value |
+| Truth disposition | `ix://agent-ix/filament-specification/FR-242` | value |
+| Settlement basis | `ix://agent-ix/filament-specification/FR-243` | value |
 
 ## Dependencies
 
-- [ADR-010](../adr/ADR-010-consume-qsl-protocol-analysis-own-assessment-and-dispatch.md) fixes premise binding as library-owned dispatch work.
+- [ADR-010](../adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md) fixes premise binding as library-owned dispatch work.
 - [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) supplies the retention and refusal rule this requirement applies to the two claim kinds.
 - [FR-044](./FR-044-link-from-a-typed-read-view-of-the-checked-package.md) supplies the read view the premises come from.
 - [FR-050](./FR-050-link-role-declarations-without-minting-identity.md) supplies the role declarations whose internality is read.
 - [FR-058](./FR-058-map-requires-bound-outcomes-to-typed-dispositions.md) supplies the requires-bound outcome carried here.
-- [FR-150](./FR-150-dispatch-projection-and-realizability-to-qsl.md) supplies the dispatch this requirement binds premises to.
+- [FR-150](./FR-150-dispatch-projection-and-realizability-to-fsl.md) supplies the dispatch this requirement binds premises to.

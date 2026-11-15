@@ -6,11 +6,11 @@ allow = [
     "BSD-2-Clause",
     "Unicode-3.0",
     "Zlib",
-    # `borrow-or-share`, reached through the QSL and IR dependencies.
+    # `borrow-or-share`, reached through the FSL and IR dependencies.
     "MIT-0",
-    # `ar_archive_writer`, a build dependency of `stacker` (QSL and IR dependencies).
+    # `ar_archive_writer`, a build dependency of `stacker` (FSL and IR dependencies).
     "Apache-2.0 WITH LLVM-exception",
-    # The agent-ix crates this driver depends on (QSL, CG, IR, RT and their
+    # The agent-ix crates this driver depends on (FSL, CG, IR, RT and their
     # first-party closure). This crate is AGPL-3.0-or-later too.
     "AGPL-3.0-or-later",
 ]
@@ -27,8 +27,8 @@ version = 2
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-git = [
-    "https://github.com/agent-ix/quire-exact",
-    "https://github.com/agent-ix/quire-semantic-value",
+    "https://github.com/agent-ix/filament-exact",
+    "https://github.com/agent-ix/filament-semantic-value",
 ]
 
 [sources.allow-org]

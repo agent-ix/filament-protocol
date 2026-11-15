@@ -11,21 +11,21 @@ use ix_trace_rs::trace;
 use std::num::NonZeroU32;
 use std::path::Path;
 
-use qsl_eval::value::{ProtocolSlot, ProtocolSuppliedValue, ProtocolSupply, SuppliedValue};
-use qsl_package::{BarePackage, BareSupply, ProtocolSlotDescriptor};
-use qsl_semantics::check::wire_id::WireGraph;
-use quire_contract_model::CheckedPackageReadLimits;
-use quire_eval::CallFailure;
-use quire_exact::{FieldValue, LimitKind, Meter, NodeKey, Value, ValueType};
-use quire_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
-use quire_protocol::compensation::algebra::{
+use filament_contract_model::CheckedPackageReadLimits;
+use filament_eval::CallFailure;
+use filament_exact::{FieldValue, LimitKind, Meter, NodeKey, Value, ValueType};
+use filament_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
+use filament_protocol::compensation::algebra::{
     AttemptAdmission, AttemptFact, AttemptLedger, AttemptOutcome, Definition, ForwardFact,
     Limits as AlgebraLimits, Registry,
 };
-use quire_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
-use quire_protocol::ids::{AttemptId, DefinitionId, EffectId};
-use quire_protocol::slot::{attempts_maximum, evaluate, SlotEvaluation, SlotOutcome};
-use quire_spec_language::checked_handoff::Corpus;
+use filament_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
+use filament_protocol::ids::{AttemptId, DefinitionId, EffectId};
+use filament_protocol::slot::{attempts_maximum, evaluate, SlotEvaluation, SlotOutcome};
+use filament_spec_language::checked_handoff::Corpus;
+use fsl_eval::value::{ProtocolSlot, ProtocolSuppliedValue, ProtocolSupply, SuppliedValue};
+use fsl_package::{BarePackage, BareSupply, ProtocolSlotDescriptor};
+use fsl_semantics::check::wire_id::WireGraph;
 use support::handoff::{join_budget, written};
 use support::limits::UNLIMITED;
 
@@ -109,7 +109,7 @@ fn call(
             let supplied = match value {
                 Some(value) => SuppliedValue::Value(value),
                 None => {
-                    SuppliedValue::Unavailable(quire_semantic_value::catalog::CatalogCode::new(
+                    SuppliedValue::Unavailable(filament_semantic_value::catalog::CatalogCode::new(
                         "unavailable_observation",
                         "missing-required-artifact",
                     ))
@@ -225,7 +225,7 @@ fn holds(evaluation: &SlotEvaluation) -> bool {
 /// FR-045-AC-1: the outcome-map rows over R's `Full` and `Partial`
 /// compensations that evaluate today: true and false `trigger.guard` and
 /// `retry.relation`, an unavailable binder, a wrongly typed value and a meter
-/// one below measured usage. R's `recovery.predicate` rows are owed: QSL's bare projection faults on its comprehension binder.
+/// one below measured usage. R's `recovery.predicate` rows are owed: FSL's bare projection faults on its comprehension binder.
 #[test]
 #[trace("FR-045-AC-1", "TC-151")]
 fn every_outcome_row_has_its_successor_outcome() {
@@ -270,7 +270,7 @@ fn every_outcome_row_has_its_successor_outcome() {
     assert_eq!(binder, selected.sources()[0].binder());
     assert_eq!(
         *cause,
-        quire_semantic_value::catalog::CatalogCode::new(
+        filament_semantic_value::catalog::CatalogCode::new(
             "unavailable_observation",
             "missing-required-artifact"
         )
@@ -319,7 +319,7 @@ fn every_outcome_row_has_its_successor_outcome() {
 
 /// FR-045-AC-3 (the part that runs today): an unavailable binder of the retry
 /// relation is never a true result, and no source converts an evaluation to
-/// `bool`. The recovery supplies of the criterion are owed (the same QSL projection fault).
+/// `bool`. The recovery supplies of the criterion are owed (the same FSL projection fault).
 #[test]
 #[trace("FR-045-AC-3", "TC-151")]
 fn an_unavailable_binder_is_never_a_true_result() {
@@ -492,7 +492,7 @@ fn the_charge_log_attributes_each_binder_read() {
     let charges = &result.charges;
     assert_eq!(
         charges.accounting_version(),
-        qsl_eval::value::BINDER_ACCOUNTING_VERSION
+        fsl_eval::value::BINDER_ACCOUNTING_VERSION
     );
     let selected = bare
         .select_protocol_slot(&ProtocolSlotDescriptor::new(
@@ -527,9 +527,9 @@ fn the_charge_log_attributes_each_binder_read() {
 #[derive(Debug)]
 struct Unsupported;
 
-impl quire_semantic_value::catalog::CatalogCoded for Unsupported {
-    fn catalog_code(&self) -> quire_semantic_value::catalog::CatalogCode {
-        quire_semantic_value::catalog::CatalogCode::new("unsupported_construct", "unsupported")
+impl filament_semantic_value::catalog::CatalogCoded for Unsupported {
+    fn catalog_code(&self) -> filament_semantic_value::catalog::CatalogCode {
+        filament_semantic_value::catalog::CatalogCode::new("unsupported_construct", "unsupported")
     }
 
     fn catalog_fields(&self) -> Option<std::collections::BTreeMap<&'static str, String>> {
@@ -545,9 +545,9 @@ impl quire_semantic_value::catalog::CatalogCoded for Unsupported {
 #[test]
 #[trace("FR-045-AC-1", "FR-045-AC-3", "TC-151")]
 fn each_owner_outcome_maps_to_its_row_and_none_to_a_boolean() {
-    use quire_eval::{FamilyOutcome, FamilyResult};
-    use quire_exact::{Incomplete, InexactTarget, IntegerInterval, Outcome, Refusal, Undefined};
-    use quire_protocol::slot::outcome_of;
+    use filament_eval::{FamilyOutcome, FamilyResult};
+    use filament_exact::{Incomplete, InexactTarget, IntegerInterval, Outcome, Refusal, Undefined};
+    use filament_protocol::slot::outcome_of;
 
     let evaluated = |outcome| FamilyOutcome::Evaluated(outcome);
     assert!(matches!(
@@ -584,7 +584,7 @@ fn each_owner_outcome_maps_to_its_row_and_none_to_a_boolean() {
         limit: 4,
         consumed: 4,
         next_charge: 1_i64.into(),
-        charge_point: quire_exact::ChargePoint::CollectionElement,
+        charge_point: filament_exact::ChargePoint::CollectionElement,
     };
     let SlotOutcome::Incomplete(held) = outcome_of(evaluated(Outcome::Incomplete(stopped.clone())))
     else {
@@ -607,8 +607,8 @@ fn each_owner_outcome_maps_to_its_row_and_none_to_a_boolean() {
 #[test]
 #[trace("FR-045-AC-4", "TC-151")]
 fn a_bound_that_is_absent_or_malformed_is_read_exactly() {
-    use quire_contract_model::{read_checked_package, CheckedPackageDispatchResult};
-    use quire_protocol::slot::BoundRefusal;
+    use filament_contract_model::{read_checked_package, CheckedPackageDispatchResult};
+    use filament_protocol::slot::BoundRefusal;
 
     let admitted = handoff();
     let nodes = &admitted.package().graph().nodes;
@@ -657,7 +657,7 @@ fn a_bound_that_is_absent_or_malformed_is_read_exactly() {
             other => panic!("neither admitted nor refused: {other:?}"),
         }
     };
-    let bounds = |package: &quire_contract_model::CheckedPackageV2| {
+    let bounds = |package: &filament_contract_model::CheckedPackageV2| {
         package
             .graph()
             .nodes

@@ -3,31 +3,31 @@ id: FR-032
 title: "Retain orthogonal result axes"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-061
+  - target: ix://agent-ix/filament-specification/FR-061
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-240
+  - target: ix://agent-ix/filament-specification/FR-240
     type: references
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-242
+  - target: ix://agent-ix/filament-specification/FR-242
     type: references
-  - target: ix://agent-ix/quire-specification/FR-243
+  - target: ix://agent-ix/filament-specification/FR-243
     type: references
-  - target: ix://agent-ix/quire-specification/FR-244
+  - target: ix://agent-ix/filament-specification/FR-244
     type: references
-  - target: ix://agent-ix/quire-specification/FR-245
+  - target: ix://agent-ix/filament-specification/FR-245
     type: references
-  - target: ix://agent-ix/quire-specification/FR-246
+  - target: ix://agent-ix/filament-specification/FR-246
     type: references
-  - target: ix://agent-ix/quire-specification/FR-247
+  - target: ix://agent-ix/filament-specification/FR-247
     type: references
-  - target: ix://agent-ix/quire-specification/FR-280
+  - target: ix://agent-ix/filament-specification/FR-280
     type: references
-  - target: ix://agent-ix/quire-specification/FR-281
+  - target: ix://agent-ix/filament-specification/FR-281
     type: references
 ---
 # FR-032: Retain orthogonal result axes
@@ -126,7 +126,7 @@ reconciled with it.
 
 ### Accepted owner rulings
 
-QSpec #29/#40 fixes the complete axis set: FR-284's four independent
+FSpec #29/#40 fixes the complete axis set: FR-284's four independent
 `open`/`closed` progress/closure values, FR-295 completeness, FR-285
 participation, FR-243's five settlement bases, FR-290 claim kinds, FR-281 claim
 strength/cardinality and FR-286 result identity. The implementation consumes
@@ -139,5 +139,5 @@ target E02 spelling or a local alias.
   requirement is part of.
 - [FR-004](./FR-004-assess-finite-global-conformance.md) supplies the
   global-conformance assessment whose closure record is carried here.
-- `ix://agent-ix/quire-specification/FR-061` states the axis set, the
+- `ix://agent-ix/filament-specification/FR-061` states the axis set, the
   no-substitution rule and the result-combination table.

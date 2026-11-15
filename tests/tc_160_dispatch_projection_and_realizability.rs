@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! TC-160: `local-projection` and `realizability` claims dispatched to the
-//! backend QSL's registry selects (FR-150).
+//! backend FSL's registry selects (FR-150).
 
 mod support {
     pub mod dynamic;
@@ -8,17 +8,17 @@ mod support {
     pub mod standin;
 }
 
-use ix_trace_rs::trace;
-use qsl_eval::simulation::protocol::Unsupported;
-use qsl_replay::{SettlementBasis, Truth};
-use qsl_route::{BackendDescriptor, Mode, ProviderOrigin};
-use qsl_semantics::check::Capability;
-use quire_protocol::dispatch::RegistrationError;
-use quire_protocol::dispatch::{
+use filament_protocol::dispatch::RegistrationError;
+use filament_protocol::dispatch::{
     dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, ProtocolClaimKind, ProtocolOutcome,
 };
-use quire_protocol::disposition::{ClaimSettlement, Disposition, QslReport, UnsupportedCause};
-use quire_semantic_value::catalog::CatalogCode;
+use filament_protocol::disposition::{ClaimSettlement, Disposition, FslReport, UnsupportedCause};
+use filament_semantic_value::catalog::CatalogCode;
+use fsl_eval::simulation::protocol::Unsupported;
+use fsl_replay::{SettlementBasis, Truth};
+use fsl_route::{BackendDescriptor, Mode, ProviderOrigin};
+use fsl_semantics::check::Capability;
+use ix_trace_rs::trace;
 use support::dynamic::Dynamic;
 use support::standin::{
     always, candidate, id, request, serve, Boundary, Calls, Req, Sentinel, Standin,
@@ -178,18 +178,18 @@ fn each_backend_cause_is_carried_in_the_backends_vocabulary_and_no_other_is_call
     let dynamic = Dynamic::with("workflow", 3);
     let refusal = CatalogCode::new("invalid_input", "distinct-cause");
     let tool_unavailable = CatalogCode::new("unsupported_projection", "tool-unavailable");
-    let answers: Vec<(&str, QslReport<Sentinel>)> = vec![
-        ("refusal", QslReport::Refusal(refusal)),
+    let answers: Vec<(&str, FslReport<Sentinel>)> = vec![
+        ("refusal", FslReport::Refusal(refusal)),
         (
             "unsupported",
-            QslReport::Unsupported {
+            FslReport::Unsupported {
                 cause: UnsupportedCause::Construct(Unsupported::SymbolicCapacity),
                 construct: None,
             },
         ),
         (
             "tool",
-            QslReport::Unsupported {
+            FslReport::Unsupported {
                 cause: UnsupportedCause::RequestedCapability(tool_unavailable),
                 construct: None,
             },
@@ -267,9 +267,9 @@ fn a_failed_backend_fails_exactly_its_claim_and_no_other_backend_is_called() {
             &[Capability::Realizability],
             Box::new(move |call| {
                 if fail && call.request.fragment.channels == [reject.clone()] {
-                    QslReport::Failed(None)
+                    FslReport::Failed(None)
                 } else {
-                    QslReport::Result(sentinel("ok"))
+                    FslReport::Result(sentinel("ok"))
                 }
             }),
         );

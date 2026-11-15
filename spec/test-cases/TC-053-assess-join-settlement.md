@@ -3,7 +3,7 @@ id: TC-053
 title: "Assess join settlement per policy"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-055
+  - target: ix://agent-ix/filament-protocol/FR-055
     type: verifies
 ---
 # TC-053: Assess join settlement per policy

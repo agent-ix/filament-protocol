@@ -7,15 +7,15 @@ mod support {
 
 use std::path::{Path, PathBuf};
 
-use ix_trace_rs::trace;
-use qsl_package::{EqualityFileRefusal, IdentityFileRefusal, NativeJoinLimits, IDENTITIES_FORMAT};
-use quire_contract_model::{
+use filament_contract_model::{
     read_checked_package, CheckedPackageDispatchResult, CheckedPackageEvidence,
     CheckedPackageLimit, CheckedPackageReadLimits, CheckedPackageRefusal,
     CheckedPackageRefusalCode, ExactTypeProjectionErrorCode,
 };
-use quire_protocol::checked_package::{admit, HandoffFiles, Refusal};
-use quire_spec_language::checked_handoff::{Corpus, SelectionAxis};
+use filament_protocol::checked_package::{admit, HandoffFiles, Refusal};
+use filament_spec_language::checked_handoff::{Corpus, SelectionAxis};
+use fsl_package::{EqualityFileRefusal, IdentityFileRefusal, NativeJoinLimits, IDENTITIES_FORMAT};
+use ix_trace_rs::trace;
 use serde_json::Value;
 use support::handoff::{join_budget, written, Handoff};
 
@@ -99,7 +99,7 @@ fn the_three_packages_of_recipe_r_are_admitted_unchanged() {
 fn manifest(handoff: &Handoff) -> Vec<Value> {
     let manifest: Value =
         serde_json::from_slice(&handoff.files["mutations/manifest.json"]).expect("manifest JSON");
-    assert_eq!(manifest["format"], "quire.checked-handoff.mutations/1");
+    assert_eq!(manifest["format"], "filament.checked-handoff.mutations/1");
     manifest["cases"].as_array().expect("cases").clone()
 }
 
@@ -246,8 +246,8 @@ fn no_source_reads_declares_or_names_the_checked_package_format() {
             "enum CheckedPackageRefusalCode",
             "enum SelectionAxis",
             "enum CheckedPackageLimit",
-            "quire.checked-package/",
-            "quire.checked-handoff.",
+            "filament.checked-package/",
+            "filament.checked-handoff.",
         ] {
             assert!(!text.contains(forbidden), "{name} names {forbidden}");
         }
@@ -264,7 +264,10 @@ fn retired_format_bytes_are_refused_and_never_upgraded() {
     let handoff = written("event_position", Corpus::None);
     let mut package: Value =
         serde_json::from_slice(&handoff.files["checked-package.json"]).expect("JSON");
-    for retired in ["quire.compiled-protocol/1", "quire.compiled-protocol/2"] {
+    for retired in [
+        "filament.compiled-protocol/1",
+        "filament.compiled-protocol/2",
+    ] {
         package["contract_version"] = Value::from(retired);
         let bytes = serde_json::to_vec(&package).expect("encode");
         let refusal = reader_refusal(admit(
@@ -294,7 +297,7 @@ fn numeric_defects_are_the_readers_refusals() {
         ("signed-64 overflow", "9223372036854775808"),
     ] {
         let bytes = text
-            .replacen("\"start\":1184", &format!("\"start\":{number}"), 1)
+            .replacen("\"start\":1193", &format!("\"start\":{number}"), 1)
             .into_bytes();
         let refusal = reader_refusal(admit(
             &files_of(&handoff, &bytes),
@@ -426,7 +429,7 @@ fn a_limit_one_below_usage_is_incomplete_and_the_exact_limit_admits() {
 }
 
 /// FR-043-AC-8: an identity or equality file of another format, or one whose
-/// row names a node the package does not hold, returns QSL's file refusal
+/// row names a node the package does not hold, returns FSL's file refusal
 /// unchanged and no admitted handoff.
 #[test]
 #[trace("FR-043-AC-8", "TC-149")]
@@ -436,20 +439,20 @@ fn identity_and_equality_files_are_refused_with_their_owners_refusals() {
 
     let mut identities: Value =
         serde_json::from_slice(&handoff.files["identities.json"]).expect("JSON");
-    identities["format"] = Value::from("quire.checked-handoff.identities/2");
+    identities["format"] = Value::from("filament.checked-handoff.identities/2");
     let other = serde_json::to_vec(&identities).expect("encode");
     let mut files = files_of(&handoff, bytes);
     files.identities = &other;
     match admit(&files, &handoff.evidence, bounded(), &mut join_budget()) {
         Err(Refusal::Identities(IdentityFileRefusal::Format(format))) => {
-            assert_eq!(format, "quire.checked-handoff.identities/2");
+            assert_eq!(format, "filament.checked-handoff.identities/2");
         }
         other => panic!("expected the identity file's format refusal, got {other:?}"),
     }
 
     for retired in [
-        "quire.checked-handoff.identities/1",
-        "quire.checked-handoff.identities/2",
+        "filament.checked-handoff.identities/1",
+        "filament.checked-handoff.identities/2",
     ] {
         identities["format"] = Value::from(retired);
         let retired_bytes = serde_json::to_vec(&identities).expect("encode");
@@ -479,23 +482,23 @@ fn identity_and_equality_files_are_refused_with_their_owners_refusals() {
 
     let mut equality: Value =
         serde_json::from_slice(&handoff.files["equality.json"]).expect("JSON");
-    equality["format"] = Value::from("quire.checked-handoff.equality/2");
+    equality["format"] = Value::from("filament.checked-handoff.equality/2");
     let other = serde_json::to_vec(&equality).expect("encode");
     let mut files = files_of(&handoff, bytes);
     files.equality = &other;
     match admit(&files, &handoff.evidence, bounded(), &mut join_budget()) {
         Err(Refusal::Equality(EqualityFileRefusal::Format(format))) => {
-            assert_eq!(format, "quire.checked-handoff.equality/2");
+            assert_eq!(format, "filament.checked-handoff.equality/2");
         }
         other => panic!("expected the equality file's format refusal, got {other:?}"),
     }
 }
 
 /// FR-043-AC-8: the identity-row join charges the caller's budget, and a
-/// budget it exhausts is QSL's own refusal, carried unchanged.
+/// budget it exhausts is FSL's own refusal, carried unchanged.
 #[test]
 #[trace("FR-043-AC-8", "TC-149")]
-fn an_exhausted_native_join_budget_is_qsls_identity_refusal_unchanged() {
+fn an_exhausted_native_join_budget_is_fsls_identity_refusal_unchanged() {
     let handoff = written("event_position", Corpus::None);
     let bytes = &handoff.files["checked-package.json"];
     let mut empty = NativeJoinLimits::new(0, 0).budget();

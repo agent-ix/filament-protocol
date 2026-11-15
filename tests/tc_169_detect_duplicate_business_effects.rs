@@ -4,13 +4,13 @@
 
 use std::num::NonZeroU32;
 
-use ix_trace_rs::trace;
-use quire_protocol::compensation::algebra::{
+use filament_protocol::compensation::algebra::{
     AttemptFact, AttemptLedger, AttemptOutcome, Definition, EffectDisposition, ForwardFact, Limits,
     Registry,
 };
-use quire_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
-use quire_protocol::ids::{AttemptId, DefinitionId, EffectId};
+use filament_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
+use filament_protocol::ids::{AttemptId, DefinitionId, EffectId};
+use ix_trace_rs::trace;
 
 struct Pure;
 

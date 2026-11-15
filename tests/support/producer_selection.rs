@@ -5,9 +5,9 @@
 //! these helpers deliberately inspect already-built test fixtures only to
 //! create a discriminating expected digest for the post-resolution verifier.
 
-use quire_observation::QualifiedSubject;
-use quire_protocol::model::v2::RuntimeBindingSet;
-use quire_protocol::producer_contracts::ProducerValueSelection;
+use filament_observation::QualifiedSubject;
+use filament_protocol::model::v2::RuntimeBindingSet;
+use filament_protocol::producer_contracts::ProducerValueSelection;
 use sha2::{Digest as _, Sha256};
 
 struct FixtureHasher {

@@ -3,7 +3,7 @@ id: TC-161
 title: "Bind communication and visibility premises"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-151
+  - target: ix://agent-ix/filament-protocol/FR-151
     type: verifies
 ---
 # TC-161: Bind communication and visibility premises
@@ -14,7 +14,7 @@ Verify that the backend receives, and the disposition retains, the exact channel
 
 ## Test Procedure
 
-Dispatch both claim kinds over a checked package with channels and internal and external roles, using a call-recording stand-in backend registered in QSL's registry snapshot. Vary one component of one channel premise, including an ordering and a delivery premise that disagree with the checked package; omit one channel premise and one role internality from the requester's per-claim premise set in turn, then restore each; have the stand-in return the `Inconclusive` verdict with an `InconclusiveCause` and a requires-bound outcome. Tag each test with the exact acceptance criterion it verifies.
+Dispatch both claim kinds over a checked package with channels and internal and external roles, using a call-recording stand-in backend registered in FSL's registry snapshot. Vary one component of one channel premise, including an ordering and a delivery premise that disagree with the checked package; omit one channel premise and one role internality from the requester's per-claim premise set in turn, then restore each; have the stand-in return the `Inconclusive` verdict with an `InconclusiveCause` and a requires-bound outcome. Tag each test with the exact acceptance criterion it verifies.
 
 ## Expected Results
 

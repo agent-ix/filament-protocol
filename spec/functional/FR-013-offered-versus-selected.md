@@ -4,17 +4,17 @@ title: "Offered versus selected discrimination"
 type: FR
 object: value_object
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-003
+  - target: ix://agent-ix/filament-protocol/US-003
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: specifies
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: specifies
-  - target: ix://agent-ix/quire-specification/FR-204
+  - target: ix://agent-ix/filament-specification/FR-204
     type: depends_on
 ---
 # FR-013: Offered versus selected discrimination
@@ -132,7 +132,7 @@ erases which side moved, which is the whole content of this discrimination.
   the two sides' refusals carry.
 - [IT-001](../integration/IT-001-consume-native-protocol-artifact.md) exercises
   the discrimination over both axis corpora.
-- `ix://agent-ix/quire-specification/FR-204` establishes that equal field values
+- `ix://agent-ix/filament-specification/FR-204` establishes that equal field values
   do not imply equal objects.
 
 ## Status

@@ -3,7 +3,7 @@ id: TC-162
 title: "Carry a projection or realizability witness joined to the linked graph"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-152
+  - target: ix://agent-ix/filament-protocol/FR-152
     type: verifies
 ---
 # TC-162: Carry a projection or realizability witness joined to the linked graph

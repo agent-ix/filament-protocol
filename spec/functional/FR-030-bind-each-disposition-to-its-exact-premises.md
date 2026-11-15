@@ -3,27 +3,27 @@ id: FR-030
 title: "Bind each disposition to its exact premises"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: part_of
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: references
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-060
+  - target: ix://agent-ix/filament-specification/FR-060
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-210
+  - target: ix://agent-ix/filament-specification/FR-210
     type: references
-  - target: ix://agent-ix/quire-specification/FR-216
+  - target: ix://agent-ix/filament-specification/FR-216
     type: references
-  - target: ix://agent-ix/quire-specification/FR-217
+  - target: ix://agent-ix/filament-specification/FR-217
     type: references
-  - target: ix://agent-ix/quire-specification/FR-249
+  - target: ix://agent-ix/filament-specification/FR-249
     type: references
-  - target: ix://agent-ix/quire-specification/FR-280
+  - target: ix://agent-ix/filament-specification/FR-280
     type: references
-  - target: ix://agent-ix/quire-specification/FR-283
+  - target: ix://agent-ix/filament-specification/FR-283
     type: references
 ---
 # FR-030: Bind each disposition to its exact premises
@@ -93,7 +93,7 @@ assessed outcomes". FR-030-AC-6 is `FR-011`'s authority rule, not a new one.
 
 ### Accepted owner rulings
 
-Quire Specification #29/#31/#40 supplies the exact contracts this requirement
+Filament Specification #29/#31/#40 supplies the exact contracts this requirement
 needs: FR-290 claim kind, FR-291 admitted fragment, FR-292 analysis backend,
 FR-217 role internality/participant binding, FR-210/FR-287 subject membership,
 and the FR-283 projection-refusal namespace. A strict source-result read failure
@@ -108,7 +108,7 @@ fields and are never substituted for one another.
 - [FR-011](./FR-011-consumer-identity-discipline.md) supplies the authority rule
   FR-030-AC-6 applies: a producer-authored identity is copied byte-exactly and
   never repaired.
-- `ix://agent-ix/quire-specification/FR-060` requires every advanced result to
+- `ix://agent-ix/filament-specification/FR-060` requires every advanced result to
   identify its admitted fragment, backend, assumptions and source/derived-artifact
   correspondence, and forbids replacing a failed backend with an unreviewed
   fallback.

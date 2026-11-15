@@ -3,54 +3,54 @@ id: FR-006
 title: "Produce canonical protocol results"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-006
+  - target: ix://agent-ix/filament-protocol/ADR-006
     type: references
-  - target: ix://agent-ix/quire-protocol/US-002
+  - target: ix://agent-ix/filament-protocol/US-002
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-031
+  - target: ix://agent-ix/filament-protocol/FR-031
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-032
+  - target: ix://agent-ix/filament-protocol/FR-032
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-033
+  - target: ix://agent-ix/filament-protocol/FR-033
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-015
+  - target: ix://agent-ix/filament-protocol/FR-015
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-061
+  - target: ix://agent-ix/filament-specification/FR-061
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-201
+  - target: ix://agent-ix/filament-specification/FR-201
     type: references
-  - target: ix://agent-ix/quire-specification/FR-240
+  - target: ix://agent-ix/filament-specification/FR-240
     type: references
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-242
+  - target: ix://agent-ix/filament-specification/FR-242
     type: references
-  - target: ix://agent-ix/quire-specification/FR-243
+  - target: ix://agent-ix/filament-specification/FR-243
     type: references
-  - target: ix://agent-ix/quire-specification/FR-244
+  - target: ix://agent-ix/filament-specification/FR-244
     type: references
-  - target: ix://agent-ix/quire-specification/FR-245
+  - target: ix://agent-ix/filament-specification/FR-245
     type: references
-  - target: ix://agent-ix/quire-specification/FR-246
+  - target: ix://agent-ix/filament-specification/FR-246
     type: references
-  - target: ix://agent-ix/quire-specification/FR-247
+  - target: ix://agent-ix/filament-specification/FR-247
     type: references
-  - target: ix://agent-ix/quire-specification/FR-248
+  - target: ix://agent-ix/filament-specification/FR-248
     type: references
-  - target: ix://agent-ix/quire-specification/FR-280
+  - target: ix://agent-ix/filament-specification/FR-280
     type: references
-  - target: ix://agent-ix/quire-specification/FR-281
+  - target: ix://agent-ix/filament-specification/FR-281
     type: references
 ---
 # FR-006: Produce canonical protocol results
 
 ## Description
 
-When an assessment disposition is available, the result producer SHALL emit one strict-reader-valid `quire.protocol.result/v1-draft.1` artifact through the atomic requirements FR-031 through FR-033 that together discharge source requirement FR-061.
+When an assessment disposition is available, the result producer SHALL emit one strict-reader-valid `filament.protocol.result/v1-draft.1` artifact through the atomic requirements FR-031 through FR-033 that together discharge source requirement FR-061.
 When any single atomic requirement FR-031 through FR-033 is unsatisfied, the result producer SHALL emit a typed refusal rather than an aggregate result.
 
 ## Inputs
@@ -163,4 +163,4 @@ local aliases or compatibility fallbacks survive these rulings.
   parts.
 - [FR-004](./FR-004-assess-finite-global-conformance.md).
 - [FR-005](./FR-005-dispatch-independent-protocol-claims.md).
-- `ix://agent-ix/quire-specification/FR-061`.
+- `ix://agent-ix/filament-specification/FR-061`.

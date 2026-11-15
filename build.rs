@@ -14,7 +14,7 @@ fn main() {
         .find(|package| {
             package
                 .lines()
-                .any(|line| line == r#"name = "quire-verification-contracts""#)
+                .any(|line| line == r#"name = "filament-verification-contracts""#)
         })
         .expect("direct E02 owner dependency is locked");
     let revision = package

@@ -3,21 +3,21 @@ id: FR-038
 title: "Retain unknown source contracts uninterpreted"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-036
+  - target: ix://agent-ix/filament-protocol/FR-036
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-013
+  - target: ix://agent-ix/filament-protocol/FR-013
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-270
+  - target: ix://agent-ix/filament-specification/FR-270
     type: references
-  - target: ix://agent-ix/quire-specification/FR-271
+  - target: ix://agent-ix/filament-specification/FR-271
     type: references
-  - target: ix://agent-ix/quire-specification/FR-273
+  - target: ix://agent-ix/filament-specification/FR-273
     type: references
 ---
 # FR-038: Retain unknown source contracts uninterpreted

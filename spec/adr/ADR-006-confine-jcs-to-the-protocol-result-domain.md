@@ -4,13 +4,13 @@ title: "Confine RFC 8785 JCS to results this repository produces"
 type: ADR
 status: accepted
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-015
+  - target: ix://agent-ix/filament-protocol/FR-015
     type: depends_on
 ---
 # ADR-006: Confine RFC 8785 JCS to results this repository produces
@@ -46,7 +46,7 @@ the byte-level difference that would have refused.
 
 RFC 8785 JCS is applied to bytes this repository produces. It is never applied
 to bytes this repository received. It does not produce a digest identity;
-QSpec FR-286 defines the structural result key, and FR-062/FR-249 define the
+FSpec FR-286 defines the structural result key, and FR-062/FR-249 define the
 structural projection identity.
 
 Three requirements carry the intake half:
@@ -70,12 +70,12 @@ that is already canonical cannot make the scenario pass for free.
 ## Result identities
 
 The earlier implementation derived result and projection identities from JCS
-preimages. QSpec #520 removed those digest-domain selections. This repository
+preimages. FSpec #520 removed those digest-domain selections. This repository
 now carries the FR-286 result key and the FR-062/FR-249 projection identity as
 structural objects, compared by exact structure. JCS is used for canonical
 result bytes only.
 
-FR-007 delegates the projection identity structure to the QSpec contract. The
+FR-007 delegates the projection identity structure to the FSpec contract. The
 adapter compares that structure exactly; it does not hash the source key,
 adapter, context, or result bytes to derive an identity.
 
@@ -100,7 +100,7 @@ numeric rules push those values into contract-defined non-number encodings
 instead.
 
 **The structural identities stay distinct by their specified structure.**
-QSpec FR-286 defines the canonical result key, and FR-062/FR-249 define the
+FSpec FR-286 defines the canonical result key, and FR-062/FR-249 define the
 projection identity. This repository carries those structures without
 deriving a digest from either one.
 

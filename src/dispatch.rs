@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! FR-150, FR-151, FR-152, FR-153: dispatch of `local-projection` and
-//! `realizability` claims to the backend QSL's registry selects.
+//! `realizability` claims to the backend FSL's registry selects.
 //!
-//! QSL decides what a backend serves. The registry is QSL's own
-//! ([`qsl_route::Registry`], FR-290's candidate computation), and a backend
+//! FSL decides what a backend serves. The registry is FSL's own
+//! ([`fsl_route::Registry`], FR-290's candidate computation), and a backend
 //! joins it at the provider boundary ([`ProviderBoundary::register`](crate::dispatch::ProviderBoundary::register)) with the
-//! descriptor QSL's registry accepts. This library holds no capability table of
+//! descriptor FSL's registry accepts. This library holds no capability table of
 //! its own and the closed built-in table of FR-005 gains no entry.
 //!
 //! The dispatcher computes no projection, no realizability verdict, no
@@ -17,13 +17,13 @@
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 
-use qsl_foundation::BackendId;
-use qsl_package::protocol_view::Delivery;
-use qsl_replay::{InconclusiveCause, ItemLabel, SeparatingWitnessRecord, SettlementBasis, Truth};
-use qsl_route::{BackendDescriptor, Candidate, CandidateOutcome, RegistrationRefusal, Registry};
-use qsl_semantics::check::Capability;
-use quire_contract_model::CheckedNodeId;
-use quire_semantic_value::catalog::CatalogCode;
+use filament_contract_model::CheckedNodeId;
+use filament_semantic_value::catalog::CatalogCode;
+use fsl_foundation::BackendId;
+use fsl_package::protocol_view::Delivery;
+use fsl_replay::{InconclusiveCause, ItemLabel, SeparatingWitnessRecord, SettlementBasis, Truth};
+use fsl_route::{BackendDescriptor, Candidate, CandidateOutcome, RegistrationRefusal, Registry};
+use fsl_semantics::check::Capability;
 
 use crate::assume_guarantee::{
     AssumeGuaranteeBinding, AssumeGuaranteeRequest, AssumeGuaranteeResult, IdentityMismatch,
@@ -31,7 +31,7 @@ use crate::assume_guarantee::{
 };
 use crate::declarations::{ChannelDeclaration, Declarations, Ordering, RoleDeclaration};
 use crate::disposition::{
-    settle_claim, ClaimSettlement, Disposition, QslBoundary, UnsupportedCause,
+    settle_claim, ClaimSettlement, Disposition, FslBoundary, UnsupportedCause,
     UnsupportedDisposition, Warning,
 };
 use crate::refusal::ProtocolCauseKind;
@@ -46,7 +46,7 @@ pub enum ProtocolClaimKind {
 }
 
 impl ProtocolClaimKind {
-    /// QSL's capability kind for the claim kind.
+    /// FSL's capability kind for the claim kind.
     #[must_use]
     pub const fn capability(self) -> Capability {
         match self {
@@ -67,9 +67,9 @@ pub struct Fragment {
 }
 
 /// One channel's premise as the requester states it (FR-151). The ordering
-/// and delivery are the components QSL's read view publishes, so they are
+/// and delivery are the components FSL's read view publishes, so they are
 /// typed and must equal the checked package's. The sender, receiver and
-/// message type are the linked declaration's (QSL publishes them); `C` holds
+/// message type are the linked declaration's (FSL publishes them); `C` holds
 /// only what the view still does not publish, which is nothing for a channel.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ChannelPremise<C> {
@@ -156,7 +156,7 @@ pub enum DispositionRefusal {
     /// A decisive `realizability` result carries no trace-position witness
     /// (FR-302).
     DecisiveWithoutWitness,
-    /// QSL's registry selected a backend that has no provider.
+    /// FSL's registry selected a backend that has no provider.
     NoProvider(BackendId),
     /// The provider answered with the other claim kind's result.
     WrongAnswerKind,
@@ -203,7 +203,7 @@ impl DispositionRefusal {
 }
 
 /// What the dispatcher reads of a backend's result. The result itself is
-/// QSL's and is carried unchanged.
+/// FSL's and is carried unchanged.
 pub trait BackendResult {
     /// The result's truth.
     fn truth(&self) -> Truth;
@@ -212,7 +212,7 @@ pub trait BackendResult {
     /// The separating-witness record the result carries, when it carries
     /// one.
     fn witness(&self) -> Option<&SeparatingWitnessRecord>;
-    /// QSL's `InconclusiveCause` when the result is its `Inconclusive`
+    /// FSL's `InconclusiveCause` when the result is its `Inconclusive`
     /// verdict.
     fn inconclusive(&self) -> Option<&InconclusiveCause>;
 }
@@ -225,7 +225,7 @@ pub enum ProtocolOutcome<R, B> {
     /// FR-290 settled the request itself `invalid-request`
     /// (`ambiguous-backend` or `unknown-backend`) and no backend was called.
     InvalidRequest {
-        /// QSL's catalog code, as FR-290 spells it.
+        /// FSL's catalog code, as FR-290 spells it.
         code: CatalogCode,
         /// Every candidate, in candidate order; empty for `unknown-backend`.
         candidates: Vec<Candidate>,
@@ -313,16 +313,16 @@ impl<A, C, I, T> From<AssumeGuaranteeBinding<T>> for Claim<A, C, I, T> {
 /// Why a provider was not registered.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum RegistrationError {
-    /// QSL's registry refused the descriptor.
+    /// FSL's registry refused the descriptor.
     Registry(RegistrationRefusal),
     /// The identity already has a provider.
     ProviderHeld(BackendId),
 }
 
 /// The call into one registered backend.
-type Provider<'p, K, R> = Box<dyn QslBoundary<K, R> + 'p>;
+type Provider<'p, K, R> = Box<dyn FslBoundary<K, R> + 'p>;
 
-/// The provider boundary: QSL's registry, and the call into each backend
+/// The provider boundary: FSL's registry, and the call into each backend
 /// registered in it. A caller supplies no callback per request. `K` is the
 /// claim a provider is asked about: a [`Binding`] for the protocol claims, an
 /// [`AssumeGuaranteeBinding`]
@@ -348,17 +348,17 @@ impl<'p, K, R> ProviderBoundary<'p, K, R> {
         Self::default()
     }
 
-    /// QSL's registry snapshot.
+    /// FSL's registry snapshot.
     #[must_use]
     pub const fn registry(&self) -> &Registry {
         &self.registry
     }
 
-    /// Register `provider` under `descriptor`, as QSL's registry admits it.
+    /// Register `provider` under `descriptor`, as FSL's registry admits it.
     ///
     /// # Errors
     ///
-    /// [`RegistrationError::Registry`] with QSL's `duplicate-backend` refusal
+    /// [`RegistrationError::Registry`] with FSL's `duplicate-backend` refusal
     /// when the identity conflicts; the identity is then served by no
     /// provider. [`RegistrationError::ProviderHeld`] when the identity
     /// already has a provider; the held provider is kept and `provider` is
@@ -366,7 +366,7 @@ impl<'p, K, R> ProviderBoundary<'p, K, R> {
     pub fn register(
         &mut self,
         descriptor: BackendDescriptor,
-        provider: impl QslBoundary<K, R> + 'p,
+        provider: impl FslBoundary<K, R> + 'p,
     ) -> Result<(), RegistrationError> {
         let id = descriptor.id().clone();
         match self.registry.register(descriptor) {
@@ -398,7 +398,7 @@ pub(crate) fn select<R, B>(
     let set = match registry.candidates(capability, requested) {
         CandidateOutcome::UnknownBackend(_) => {
             return Err(Box::new(ProtocolOutcome::InvalidRequest {
-                // IR-1513: the owner (quire-contract-codegen) is to publish this code.
+                // IR-1513: the owner (filament-contract-codegen) is to publish this code.
                 code: CatalogCode::new("invalid_capability", "unknown-backend"),
                 candidates: Vec::new(),
                 binding,
@@ -421,7 +421,7 @@ pub(crate) fn select<R, B>(
             )))
         } else {
             ProtocolOutcome::InvalidRequest {
-                // IR-1513: the owner (quire-contract-codegen) is to publish this code.
+                // IR-1513: the owner (filament-contract-codegen) is to publish this code.
                 code: CatalogCode::new("invalid_capability", "ambiguous-backend"),
                 candidates: set.candidates().to_vec(),
                 binding,
@@ -492,7 +492,7 @@ impl BackendResult for std::convert::Infallible {
 }
 
 /// The result a provider returns: its protocol result or its composition or
-/// refinement result, each QSL's own and carried unchanged. The two are
+/// refinement result, each FSL's own and carried unchanged. The two are
 /// separate types, so a caller that asks one kind implements the other's
 /// reading for nothing.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -504,7 +504,7 @@ pub enum Answer<P, Q> {
 }
 
 /// The steps every claim kind shares once its premises are bound: take
-/// FR-290's candidate set from QSL's registry, send the claim to the one
+/// FR-290's candidate set from FSL's registry, send the claim to the one
 /// candidate, carry what returns, and refuse a result that `refuse` rejects.
 pub(crate) fn settle_bound<K, P, Q, R, B: Clone>(
     boundary: &mut ProviderBoundary<'_, K, Answer<P, Q>>,
@@ -541,7 +541,7 @@ pub(crate) fn settle_bound<K, P, Q, R, B: Clone>(
 }
 
 /// Settle one claim: bind its premises, take FR-290's candidate set from
-/// QSL's registry, send the claim to the one candidate, and carry what
+/// FSL's registry, send the claim to the one candidate, and carry what
 /// returns.
 pub fn dispatch<K, A, C, I, P, Q>(
     boundary: &mut ProviderBoundary<'_, K, Answer<P, Q>>,

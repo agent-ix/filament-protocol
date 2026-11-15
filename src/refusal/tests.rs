@@ -37,7 +37,7 @@ fn missing_definition(value: &[u8]) -> RefusalCause {
 }
 
 fn usage() -> ResourceUsage {
-    ResourceUsage::protocol("quire.protocol/test-usage/1", &[("operations", 1)])
+    ResourceUsage::protocol("filament.protocol/test-usage/1", &[("operations", 1)])
 }
 
 fn representation_refusal(axis_value: &[u8]) -> ProtocolRefusal {
@@ -78,7 +78,7 @@ fn resource_incomplete() -> crate::bounds::inventory::ResourceIncomplete {
 #[test]
 #[trace("TC-011", "FR-008-AC-1", "FR-036-AC-4")]
 fn tc_011_domains_and_stages_are_closed_and_exact() {
-    assert_eq!(REFUSAL_CONTRACT, "quire.protocol/refusal/1");
+    assert_eq!(REFUSAL_CONTRACT, "filament.protocol/refusal/1");
     assert_eq!(
         RefusalDomain::ALL.map(RefusalDomain::as_str),
         [
@@ -504,7 +504,7 @@ fn tc_011_every_foundation_envelope_field_is_typed_and_readable() {
             .protocol_record()
             .owner()
             .as_bytes(),
-        b"agent-ix/quire-protocol"
+        b"agent-ix/filament-protocol"
     );
     assert_eq!(
         refusal
@@ -512,7 +512,7 @@ fn tc_011_every_foundation_envelope_field_is_typed_and_readable() {
             .protocol_record()
             .contract()
             .as_bytes(),
-        b"quire.protocol/test-usage/1"
+        b"filament.protocol/test-usage/1"
     );
     assert_eq!(
         refusal.resource_usage().protocol_record().measures()[0]
@@ -627,7 +627,7 @@ fn tc_011_each_refusal_identity_component_changes_equality() {
         ProtocolStage::Representation,
         axis(b"axis-a"),
         missing_definition(b"definition/7"),
-        ResourceUsage::protocol("quire.protocol/test-usage/1", &[("operations", 2)]),
+        ResourceUsage::protocol("filament.protocol/test-usage/1", &[("operations", 2)]),
     )
     .expect("representation code and stage agree")
     .emitting_nothing();

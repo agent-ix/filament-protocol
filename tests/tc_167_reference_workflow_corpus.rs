@@ -10,12 +10,12 @@ mod support {
     pub mod handoff;
 }
 
-use ix_trace_rs::trace;
-use quire_exact::Integer;
-use quire_protocol::dynamics::{
+use filament_exact::Integer;
+use filament_protocol::dynamics::{
     assess_channels, assess_joins, assess_loops, assess_roles, ChannelEvent, ChannelFact,
     ChannelOutcome, JoinEvent, JoinFact, JoinOutcome, LoopEvent, LoopFact, RoleEvent, RoleFact,
 };
+use ix_trace_rs::trace;
 use support::dynamic::{at, instance, message, workflow, Dynamic};
 
 /// One run's observed history.

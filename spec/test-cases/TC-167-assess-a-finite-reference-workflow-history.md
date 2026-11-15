@@ -3,13 +3,13 @@ id: TC-167
 title: "Assess a finite reference workflow history on every dynamic axis"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-053
+  - target: ix://agent-ix/filament-protocol/FR-053
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-054
+  - target: ix://agent-ix/filament-protocol/FR-054
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-055
+  - target: ix://agent-ix/filament-protocol/FR-055
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-056
+  - target: ix://agent-ix/filament-protocol/FR-056
     type: verifies
 ---
 # TC-167: Assess a finite reference workflow history on every dynamic axis
@@ -20,7 +20,7 @@ Verify that one finite observed history of a choreography (a replicated worker r
 
 ## Test Procedure
 
-Compile the dynamic-roles choreography with QSL's writer, admit and link it, and assess a conforming run and a faulty run (worker population over its bound, queue over its capacity, a join settled before its threshold, a loop over its maximum), and a run that breaks one axis only, for each axis. Rebuild a history over a second compilation and assess it again.
+Compile the dynamic-roles choreography with FSL's writer, admit and link it, and assess a conforming run and a faulty run (worker population over its bound, queue over its capacity, a join settled before its threshold, a loop over its maximum), and a run that breaks one axis only, for each axis. Rebuild a history over a second compilation and assess it again.
 
 ## Expected Results
 

@@ -3,9 +3,9 @@ id: TC-017
 title: "Validate the consumer-owned delivery index"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-018
+  - target: ix://agent-ix/filament-protocol/FR-018
     type: verifies
-  - target: ix://agent-ix/quire-protocol/NFR-006
+  - target: ix://agent-ix/filament-protocol/NFR-006
     type: verifies
 ---
 # TC-017: Validate the Consumer-Owned Delivery Index

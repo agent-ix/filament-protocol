@@ -3,29 +3,29 @@ id: FR-028
 title: "Keep progress and closure axes independent"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: part_of
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-specification/FR-059
+  - target: ix://agent-ix/filament-specification/FR-059
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-240
+  - target: ix://agent-ix/filament-specification/FR-240
     type: references
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-242
+  - target: ix://agent-ix/filament-specification/FR-242
     type: references
-  - target: ix://agent-ix/quire-specification/FR-243
+  - target: ix://agent-ix/filament-specification/FR-243
     type: references
-  - target: ix://agent-ix/quire-specification/FR-245
+  - target: ix://agent-ix/filament-specification/FR-245
     type: references
-  - target: ix://agent-ix/quire-specification/FR-246
+  - target: ix://agent-ix/filament-specification/FR-246
     type: references
-  - target: ix://agent-ix/quire-specification/FR-247
+  - target: ix://agent-ix/filament-specification/FR-247
     type: references
-  - target: ix://agent-ix/quire-specification/FR-258
+  - target: ix://agent-ix/filament-specification/FR-258
     type: references
-  - target: ix://agent-ix/quire-specification/FR-268
+  - target: ix://agent-ix/filament-specification/FR-268
     type: references
 ---
 # FR-028: Keep progress and closure axes independent
@@ -124,10 +124,10 @@ reintroduced by a consumer." They are withdrawn.
 
 ### Accepted owner rulings
 
-Quire Specification #29/#40 closes the previously open axes: FR-240 derives the
+Filament Specification #29/#40 closes the previously open axes: FR-240 derives the
 canonical result identity and refuses same identity/different bytes; FR-243
 defines the five settlement bases; FR-284 defines independent `open`/`closed`
-progress and closure; FR-285 defines participation; FR-289 maps half-open QObs
+progress and closure; FR-285 defines participation; FR-289 maps half-open FObs
 windows to inclusive native-temporal boundaries; and FR-295 defines
 `complete`/`incomplete`/`contradicted` input completeness. Protocol imports
 these types componentwise and never substitutes one axis for another.
@@ -136,7 +136,7 @@ these types componentwise and never substitutes one axis for another.
 
 - [FR-004](./FR-004-assess-finite-global-conformance.md) is the parent this
   requirement is part of.
-- `ix://agent-ix/quire-specification/FR-059` establishes the global closure
+- `ix://agent-ix/filament-specification/FR-059` establishes the global closure
   record, its independence from decision-scope closure, surrounding-execution
   closure, assessment execution and completeness, and the rule that complete
   global success requires `closed` plus every exact required premise.

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! FR-043: admission of the checked-package handoff.
 //!
-//! The handoff directory that `quire_spec_language::checked_handoff` writes
-//! (QSL FR-517) holds `checked-package.json`, `selection.json`, `identities.json`
+//! The handoff directory that `filament_spec_language::checked_handoff` writes
+//! (FSL FR-517) holds `checked-package.json`, `selection.json`, `identities.json`
 //! and `equality.json`. [`admit`] reads the package with Contract IR's
 //! [`read_checked_package`], compares the admitted package with the selection
 //! sidecar, and reads the two bytes-only files against it. It returns an
@@ -14,13 +14,13 @@
 
 use std::fmt;
 
-use qsl_package::{EqualityFileRefusal, IdentityFileRefusal, ReadEqualityRows, ReadIdentityRows};
-use quire_contract_model::{
+use filament_contract_model::{
     read_checked_package, CatalogReadError, CheckedPackageDispatchResult, CheckedPackageEvidence,
     CheckedPackageIncomplete, CheckedPackageReadLimits, CheckedPackageRefusal, CheckedPackageV2,
     NativeJoinBudget,
 };
-use quire_spec_language::checked_handoff::{Selection, SelectionReadError, SelectionRefusal};
+use filament_spec_language::checked_handoff::{Selection, SelectionReadError, SelectionRefusal};
+use fsl_package::{EqualityFileRefusal, IdentityFileRefusal, ReadEqualityRows, ReadIdentityRows};
 
 /// The bytes of the four handoff files [`admit`] reads.
 #[derive(Clone, Copy, Debug)]
@@ -110,10 +110,10 @@ impl std::error::Error for Refusal {}
 /// The package is read first and only then compared with the selection, so a
 /// defect the reader refuses is a [`Refusal::Reader`] and a defect only the
 /// selection can see is a [`Refusal::Selection`]. `evidence` is the evidence
-/// assembled from the handoff's own files (QSL FR-517) and `limits` the read
+/// assembled from the handoff's own files (FSL FR-517) and `limits` the read
 /// limits of the caller. `budget` is the caller's one finite native-join
 /// allowance for the pass; the identity-row join charges it and nothing here
-/// builds, defaults or enlarges one (QSL FR-531).
+/// builds, defaults or enlarges one (FSL FR-531).
 ///
 /// # Errors
 ///

@@ -3,23 +3,23 @@ id: FR-029
 title: "Return one disposition per requested claim"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: part_of
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-specification/FR-060
+  - target: ix://agent-ix/filament-specification/FR-060
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-242
+  - target: ix://agent-ix/filament-specification/FR-242
     type: references
-  - target: ix://agent-ix/quire-specification/FR-281
+  - target: ix://agent-ix/filament-specification/FR-281
     type: references
-  - target: ix://agent-ix/quire-specification/FR-282
+  - target: ix://agent-ix/filament-specification/FR-282
     type: references
-  - target: ix://agent-ix/quire-specification/FR-283
+  - target: ix://agent-ix/filament-specification/FR-283
     type: references
-  - target: ix://agent-ix/quire-specification/FR-290
+  - target: ix://agent-ix/filament-specification/FR-290
     type: depends_on
 ---
 # FR-029: Return one disposition per requested claim
@@ -93,12 +93,12 @@ the dispatcher's behaviour, never read off two dispositions' spellings.
 
 ### Acceptance state of adopted vocabularies
 
-`ix://agent-ix/quire-specification/FR-290` is the accepted authority for the
+`ix://agent-ix/filament-specification/FR-290` is the accepted authority for the
 capability-kind vocabulary: its **Vocabulary authority** section, landed by
-`agent-ix/quire-specification#116`, states that its six labels
+`agent-ix/filament-specification#116`, states that its six labels
 — `global-conformance`, `monitorability`, `local-projection`, `refinement`,
 `realizability`, `composition` — are the single capability-kind vocabulary
-across the ecosystem and that quire-protocol's advertised claim-kind vocabulary
+across the ecosystem and that filament-protocol's advertised claim-kind vocabulary
 aligns to that set. Protocol dispatches those six exact labels and authors none
 of its own. Where this repository's prose names a kind in shorter form —
 "conformance" for `global-conformance` and "projection" for `local-projection` —
@@ -119,6 +119,6 @@ to `identity-mismatch`.
 - [FR-004](./FR-004-assess-finite-global-conformance.md) supplies the finite
   conformance result that FR-029-AC-1 requires to survive an unsupported
   projection.
-- `ix://agent-ix/quire-specification/FR-060` establishes one independent
+- `ix://agent-ix/filament-specification/FR-060` establishes one independent
   disposition per requested capability and the non-transfer of premises and
   success among them.

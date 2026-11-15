@@ -8,19 +8,19 @@ mod support {
     pub mod standin;
 }
 
-use ix_trace_rs::trace;
-use qsl_eval::simulation::RequiresBound;
-use qsl_foundation::bound::{DomainKey, DomainKind};
-use qsl_package::protocol_view::Delivery;
-use qsl_replay::{InconclusiveCause, SettlementBasis, Truth};
-use qsl_semantics::check::Capability;
-use qsl_semantics::family::ClaimExtent;
-use quire_protocol::declarations::Ordering;
-use quire_protocol::dispatch::{
+use filament_protocol::declarations::Ordering;
+use filament_protocol::dispatch::{
     dispatch, dispatch_claims, ChannelPremise, ClaimDisposition, ClaimRequest, DispositionRefusal,
     ProtocolClaimKind, ProtocolOutcome,
 };
-use quire_protocol::disposition::{ClaimSettlement, Disposition, QslReport};
+use filament_protocol::disposition::{ClaimSettlement, Disposition, FslReport};
+use fsl_eval::simulation::RequiresBound;
+use fsl_foundation::bound::{DomainKey, DomainKind};
+use fsl_package::protocol_view::Delivery;
+use fsl_replay::{InconclusiveCause, SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
+use fsl_semantics::family::ClaimExtent;
+use ix_trace_rs::trace;
 use support::dynamic::Dynamic;
 use support::standin::{always, request, rest, serve, Boundary, Rest, Sentinel};
 
@@ -258,7 +258,7 @@ fn inconclusive_and_requires_bound_are_carried_and_hold_no_decided_truth() {
         &mut boundary,
         "backend",
         &[Capability::Realizability],
-        Box::new(move |_| QslReport::RequiresBound {
+        Box::new(move |_| FslReport::RequiresBound {
             outcome: reported.clone(),
             construct: None,
         }),

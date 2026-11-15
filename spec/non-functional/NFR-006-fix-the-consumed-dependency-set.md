@@ -4,15 +4,15 @@ title: "Fix the consumed dependency set and the accepted delivery surface"
 type: NFR
 quality_attribute: security
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-012
+  - target: ix://agent-ix/filament-protocol/FR-012
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-018
+  - target: ix://agent-ix/filament-protocol/FR-018
     type: constrains
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-004
+  - target: ix://agent-ix/filament-protocol/NFR-004
     type: depends_on
 ---
 # NFR-006: Fix the consumed dependency set and the accepted delivery surface
@@ -158,8 +158,8 @@ B-authored fixture root can carry an unenumerated file.
 ## Status
 
 In progress. The current lock has 195 non-root packages and seven git sources;
-Cargo/rights records cover the current exact pins, including QSL `2736b62`,
-QObs `9240063`, qverify `293e342` and its transitive Engineering Assurance
+Cargo/rights records cover the current exact pins, including FSL `2736b62`,
+FObs `9240063`, qverify `293e342` and its transitive Engineering Assurance
 `9237ce5`.
 Task-013 implements TC-013's exact-member controls for AC-6 and AC-7;
 Task-019/#66 owns the missing TC-017 consumer-index control for AC-8. Every

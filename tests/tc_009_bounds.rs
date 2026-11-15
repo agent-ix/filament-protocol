@@ -6,15 +6,15 @@ use std::cell::Cell;
 use std::collections::BTreeSet;
 use std::time::{Duration, Instant};
 
-use ix_trace_rs::trace;
-use quire_protocol::bounds::inventory::{
+use filament_protocol::bounds::inventory::{
     production_entries, production_inventory, production_sources, AccountingFault, BoundaryCase,
     Budget, BudgetDimension, BudgetError, ChargeError, ChargePoint, IncompleteCode, Inventory,
     InventoryEntry, InventoryError, LimitAuthority, OperationOutcome, ResourceAccountant,
     SourceSite, Termination,
 };
-use quire_protocol::bounds::{Clock, Phase, SiteId, SiteKind};
-use quire_protocol::repro::ToolchainIdentity;
+use filament_protocol::bounds::{Clock, Phase, SiteId, SiteKind};
+use filament_protocol::repro::ToolchainIdentity;
+use ix_trace_rs::trace;
 
 // ---------------------------------------------------------------------------
 // NFR-002-AC-3 / FR-016 — QProtocol caller-budget vocabulary and inventory

@@ -1,16 +1,16 @@
-# quire-protocol
+# filament-protocol
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/k8DVhuYBR2)
-[![Quire](https://img.shields.io/badge/Quire-Specification%20Language-1F6FEB)](https://github.com/agent-ix/quire-spec-language)
+[![Filament](https://img.shields.io/badge/Filament-Specification%20Language-1F6FEB)](https://github.com/agent-ix/filament-spec-language)
 
-quire-protocol is a Rust crate that consumes the checked package the Quire
-Specification Language (QSL) produces for a protocol. A protocol describes
+filament-protocol is a Rust crate that consumes the checked package the Filament
+Specification Language (FSL) produces for a protocol. A protocol describes
 roles that exchange messages over channels, together with the steps that undo
 earlier work when something fails.
 
 The crate admits a checked-package handoff, links one protocol clause into its
 roles, channels, queues and controls, evaluates protocol slots and temporal
-evidence through QSL's evaluation entries, and keeps the compensation state
+evidence through FSL's evaluation entries, and keeps the compensation state
 machine. Every refusal carries the value of the component that produced it, and
 resource bounds are declared up front.
 
@@ -21,11 +21,11 @@ resource bounds are declared up front.
 
 ## Getting started
 
-quire-protocol is not published to a registry. Add it as a git dependency:
+filament-protocol is not published to a registry. Add it as a git dependency:
 
 ```toml
 [dependencies]
-quire-protocol = { git = "https://github.com/agent-ix/quire-protocol", branch = "main" }
+filament-protocol = { git = "https://github.com/agent-ix/filament-protocol", branch = "main" }
 ```
 
 To build from a clone, install the Rust toolchain named in `rust-toolchain.toml`
@@ -60,7 +60,7 @@ of a protocol clause in the package.
 
 ## Outcomes
 
-A slot evaluation returns a `SlotOutcome` that carries QSL's value unchanged.
+A slot evaluation returns a `SlotOutcome` that carries FSL's value unchanged.
 Admission returns a `Refusal` with one variant per file or check that failed.
 In addition to the package and sidecar results shown below,
 `Refusal::CatalogUnavailable` carries Contract IR's `CatalogReadError` unchanged
@@ -78,7 +78,7 @@ checks.
 | Module | What it holds |
 | --- | --- |
 | `checked_package` | Admission of the checked-package handoff. |
-| `link` | The linked protocol over QSL's read view and causal relation. |
+| `link` | The linked protocol over FSL's read view and causal relation. |
 | `slot` | The outcome of evaluating a protocol slot. |
 | `evidence` | Temporal evidence read from the checked package's own nodes. |
 | `compensation` | Activation, registration, ordering and retry facts. |
@@ -90,22 +90,22 @@ checks.
 
 The crate declares no Cargo feature.
 
-## Quire ecosystem
+## Filament ecosystem
 
-quire-protocol sits beside the compiler. It reads QSL's checked output and
+filament-protocol sits beside the compiler. It reads FSL's checked output and
 works over observations.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/ecosystem-dark.svg">
-  <img alt="The Quire repositories. The main chain runs from the standard, quire-specification, to the compiler, quire-spec-language, then quire-contract-ir, quire-contract-codegen and quire-contract-runtime. quire-spec-language also feeds quire-protocol, and quire-contract-ir feeds quire-analyze. quire-observation feeds quire-protocol and quire-mltl. Above the chain, quire-driver runs it, quire-integration tests it and quire-verification plans verification. Below it, shared libraries used throughout: quire-eval, quire-exact, quire-semantic-value, quire-walk, quire-canonical and quire-verification-contracts." src="docs/images/ecosystem-light.svg">
+  <img alt="The Filament repositories. The main chain runs from the standard, filament-specification, to the compiler, filament-spec-language, then filament-contract-ir, filament-contract-codegen and filament-contract-runtime. filament-spec-language also feeds filament-protocol, and filament-contract-ir feeds filament-analyze. filament-observation feeds filament-protocol and filament-mltl. Above the chain, filament-driver runs it, filament-integration tests it and filament-verification plans verification. Below it, shared libraries used throughout: filament-eval, filament-exact, filament-semantic-value, filament-walk, quire-canonical and filament-verification-contracts." src="docs/images/ecosystem-light.svg">
 </picture>
 
-It depends on [quire-spec-language](https://github.com/agent-ix/quire-spec-language),
-[quire-eval](https://github.com/agent-ix/quire-eval),
-[quire-observation](https://github.com/agent-ix/quire-observation),
-[quire-verification-contracts](https://github.com/agent-ix/quire-verification-contracts)
+It depends on [filament-spec-language](https://github.com/agent-ix/filament-spec-language),
+[filament-eval](https://github.com/agent-ix/filament-eval),
+[filament-observation](https://github.com/agent-ix/filament-observation),
+[filament-verification-contracts](https://github.com/agent-ix/filament-verification-contracts)
 and [engineering-assurance](https://github.com/agent-ix/engineering-assurance).
-[quire-contract-ir](https://github.com/agent-ix/quire-contract-ir) supplies the
+[filament-contract-ir](https://github.com/agent-ix/filament-contract-ir) supplies the
 checked-package reader. The requirements are in [`spec/spec.md`](spec/spec.md).
 
 ## Building and testing

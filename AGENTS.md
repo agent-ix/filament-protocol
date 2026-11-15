@@ -20,7 +20,7 @@ version they ran.
 - Run QUOIN `/specify`, then self `/spec-review`, and resolve its findings before
   implementing a substantive behavior or interface change. Use QUOIN
   `/spec-to-plan` before implementation begins.
-- Treat `agent-ix/quire-specification` as the formal-clause source. Do not
+- Treat `agent-ix/filament-specification` as the formal-clause source. Do not
   rewrite protocol or temporal semantics locally.
 - **Find the owner before you declare a type.** This repository is a consumer in
   a multi-repository ecosystem, and most types it handles are owned elsewhere.
@@ -44,16 +44,16 @@ version they ran.
 - Before promotion, run the `rust-review` skill and
   QUOIN semantic `/gap-analysis`, then remediate every in-scope finding.
 - Run local checks only. Set `CARGO_BUILD_JOBS=1` and use
-  `flock /tmp/quire-heavy-check.lock` for heavy Cargo work. Do not dispatch hosted CI.
+  `flock /tmp/filament-heavy-check.lock` for heavy Cargo work. Do not dispatch hosted CI.
 - The local gate is defined by [NFR-004](spec/non-functional/NFR-004-define-local-verification-gate.md).
   It is exactly these four commands, in this order, over one unchanged head,
   in the one Cargo-feature lane of a crate that declares no feature:
 
   ```console
-  CARGO_BUILD_JOBS=1 flock /tmp/quire-heavy-check.lock cargo fmt --all -- --check
-  CARGO_BUILD_JOBS=1 flock /tmp/quire-heavy-check.lock cargo clippy --locked --all-targets --target-dir target-codex-backends -- -D warnings
-  CARGO_BUILD_JOBS=1 flock /tmp/quire-heavy-check.lock cargo test --locked --target-dir target-codex-backends
-  CARGO_BUILD_JOBS=1 flock /tmp/quire-heavy-check.lock env RUSTDOCFLAGS="-D warnings" cargo doc --locked --no-deps --target-dir target-codex-backends
+  CARGO_BUILD_JOBS=1 flock /tmp/filament-heavy-check.lock cargo fmt --all -- --check
+  CARGO_BUILD_JOBS=1 flock /tmp/filament-heavy-check.lock cargo clippy --locked --all-targets --target-dir target-codex-backends -- -D warnings
+  CARGO_BUILD_JOBS=1 flock /tmp/filament-heavy-check.lock cargo test --locked --target-dir target-codex-backends
+  CARGO_BUILD_JOBS=1 flock /tmp/filament-heavy-check.lock env RUSTDOCFLAGS="-D warnings" cargo doc --locked --no-deps --target-dir target-codex-backends
   ```
 
   The formatting command detects formatting drift. The Clippy command detects
@@ -75,7 +75,7 @@ version they ran.
   tracked `#[cfg(unix)]` integration test through the admitted
   `x86_64-unknown-linux-gnu` target. This is not a claim about another target.
   Do not pass `--features quire-extraction` here — that feature belongs to
-  `quire-spec-language`, and this package does not declare it. An instruction to
+  `filament-spec-language`, and this package does not declare it. An instruction to
   run a lane for a feature this crate does not declare is a gate defect to
   report, not a lane to satisfy, and it is never fixed by declaring a feature
   with no `cfg`'d code behind it. Introducing another `cfg(feature = ...)`

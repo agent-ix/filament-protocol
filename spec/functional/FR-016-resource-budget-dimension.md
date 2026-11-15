@@ -4,15 +4,15 @@ title: "Resource budget dimension"
 type: FR
 object: enumeration
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-006
+  - target: ix://agent-ix/filament-protocol/US-006
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-002
+  - target: ix://agent-ix/filament-protocol/NFR-002
     type: specifies
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: specifies
 ---
 # FR-016: Resource budget dimension

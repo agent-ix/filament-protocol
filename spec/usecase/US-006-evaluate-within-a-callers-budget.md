@@ -3,7 +3,7 @@ id: US-006
 title: "Evaluate within a caller's budget"
 type: US
 relationships:
-  - target: ix://agent-ix/quire-protocol/StR-004
+  - target: ix://agent-ix/filament-protocol/StR-004
     type: traces_to
 ---
 # US-006: Evaluate within a caller's budget

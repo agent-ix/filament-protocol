@@ -3,14 +3,14 @@ id: TC-150
 title: "Link from a typed read view of the checked package"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-044
+  - target: ix://agent-ix/filament-protocol/FR-044
     type: verifies
 ---
 # TC-150: Link from a typed read view of the checked package
 
 ## Description
 
-Verify the link layer over the checked package's nodes and QSL's causal relation,
+Verify the link layer over the checked package's nodes and FSL's causal relation,
 including the consumer-owned residual checks added after stage 2.
 
 ## Test Procedure
@@ -22,7 +22,7 @@ channel premises; verify each consumer refusal names its node ids and available
 source-map loci; link an absent id, a `protocol_reference` carrier and a
 non-protocol node; compile-fail the retired types; verify linking succeeds
 without any window-binding package member and the linker imports no window view
-from QSL; re-run FR-002-AC-1 to AC-5 over **R**, including concurrent identity,
+from FSL; re-run FR-002-AC-1 to AC-5 over **R**, including concurrent identity,
 legal interleavings, equal-time input reordering and changed temporal/clock
 selection. Tag each test with its exact acceptance criterion using
 `#[trace("TC-150", "FR-044-AC-n")]`.
@@ -32,5 +32,5 @@ selection. Tag each test with its exact acceptance criterion using
 Lists and edges equal the view's; no local edge derivation; each consumer
 refusal is typed, located when an owner locus exists, and returns no partial
 representation; owner refusals remain unchanged; retired types unresolved; no
-window package member or QSL window view is required; FR-002's criteria hold
+window package member or FSL window view is required; FR-002's criteria hold
 over **R**.

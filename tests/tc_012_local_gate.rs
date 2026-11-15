@@ -7,10 +7,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 const FORMAT_COMMAND: &str =
-    "CARGO_BUILD_JOBS=1 flock /tmp/quire-heavy-check.lock cargo fmt --all -- --check";
-const CLIPPY_COMMAND: &str = "CARGO_BUILD_JOBS=1 flock /tmp/quire-heavy-check.lock cargo clippy --locked --all-targets --target-dir target-codex-backends -- -D warnings";
-const TEST_COMMAND: &str = "CARGO_BUILD_JOBS=1 flock /tmp/quire-heavy-check.lock cargo test --locked --target-dir target-codex-backends";
-const DOC_COMMAND: &str = "CARGO_BUILD_JOBS=1 flock /tmp/quire-heavy-check.lock env RUSTDOCFLAGS=\"-D warnings\" cargo doc --locked --no-deps --target-dir target-codex-backends";
+    "CARGO_BUILD_JOBS=1 flock /tmp/filament-heavy-check.lock cargo fmt --all -- --check";
+const CLIPPY_COMMAND: &str = "CARGO_BUILD_JOBS=1 flock /tmp/filament-heavy-check.lock cargo clippy --locked --all-targets --target-dir target-codex-backends -- -D warnings";
+const TEST_COMMAND: &str = "CARGO_BUILD_JOBS=1 flock /tmp/filament-heavy-check.lock cargo test --locked --target-dir target-codex-backends";
+const DOC_COMMAND: &str = "CARGO_BUILD_JOBS=1 flock /tmp/filament-heavy-check.lock env RUSTDOCFLAGS=\"-D warnings\" cargo doc --locked --no-deps --target-dir target-codex-backends";
 const ADMITTED_TARGET: &str = "x86_64-unknown-linux-gnu";
 
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -111,8 +111,8 @@ impl Command {
         } else {
             0
         };
-        let lock = if text.contains("flock /tmp/quire-heavy-check.lock ") {
-            "/tmp/quire-heavy-check.lock"
+        let lock = if text.contains("flock /tmp/filament-heavy-check.lock ") {
+            "/tmp/filament-heavy-check.lock"
         } else {
             ""
         };
@@ -231,11 +231,9 @@ impl GatePolicy {
         if self.commands.iter().any(|command| !command.risk_bound) {
             defects.insert(GateDefect::MissingRisk);
         }
-        if self
-            .commands
-            .iter()
-            .any(|command| command.build_jobs != 1 || command.lock != "/tmp/quire-heavy-check.lock")
-        {
+        if self.commands.iter().any(|command| {
+            command.build_jobs != 1 || command.lock != "/tmp/filament-heavy-check.lock"
+        }) {
             defects.insert(GateDefect::Concurrency);
         }
 

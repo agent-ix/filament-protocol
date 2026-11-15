@@ -3,7 +3,7 @@ id: TC-052
 title: "Assess queue capacity, overflow outcome and order"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-054
+  - target: ix://agent-ix/filament-protocol/FR-054
     type: verifies
 ---
 # TC-052: Assess queue capacity, overflow outcome and order

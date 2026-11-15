@@ -10,14 +10,14 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-use ix_trace_rs::trace;
-use quire_protocol::bounds::inventory::{
+use filament_protocol::bounds::inventory::{
     production_inventory, Budget, BudgetDimension, OperationOutcome, ResourceAccountant,
 };
-use quire_protocol::repro::{
+use filament_protocol::repro::{
     CorpusIdentity, ReproductionInputKind, ReproductionInputs, ReproductionRecord,
     ReproductionRefusal, Seed, ToolchainIdentity,
 };
+use ix_trace_rs::trace;
 
 const TOOLCHAIN_BYTES: &[u8] = b"rustc-1.98.0-x86_64-unknown-linux-gnu";
 const CORPUS_BYTES: &[u8] = b"corpus:9f2c1ad4";

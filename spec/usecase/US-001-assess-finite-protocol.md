@@ -3,7 +3,7 @@ id: US-001
 title: "Assess one finite native protocol"
 type: US
 relationships:
-  - target: ix://agent-ix/quire-protocol/StR-001
+  - target: ix://agent-ix/filament-protocol/StR-001
     type: traces_to
 ---
 # US-001: Assess one finite native protocol

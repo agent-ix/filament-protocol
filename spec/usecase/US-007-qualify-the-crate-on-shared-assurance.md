@@ -3,7 +3,7 @@ id: US-007
 title: "Qualify the crate on shared assurance"
 type: US
 relationships:
-  - target: ix://agent-ix/quire-protocol/StR-005
+  - target: ix://agent-ix/filament-protocol/StR-005
     type: traces_to
 ---
 # US-007: Qualify the crate on shared assurance

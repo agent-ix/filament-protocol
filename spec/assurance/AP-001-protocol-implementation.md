@@ -6,7 +6,7 @@ status: proposed
 owner: agent-ix-protocol-owner
 profile_version: 0.2
 profile_kind: general
-scope: one exact quire-protocol Rust candidate implementing the selected finite native Quire protocol profile
+scope: one exact filament-protocol Rust candidate implementing the selected finite native Filament protocol profile
 impact_assessments:
   - id: impact-false-conformance
     scenario: a refused, unsupported, resource-incomplete or failed protocol assessment is reported as complete conformance
@@ -16,7 +16,7 @@ impact_assessments:
       stochastic_dependency: none
     detect_before_harm:
       expected: true
-      control_ref: ix://agent-ix/quire-protocol/FR-004
+      control_ref: ix://agent-ix/filament-protocol/FR-004
   - id: impact-compensation-confusion
     scenario: a delivery or attempt is treated as a successful effect or recovery and activates an invalid compensation result
     severity: critical
@@ -25,7 +25,7 @@ impact_assessments:
       stochastic_dependency: none
     detect_before_harm:
       expected: true
-      control_ref: ix://agent-ix/quire-protocol/FR-003
+      control_ref: ix://agent-ix/filament-protocol/FR-003
   - id: impact-result-loss
     scenario: projection or strict reading erases uncertainty, support lineage, adequacy separation, or an independent finding
     severity: material
@@ -34,7 +34,7 @@ impact_assessments:
       stochastic_dependency: none
     detect_before_harm:
       expected: true
-      control_ref: ix://agent-ix/quire-protocol/FR-007
+      control_ref: ix://agent-ix/filament-protocol/FR-007
   - id: impact-identity-substitution
     scenario: changed source, dependency, observation, profile, result, or adapter bytes retain an accepted identity
     severity: critical
@@ -43,7 +43,7 @@ impact_assessments:
       stochastic_dependency: none
     detect_before_harm:
       expected: true
-      control_ref: ix://agent-ix/quire-protocol/NFR-001
+      control_ref: ix://agent-ix/filament-protocol/NFR-001
   - id: impact-assurance-duplication
     scenario: a local runner, transcript verdict parser, evidence store, or foreign-language qualification path bypasses shared assurance controls
     severity: material
@@ -52,30 +52,30 @@ impact_assessments:
       stochastic_dependency: none
     detect_before_harm:
       expected: true
-      control_ref: ix://agent-ix/quire-protocol/NFR-003
+      control_ref: ix://agent-ix/filament-protocol/NFR-003
 review_policy:
   mode: require
   operations: [spec-review, code-review, gap-analysis]
 relationships:
-  - target: ix://agent-ix/quire-protocol/StR-001
+  - target: ix://agent-ix/filament-protocol/StR-001
     type: governs
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: governs
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: governs
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: governs
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: governs
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: governs
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: governs
-  - target: ix://agent-ix/quire-protocol/NFR-001
+  - target: ix://agent-ix/filament-protocol/NFR-001
     type: governs
-  - target: ix://agent-ix/quire-protocol/NFR-002
+  - target: ix://agent-ix/filament-protocol/NFR-002
     type: governs
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: governs
 ---
 # Protocol implementation assurance profile

@@ -54,7 +54,7 @@
 //! case that follows fails for the type mismatch and for nothing else.
 //!
 //! ```
-//! use quire_protocol::ids::*;
+//! use filament_protocol::ids::*;
 //! fn definition(_: DefinitionId) {}
 //! fn role_instance(_: RoleInstanceId) {}
 //! fn workflow_instance(_: WorkflowInstanceId) {}
@@ -96,97 +96,97 @@
 //! argument.
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{DefinitionId, RoleInstanceId};
+//! use filament_protocol::ids::{DefinitionId, RoleInstanceId};
 //! fn takes(_: DefinitionId) {}
 //! takes(RoleInstanceId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{RoleInstanceId, WorkflowInstanceId};
+//! use filament_protocol::ids::{RoleInstanceId, WorkflowInstanceId};
 //! fn takes(_: RoleInstanceId) {}
 //! takes(WorkflowInstanceId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{ParticipantId, WorkflowInstanceId};
+//! use filament_protocol::ids::{ParticipantId, WorkflowInstanceId};
 //! fn takes(_: WorkflowInstanceId) {}
 //! takes(ParticipantId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{ComponentId, ParticipantId};
+//! use filament_protocol::ids::{ComponentId, ParticipantId};
 //! fn takes(_: ParticipantId) {}
 //! takes(ComponentId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{ComponentId, EndpointId};
+//! use filament_protocol::ids::{ComponentId, EndpointId};
 //! fn takes(_: ComponentId) {}
 //! takes(EndpointId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{ChannelId, EndpointId};
+//! use filament_protocol::ids::{ChannelId, EndpointId};
 //! fn takes(_: EndpointId) {}
 //! takes(ChannelId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{ChannelId, MessageId};
+//! use filament_protocol::ids::{ChannelId, MessageId};
 //! fn takes(_: ChannelId) {}
 //! takes(MessageId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{MessageId, SendId};
+//! use filament_protocol::ids::{MessageId, SendId};
 //! fn takes(_: MessageId) {}
 //! takes(SendId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{ReceiveId, SendId};
+//! use filament_protocol::ids::{ReceiveId, SendId};
 //! fn takes(_: SendId) {}
 //! takes(ReceiveId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{DeliveryId, ReceiveId};
+//! use filament_protocol::ids::{DeliveryId, ReceiveId};
 //! fn takes(_: ReceiveId) {}
 //! takes(DeliveryId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{AttemptId, DeliveryId};
+//! use filament_protocol::ids::{AttemptId, DeliveryId};
 //! fn takes(_: DeliveryId) {}
 //! takes(AttemptId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{AttemptId, EffectId};
+//! use filament_protocol::ids::{AttemptId, EffectId};
 //! fn takes(_: AttemptId) {}
 //! takes(EffectId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{EffectId, RegistrationId};
+//! use filament_protocol::ids::{EffectId, RegistrationId};
 //! fn takes(_: EffectId) {}
 //! takes(RegistrationId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{CommitId, RegistrationId};
+//! use filament_protocol::ids::{CommitId, RegistrationId};
 //! fn takes(_: RegistrationId) {}
 //! takes(CommitId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{CommitId, RecoveryId};
+//! use filament_protocol::ids::{CommitId, RecoveryId};
 //! fn takes(_: CommitId) {}
 //! takes(RecoveryId::new(b"d", "d"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::{DefinitionId, RecoveryId};
+//! use filament_protocol::ids::{DefinitionId, RecoveryId};
 //! fn takes(_: RecoveryId) {}
 //! takes(DefinitionId::new(b"d", "d"));
 //! ```
@@ -197,17 +197,17 @@
 //! diagnostic can never be read back as a protocol identity:
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::SendId;
+//! use filament_protocol::ids::SendId;
 //! let _: SendId = "send-1".parse().unwrap();
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::SendId;
+//! use filament_protocol::ids::SendId;
 //! let _ = SendId::from(String::from("send-1"));
 //! ```
 //!
 //! ```compile_fail
-//! use quire_protocol::ids::ChannelId;
+//! use filament_protocol::ids::ChannelId;
 //! let _ = ChannelId::from("orders");
 //! ```
 

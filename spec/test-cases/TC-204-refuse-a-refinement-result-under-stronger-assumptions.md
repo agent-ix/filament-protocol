@@ -3,14 +3,14 @@ id: TC-204
 title: "Refuse a refinement result whose assumptions are stronger than the request's"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-204
+  - target: ix://agent-ix/filament-protocol/FR-204
     type: verifies
 ---
 # TC-204: Refuse a refinement result whose assumptions are stronger than the request's
 
 ## Description
 
-Verify identity inclusion of a result's retained assumptions in the request's and the carrying of a backend-reported strengthened-assumption finding, with a stand-in for the QSL call boundary and no local analysis.
+Verify identity inclusion of a result's retained assumptions in the request's and the carrying of a backend-reported strengthened-assumption finding, with a stand-in for the FSL call boundary and no local analysis.
 
 ## Test Procedure
 

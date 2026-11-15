@@ -4,19 +4,19 @@ title: "Digest domain selection"
 type: FR
 object: value_object
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-003
+  - target: ix://agent-ix/filament-protocol/ADR-003
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-006
+  - target: ix://agent-ix/filament-protocol/ADR-006
     type: references
-  - target: ix://agent-ix/quire-protocol/US-005
+  - target: ix://agent-ix/filament-protocol/US-005
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: specifies
-  - target: ix://agent-ix/quire-specification/FR-201
+  - target: ix://agent-ix/filament-specification/FR-201
     type: depends_on
 ---
 # FR-015: Digest domain selection
@@ -34,7 +34,7 @@ Where a producer reference arrives already carrying an upstream domain label,
 that label is retained exactly and is never re-labelled into another member.
 
 Canonical protocol results and their E02 projections carry the structural
-identities defined by QSpec FR-286 and FR-062. This repository computes no
+identities defined by FSpec FR-286 and FR-062. This repository computes no
 result or projection digest.
 
 ## Identity and comparison
@@ -61,7 +61,7 @@ result or projection digest.
 
 ## Dependencies
 
-- `ix://agent-ix/quire-specification/FR-201` publishes the vocabulary and the
+- `ix://agent-ix/filament-specification/FR-201` publishes the vocabulary and the
   cross-domain inequality rule.
 - [FR-011](./FR-011-consumer-identity-discipline.md) supplies the identity
   discipline.

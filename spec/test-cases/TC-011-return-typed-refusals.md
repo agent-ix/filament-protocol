@@ -3,7 +3,7 @@ id: TC-011
 title: "Return typed refusals without text parsing"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: verifies
 ---
 # TC-011: Return typed refusals without text parsing

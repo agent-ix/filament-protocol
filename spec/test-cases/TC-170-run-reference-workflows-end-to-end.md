@@ -3,9 +3,9 @@ id: TC-170
 title: "Run the timed-refund and compensated fan-out reference workflows end to end"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-023
+  - target: ix://agent-ix/filament-protocol/FR-023
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-100
+  - target: ix://agent-ix/filament-protocol/FR-100
     type: verifies
 ---
 # TC-170: Run the timed-refund and compensated fan-out reference workflows end to end

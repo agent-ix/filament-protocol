@@ -3,13 +3,13 @@ id: StR-001
 title: "Evaluate native protocols without semantic loss"
 type: StR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: satisfied_by
 ---
 # StR-001: Evaluate native protocols without semantic loss
@@ -17,7 +17,7 @@ relationships:
 ## Stakeholder Need
 
 Protocol verification owners SHALL receive one deterministic evaluation of the
-selected native Quire protocol that preserves identity, compensation,
+selected native Filament protocol that preserves identity, compensation,
 incompleteness, uncertainty, and result provenance.
 
 ## Rationale
@@ -38,7 +38,7 @@ make later qualification irreproducible.
 ## Stakeholders
 
 The primary stakeholder is the protocol verification owner. Native compiler,
-observation, temporal, Engineering Assurance, Quoin, and quire-verification
+observation, temporal, Engineering Assurance, Quoin, and filament-verification
 maintainers are interface owners and affected consumers.
 
 ## Context and Assumptions
@@ -55,7 +55,7 @@ runner or evidence framework.
 
 ## Dependencies
 
-The need depends on the composed native Quire baseline and the independent E02
+The need depends on the composed native Filament baseline and the independent E02
 contract. It drives local admission, conformance, and canonical result behavior.
 
 ## Priority and Risk (Informative)

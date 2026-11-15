@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! FR-046: temporal evidence from the checked package's own nodes.
 //!
-//! The call is QSL's: [`EvidencePackage`] built from a [`BarePackage`]
-//! (QSL FR-532) evaluates an [`EvidenceRequest`] and answers an
+//! The call is FSL's: [`EvidencePackage`] built from a [`BarePackage`]
+//! (FSL FR-532) evaluates an [`EvidenceRequest`] and answers an
 //! [`EvidenceResult`]. This module reads that result into an
-//! [`EvidenceRecord`] and carries every refusal as QSL returned it: a
+//! [`EvidenceRecord`] and carries every refusal as FSL returned it: a
 //! construction refusal ([`PackageMismatch`]) before any call, and a call
 //! refusal ([`CallFailure`]) with its cause name unchanged. Nothing is
 //! reinterpreted, renamed or merged, and the request and result are
 //! in-memory values with no document and no contract identifier.
 
-use qsl_eval::temporal::evidence::{
+use filament_contract_model::{CheckedNodeId, NativeJoinBudget};
+use filament_eval::CallFailure;
+use filament_exact::Meter;
+use fsl_eval::temporal::evidence::{
     ActivationState, EvidencePackage, EvidenceRequest, EvidenceResult, Indeterminate, NonValue,
     PackageMismatch, Settlement, SupportRef, Truth,
 };
-use qsl_package::BarePackage;
-use quire_contract_model::{CheckedNodeId, NativeJoinBudget};
-use quire_eval::CallFailure;
-use quire_exact::Meter;
+use fsl_package::BarePackage;
 
 /// What an evidence result says of one temporal obligation.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -55,17 +55,17 @@ pub enum EvidenceRefusal {
     /// The package did not construct; no call was made and nothing was
     /// charged.
     Construction(PackageMismatch),
-    /// QSL's call refusal, unchanged.
+    /// FSL's call refusal, unchanged.
     Call(CallFailure),
 }
 
 /// The evidence package of `bare`, built from its nodes alone. `budget` is
 /// the caller's one finite native-join allowance for the pass; capture
-/// projections the bare package did not retain charge it (QSL FR-531).
+/// projections the bare package did not retain charge it (FSL FR-531).
 ///
 /// # Errors
 ///
-/// [`EvidenceRefusal::Construction`] with QSL's [`PackageMismatch`].
+/// [`EvidenceRefusal::Construction`] with FSL's [`PackageMismatch`].
 pub fn package<'p>(
     bare: &'p BarePackage<'p>,
     budget: &mut NativeJoinBudget,
@@ -77,7 +77,7 @@ pub fn package<'p>(
 ///
 /// # Errors
 ///
-/// [`EvidenceRefusal::Call`] with QSL's [`CallFailure`], charging nothing
+/// [`EvidenceRefusal::Call`] with FSL's [`CallFailure`], charging nothing
 /// for an admission refusal.
 pub fn assess(
     package: &EvidencePackage<'_>,

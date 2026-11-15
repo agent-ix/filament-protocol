@@ -3,13 +3,13 @@ id: FR-042
 title: "Publish the canonical result reader and selected Contract-IR mapping"
 type: FR
 relationships:
-  - { target: ix://agent-ix/quire-protocol/FR-006, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-031, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-032, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-033, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-240, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-286, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-295, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-006, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-031, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-032, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-033, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-240, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-286, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-295, type: depends_on }
   - { target: ix://agent-ix/tl-syntax/IF-003, type: implements }
   - { target: ix://agent-ix/tl-syntax/VO-005, type: implements }
 ---
@@ -18,9 +18,9 @@ relationships:
 ## Description
 
 When a caller produces or consumes a protocol result, the library SHALL expose
-the complete `quire.protocol.result/v1-draft.1` contract through one bounded
+the complete `filament.protocol.result/v1-draft.1` contract through one bounded
 canonical producer and strict public reader and SHALL publish a separate exact
-`quire.protocol.contract-ir-result-map/v1` validated mapping view.
+`filament.protocol.contract-ir-result-map/v1` validated mapping view.
 
 ## Public subsystem
 
@@ -47,7 +47,7 @@ The producer and reader SHALL enforce every FR-061/FR-240/FR-286 field and
 combination in FR-031 through FR-033. The four decision/surrounding progress and
 closure axes each carry only independently selected `open`/`closed` states and
 exact owner assertion references. Completeness is a separate embedded
-`quire.observation.completeness-assertion/v1` selection with one FR-295 state.
+`filament.observation.completeness-assertion/v1` selection with one FR-295 state.
 Truth uses only `satisfied`, `violated`, `pending`, `unavailable`; activation,
 settlement, participation, adequacy, global closure, claim and correction
 lineage retain their separately owned closed values and required premises.
@@ -107,8 +107,8 @@ uses fresh accounting; caller limits may lower but not raise owner maxima.
 ## Dependencies
 
 FR-006 and FR-031 through FR-033 supply canonical result construction,
-orthogonal axes and lineage. `quire-specification` FR-240/286/287 supply the
-shared result identity and completeness authority. Quire Observation supplies
+orthogonal axes and lineage. `filament-specification` FR-240/286/287 supply the
+shared result identity and completeness authority. Filament Observation supplies
 embedded assertion views; Contract IR is a downstream mapped-view consumer.
 
 ## Status

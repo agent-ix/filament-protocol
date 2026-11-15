@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! TC-017: consumer-owned delivery-index validation.
 
-use ix_trace_rs::trace;
-use quire_protocol::bounds::inventory::{
+use filament_protocol::bounds::inventory::{
     production_inventory, Budget, BudgetDimension, OperationOutcome, ResourceAccountant,
 };
-use quire_protocol::delivery_index::{
+use filament_protocol::delivery_index::{
     CompiledDimension, DeliveryIndex, DeliveryIndexContents, DeliveryIndexError, DeliveryIndexKey,
     DeliveryRoot, IndexRead, IndexedInput, IndexedLimit, IndexedMember, IndexedMutation, InputRole,
     LimitDimension, MemberReadError, ProducerRevision, TemporalBindingRecord,
 };
-use quire_protocol::version_lock::EntryKey;
+use filament_protocol::version_lock::EntryKey;
+use ix_trace_rs::trace;
 
 fn key(root: &[u8], revision: &[u8]) -> DeliveryIndexKey {
     DeliveryIndexKey::new(DeliveryRoot::new(root), ProducerRevision::new(revision))
@@ -83,12 +83,12 @@ fn valid() -> DeliveryIndex {
             ],
             vec![
                 IndexedLimit::new(
-                    accountant("quire-protocol", "budget/1"),
+                    accountant("filament-protocol", "budget/1"),
                     LimitDimension::Protocol(BudgetDimension::InputByte),
                     12,
                 ),
                 IndexedLimit::new(
-                    accountant("quire-spec-language", "compiled/1"),
+                    accountant("filament-spec-language", "compiled/1"),
                     LimitDimension::CompiledProtocol(CompiledDimension::PayloadBytes),
                     12,
                 ),
@@ -263,7 +263,7 @@ fn tc_017_preserves_every_adapter_absence_as_a_distinct_outcome() {
         OperationOutcome::DomainError(DeliveryIndexError::MissingIndex(root)) if root.as_bytes() == b"delivery-a"
     ));
     assert!(matches!(
-        observe(selected, IndexRead::Unreadable(quire_protocol::version_lock::ExactBytes::new(b"invalid json"))),
+        observe(selected, IndexRead::Unreadable(filament_protocol::version_lock::ExactBytes::new(b"invalid json"))),
         OperationOutcome::DomainError(DeliveryIndexError::UnreadableIndex { reason, .. }) if reason.as_bytes() == b"invalid json"
     ));
     assert!(matches!(
@@ -271,7 +271,7 @@ fn tc_017_preserves_every_adapter_absence_as_a_distinct_outcome() {
         Err(DeliveryIndexError::MissingMember(path)) if path.as_bytes() == b"missing.json"
     ));
     assert!(matches!(
-        IndexedMember::observed(b"unreadable.json", Err(MemberReadError::Unreadable(quire_protocol::version_lock::ExactBytes::new(b"permission")))),
+        IndexedMember::observed(b"unreadable.json", Err(MemberReadError::Unreadable(filament_protocol::version_lock::ExactBytes::new(b"permission")))),
         Err(DeliveryIndexError::UnreadableMember { path, reason })
             if path.as_bytes() == b"unreadable.json" && reason.as_bytes() == b"permission"
     ));

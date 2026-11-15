@@ -3,7 +3,7 @@ id: US-002
 title: "Consume source-bound protocol results"
 type: US
 relationships:
-  - target: ix://agent-ix/quire-protocol/StR-001
+  - target: ix://agent-ix/filament-protocol/StR-001
     type: traces_to
 ---
 # US-002: Consume source-bound protocol results
@@ -43,7 +43,7 @@ require it. Such a reference does not become proof that the bytes were retained.
 
 ## Constraints (Contextual)
 
-Quoin retains evidence authority and quire-verification retains E02 ownership.
+Quoin retains evidence authority and filament-verification retains E02 ownership.
 
 ## Dependencies (Contextual)
 

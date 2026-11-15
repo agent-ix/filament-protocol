@@ -11,12 +11,12 @@ mod support {
 
 use std::convert::Infallible;
 
-use ix_trace_rs::trace;
-use qsl_replay::Truth;
-use quire_protocol::dispatch::{
+use filament_protocol::dispatch::{
     dispatch_claims, BackendResult, ClaimDisposition, ClaimRequest, ProtocolOutcome,
 };
-use quire_protocol::disposition::ClaimSettlement;
+use filament_protocol::disposition::ClaimSettlement;
+use fsl_replay::Truth;
+use ix_trace_rs::trace;
 use support::projection::{boundary, claim, settle, worked, CANCELLED, PICK, PICK2};
 
 /// The truth the engine settles for projecting `ship`/`cancel` onto each role.

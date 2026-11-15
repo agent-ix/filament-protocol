@@ -4,11 +4,11 @@ title: "Two manifest statuses, and no partial pin"
 type: ADR
 status: accepted
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-012
+  - target: ix://agent-ix/filament-protocol/FR-012
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: depends_on
 ---
 # ADR-009: Two manifest statuses, and no partial pin
@@ -23,8 +23,8 @@ contract, so pinnable and unresolved entries coexist without a third status.
 
 [FR-009](../functional/FR-009-lock-external-producer-revisions.md) resolves the
 exact external contracts each scenario requires through one version-lock
-manifest. QSL and Engineering Assurance contracts are pinnable; the current
-QObs dependency is stale; qverify's cross-repository acceptance and Quoin's
+manifest. FSL and Engineering Assurance contracts are pinnable; the current
+FObs dependency is stale; qverify's cross-repository acceptance and Quoin's
 Protocol scenario intake remain unresolved.
 
 That state creates enormous pressure for a third status. Something that means

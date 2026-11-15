@@ -3,7 +3,7 @@ id: TC-004
 title: "Assess finite global conformance"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: verifies
 ---
 # TC-004: Assess finite global conformance

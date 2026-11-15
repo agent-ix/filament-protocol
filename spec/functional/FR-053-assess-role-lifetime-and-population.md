@@ -3,16 +3,16 @@ id: FR-053
 title: "Assess an observed history against role lifetime and population bound"
 type: FR
 relationships:
-  - { target: ix://agent-ix/quire-protocol/US-001, type: implements }
-  - { target: ix://agent-ix/quire-protocol/ADR-010, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-004, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-027, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-028, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-041, type: references }
-  - { target: ix://agent-ix/quire-specification/FR-170, type: references }
-  - { target: ix://agent-ix/quire-specification/FR-171, type: references }
-  - { target: ix://agent-ix/quire-spec-language/ADR-027, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-050, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/US-001, type: implements }
+  - { target: ix://agent-ix/filament-protocol/ADR-010, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-004, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-027, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-028, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-041, type: references }
+  - { target: ix://agent-ix/filament-specification/FR-170, type: references }
+  - { target: ix://agent-ix/filament-specification/FR-171, type: references }
+  - { target: ix://agent-ix/filament-spec-language/ADR-027, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-050, type: depends_on }
 ---
 # FR-053: Assess an observed history against role lifetime and population bound
 
@@ -33,16 +33,16 @@ Per role: the observed instance identities, whether each instance's observed act
 - The evaluator shall treat an instance identity as the identity the observation names.
 - The evaluator shall judge each role once for each workflow instance the history names: the authored `max` bounds the live instances of one workflow instance, and a workflow end ends only that workflow instance's role instances.
 - The evaluator shall mint none.
-- The evaluator shall take the end of a `workflow` lifetime at the observation that ends the workflow instance holding the role, the end of a `scope` lifetime at the observation of the step that QSL ADR-027 RR-4 ends it by (no running thread can reach a node the role owns, the effect of a compensation template it owns, or an open registration of such a template), and the end of an `until(p)` lifetime at the observed `retire` of the instance.
+- The evaluator shall take the end of a `workflow` lifetime at the observation that ends the workflow instance holding the role, the end of a `scope` lifetime at the observation of the step that FSL ADR-027 RR-4 ends it by (no running thread can reach a node the role owns, the effect of a compensation template it owns, or an open registration of such a template), and the end of an `until(p)` lifetime at the observed `retire` of the instance.
 - The evaluator shall not evaluate `p`.
 - The evaluator shall report activity by an instance before its spawn or after its retirement as a lifetime violation naming the instance and the observation.
 - The evaluator shall report a live-instance count above the authored bound as a population violation naming the role, the bound and the observed count.
 - The evaluator shall report each violation without repairing it (FR-027).
-- The evaluator shall refuse a history that names a spawn, retire or end fact for a static role, which QSL never spawns, and return no assessment.
+- The evaluator shall refuse a history that names a spawn, retire or end fact for a static role, which FSL never spawns, and return no assessment.
 - The evaluator shall refuse a history that names a node that is not a declared role, naming the node, and return no assessment.
 - The evaluator shall give the same result under every permitted presentation order (FR-026).
 - The evaluator shall keep the progress and closure axes independent of this assessment (FR-028).
-- This requirement states no step semantics. QSL owns the exploration semantics (QSL ADR-027); this library assesses one admitted observation history (ADR-010 Decision 2).
+- This requirement states no step semantics. FSL owns the exploration semantics (FSL ADR-027); this library assesses one admitted observation history (ADR-010 Decision 2).
 
 ## Acceptance Criteria
 
@@ -62,5 +62,5 @@ Per role: the observed instance identities, whether each instance's observed act
 
 ## Dependencies
 
-- [ADR-010](../adr/ADR-010-consume-qsl-protocol-analysis-own-assessment-and-dispatch.md) fixes what this library owns for dynamic roles, bounded queues, joins and loops, and what QSL owns.
-- QSL ADR-027 states the step semantics this requirement does not restate; QSpec FR-170 and FR-171 state the thresholds and overflow rules the criteria cite.
+- [ADR-010](../adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md) fixes what this library owns for dynamic roles, bounded queues, joins and loops, and what FSL owns.
+- FSL ADR-027 states the step semantics this requirement does not restate; FSpec FR-170 and FR-171 state the thresholds and overflow rules the criteria cite.

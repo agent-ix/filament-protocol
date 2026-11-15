@@ -1,36 +1,36 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! A realizability fixture built from QSL's public front end: a three-role
-//! protocol over a one-object model, both package forms (QSL's in-process
+//! A realizability fixture built from FSL's public front end: a three-role
+//! protocol over a one-object model, both package forms (FSL's in-process
 //! `CheckedPackage` the subject needs, and the admitted `CheckedPackageV2` the
-//! request names), the model's snapshot, and the request QSL's engine decides.
+//! request names), the model's snapshot, and the request FSL's engine decides.
 
 // Each test binary uses a different part of these helpers.
 #![allow(dead_code)]
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use qsl_analyze::protocol_analysis::RealizabilityRequest;
-use qsl_eval::model_subject::{ModelInstance, ModelSubject, ProtocolSubject, RoleBinding};
-use qsl_eval::simulation::model::{ExpansionLimits, ModelSimulationRequest, PopulationUniverse};
-use qsl_eval::simulation::protocol::ResolvedMemory;
-use qsl_foundation::SourceIdentity;
-use qsl_package::{CheckedPackage, EmitLimits};
-use qsl_replay::protocol_analysis::{BoundsDraft, RunBudget};
-use qsl_semantics::check::PackageDeclarations;
-use qsl_semantics::model::accounting::ModelNormalizationLimits;
-use qsl_semantics::model::intake::{admit_unit, meaning, package_input, PackageInput};
-use qsl_semantics::model::observation::{
-    document_reference, DocumentProvision, DocumentRef, ObservationLimits,
-};
-use quire_checked::key::DeclarationKey;
-use quire_contract_model::{
+use filament_checked::key::DeclarationKey;
+use filament_contract_model::{
     CheckedNodeId, CheckedPackageDispatchResult, CheckedPackageReadLimits, CheckedPackageV2,
 };
-use quire_exact::ScalarLimits;
-use quire_semantic_value::checking::CheckingLimits;
+use filament_exact::ScalarLimits;
+use filament_semantic_value::checking::{CheckMode, CheckingLimits};
+use fsl_analyze::protocol_analysis::RealizabilityRequest;
+use fsl_eval::model_subject::{ModelInstance, ModelSubject, ProtocolSubject, RoleBinding};
+use fsl_eval::simulation::model::{ExpansionLimits, ModelSimulationRequest, PopulationUniverse};
+use fsl_eval::simulation::protocol::ResolvedMemory;
+use fsl_foundation::SourceIdentity;
+use fsl_package::{CheckedPackage, EmitLimits};
+use fsl_replay::protocol_analysis::{BoundsDraft, RunBudget};
+use fsl_semantics::check::PackageDeclarations;
+use fsl_semantics::model::accounting::ModelNormalizationLimits;
+use fsl_semantics::model::intake::{admit_unit, meaning, package_input, PackageInput};
+use fsl_semantics::model::observation::{
+    document_reference, DocumentProvision, DocumentRef, ObservationLimits,
+};
 use serde_json::{json, Value as Json};
 
-use quire_protocol::link::{link, LinkedProtocol};
+use filament_protocol::link::{link, LinkedProtocol};
 
 use super::projection::{assessed_root, RECORDS};
 
@@ -81,7 +81,7 @@ fn document() -> Vec<u8> {
     };
     let constraint = |keyword: &str, value: &str| {
         json!({"identity": ident(&format!("Level/constraints/{keyword}")), "keyword": keyword,
-            "operands": {"value": value}, "appliesTo": "ix://quire/native/Integer",
+            "operands": {"value": value}, "appliesTo": "ix://filament/native/Integer",
             "diagnosticCode": format!("bound.{keyword}"), "origin": origin(&ident("Level"))})
     };
     let population_node = |name: &str, member: &str| {
@@ -138,18 +138,18 @@ fn key(suffix: &str) -> DeclarationKey {
     }
 }
 
-/// The checked package of the QSL unit `text`, by QSL's public front end.
+/// The checked package of the FSL unit `text`, by FSL's public front end.
 fn checked(text: &str, document: &[u8]) -> CheckedPackage {
     let packages = package_input([document]).expect("the model package reads");
-    let parsed = qsl_cst::parse(
+    let parsed = fsl_cst::parse(
         SourceIdentity::new("agent-ix", "realizability"),
         "unit.native",
         text.as_bytes(),
-        qsl_cst::Limits::default(),
+        fsl_cst::Limits::default(),
     )
     .expect("the unit parses");
     assert!(parsed.is_admissible(), "{:?}", parsed.diagnostics());
-    let built = qsl_forms::build_unit(&parsed).expect("the unit builds");
+    let built = fsl_forms::build_unit(&parsed).expect("the unit builds");
     let models = admit_unit(
         &built.selections().models,
         &packages,
@@ -157,7 +157,7 @@ fn checked(text: &str, document: &[u8]) -> CheckedPackage {
     )
     .expect("the model selection admits")
     .with_parsed_operation_clauses(|text| {
-        qsl_forms::parse_clause_text(text, qsl_cst::Limits::default())
+        fsl_forms::parse_clause_text(text, fsl_cst::Limits::default())
     })
     .expect("the operation clauses parse");
     let declarations = PackageDeclarations::assemble(
@@ -169,7 +169,7 @@ fn checked(text: &str, document: &[u8]) -> CheckedPackage {
     )
     .expect("the unit assembles");
     let graph = declarations
-        .check(CheckingLimits::default())
+        .check(CheckMode::Linked, CheckingLimits::default())
         .unwrap_or_else(|refusals| panic!("the unit checks: {refusals:?}"));
     CheckedPackage::link(graph)
 }
@@ -207,9 +207,9 @@ impl Realizability {
         .concat();
         let text = format!(
             "language \"ix:native\" edition \"1-draft\";\n\
-             profile v = \"quire.value.complete/v1\";\n\
-             profile t0 = \"quire.temporal.infinite-trace/v1\";\n\
-             profile pp = \"quire.protocol.finite-global/v1\";\n\
+             profile v = \"filament.value.complete/v1\";\n\
+             profile t0 = \"filament.temporal.infinite-trace/v1\";\n\
+             profile pp = \"filament.protocol.finite-global/v1\";\n\
              model M = \"{PACKAGE}\";\n\
              {RECORDS}protocol Flow using pp over (k: M::Cell) on origin {{\n{members}\n\
              run sequence Main {{\n\
@@ -223,13 +223,13 @@ impl Realizability {
         );
         let document = document();
         let checked = checked(&text, &document);
-        let emission = qsl_package::emit_checked(&checked, EmitLimits::new(1 << 32))
+        let emission = fsl_package::emit_checked(&checked, EmitLimits::new(1 << 32))
             .expect("the protocol package emits");
         let mut evidence = emission.evidence().clone();
         evidence
             .insert_domain_package_document(PACKAGE, document.as_slice())
             .expect("fresh domain evidence");
-        let admitted = match quire_contract_model::read_checked_package(
+        let admitted = match filament_contract_model::read_checked_package(
             emission.package().bytes(),
             CheckedPackageReadLimits::bounded(),
             &evidence,
@@ -238,7 +238,7 @@ impl Realizability {
             other => panic!("the package is admitted: {other:?}"),
         };
         let snapshot = json!({
-            "format": "quire.state.snapshot/v1",
+            "format": "filament.state.snapshot/v1",
             "identity": {"authority": "test", "identity": "s0"},
             "observation": "current", "model": {"identity": PACKAGE},
             "anchor": {"kind": "initialization", "name": "start"},

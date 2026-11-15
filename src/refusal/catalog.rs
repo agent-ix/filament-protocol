@@ -127,7 +127,7 @@ pub const UNREGISTERED_CODE: CodeEntry = CodeEntry {
 pub const ENVELOPE_CODES: CodeModule = CodeModule {
     root: "refusal",
     owner: "C-01",
-    module_path: "quire_protocol::refusal",
+    module_path: "filament_protocol::refusal",
     entries: &[UNREGISTERED_CODE],
 };
 
@@ -153,7 +153,7 @@ pub const UNSUPPORTED_SOURCE_CONTRACT: CodeEntry = CodeEntry {
 pub const SPEC_NAMED_CODES: CodeModule = CodeModule {
     root: "unsupported-source-contract",
     owner: "C-02",
-    module_path: "quire_protocol::refusal::catalog",
+    module_path: "filament_protocol::refusal::catalog",
     entries: &[UNSUPPORTED_SOURCE_CONTRACT],
 };
 
@@ -173,7 +173,7 @@ pub const SPEC_NAMED_CODES: CodeModule = CodeModule {
 pub const CLOSURE_CODES: CodeModule = CodeModule {
     root: "closure",
     owner: "C-15",
-    module_path: "quire_protocol::closure",
+    module_path: "filament_protocol::closure",
     entries: &[
         CodeEntry {
             provenance: Provenance::Minted,
@@ -241,7 +241,7 @@ pub const CLOSURE_CODES: CodeModule = CodeModule {
 pub const EXECUTION_CODES: CodeModule = CodeModule {
     root: "execution",
     owner: "C-15",
-    module_path: "quire_protocol::closure",
+    module_path: "filament_protocol::closure",
     entries: &[
         CodeEntry {
             provenance: Provenance::Minted,
@@ -278,7 +278,7 @@ pub const EXECUTION_CODES: CodeModule = CodeModule {
 pub const VERSION_LOCK_CODES: CodeModule = CodeModule {
     root: "version-lock",
     owner: "Task-013",
-    module_path: "quire_protocol::version_lock",
+    module_path: "filament_protocol::version_lock",
     entries: &[
         CodeEntry {
             provenance: Provenance::Minted,
@@ -616,7 +616,7 @@ impl CatalogSelection {
 }
 
 /// Identity of B's own local diagnostic catalog.
-pub const LOCAL_CATALOG_IDENTITY: &str = "agent-ix/quire-protocol/refusal-catalog";
+pub const LOCAL_CATALOG_IDENTITY: &str = "agent-ix/filament-protocol/refusal-catalog";
 /// Revision of B's own local diagnostic catalog.
 pub const LOCAL_CATALOG_REVISION: &str = "1";
 

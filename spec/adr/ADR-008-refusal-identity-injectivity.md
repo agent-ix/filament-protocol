@@ -4,13 +4,13 @@ title: "One refusal axis, one typed identity"
 type: ADR
 status: accepted
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-271
+  - target: ix://agent-ix/filament-specification/FR-271
     type: depends_on
 ---
 # ADR-008: One refusal axis, one typed identity
@@ -133,7 +133,7 @@ of the current selection surface.
 **Local and source interiors remain separate.** Protocol's local refusal paths
 use FR-008's accepted closed causes and stages. A known source response retains
 the exact interior its selected contract publishes; an unknown contract remains
-opaque under `unsupported-source-contract`. The proposed QSpec diagnostic
+opaque under `unsupported-source-contract`. The proposed FSpec diagnostic
 catalog is not required by local paths and does not block their injectivity
 tests.
 

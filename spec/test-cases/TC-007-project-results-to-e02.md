@@ -3,11 +3,11 @@ id: TC-007
 title: "Project canonical protocol results to E02"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-034
+  - target: ix://agent-ix/filament-protocol/FR-034
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-035
+  - target: ix://agent-ix/filament-protocol/FR-035
     type: verifies
 ---
 # TC-007: Project canonical protocol results to E02

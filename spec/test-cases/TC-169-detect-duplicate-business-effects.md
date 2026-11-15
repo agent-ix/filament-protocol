@@ -3,7 +3,7 @@ id: TC-169
 title: "Detect duplicate business effects independently of delivery"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-023
+  - target: ix://agent-ix/filament-protocol/FR-023
     type: verifies
 ---
 # TC-169: Detect duplicate business effects independently of delivery

@@ -8,15 +8,15 @@ mod support {
     pub mod standin;
 }
 
-use ix_trace_rs::trace;
-use qsl_foundation::witness::ValuePathStep;
-use qsl_replay::{SettlementBasis, Truth};
-use qsl_semantics::check::Capability;
-use quire_protocol::dispatch::{
+use filament_protocol::dispatch::{
     dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal,
     ProtocolClaimKind, ProtocolOutcome,
 };
-use quire_protocol::disposition::ClaimSettlement;
+use filament_protocol::disposition::ClaimSettlement;
+use fsl_foundation::witness::ValuePathStep;
+use fsl_replay::{SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
+use ix_trace_rs::trace;
 use support::dynamic::Dynamic;
 use support::standin::{always, request, serve, witness, Boundary, Sentinel};
 
