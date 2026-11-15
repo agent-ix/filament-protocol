@@ -8,6 +8,7 @@ mod support {
     pub mod standin;
 }
 
+use filament_contract_model::CheckedNodeId;
 use filament_protocol::declarations::Ordering;
 use filament_protocol::dispatch::{
     dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal,
@@ -119,7 +120,7 @@ fn an_omitted_premise_refuses_only_that_disposition_and_calls_no_backend() {
     no_role.premises.roles.remove(&role);
     let (mut boundary, calls) = serving();
     let declarations = dynamic.linked().declarations();
-    let settled = dispatch_claims(
+    let settled = dispatch_claims::<_, _, _, CheckedNodeId, _>(
         &mut boundary,
         declarations,
         &[],
@@ -296,7 +297,7 @@ fn a_requester_premise_that_disagrees_with_the_package_is_refused_alone() {
         Delivery::AtMostOnce
     };
     let (mut boundary, calls) = serving();
-    let settled = dispatch_claims(
+    let settled = dispatch_claims::<_, _, _, CheckedNodeId, _>(
         &mut boundary,
         dynamic.linked().declarations(),
         &[],

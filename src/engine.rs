@@ -29,7 +29,7 @@ use fsl_replay::{
 };
 use fsl_route::{BackendDescriptor, ProviderOrigin, RegistrationRefusal};
 
-use crate::dispatch::{Answer, BackendResult, Binding, Claim, ProtocolClaimKind};
+use crate::dispatch::{BackendResult, Binding, ProtocolClaimKind};
 use crate::disposition::{FslBoundary, FslReport, UnsupportedCause};
 
 /// The request the caller states for one claim, in the engine's own request
@@ -206,18 +206,11 @@ fn without_result<R>(record: &AnalyzeRecord) -> FslReport<R> {
     }
 }
 
-impl<'p, A, I, T, Q, S> FslBoundary<Claim<A, I, T>, Answer<EngineResult, Q>> for FslEngine<'p, S>
+impl<'p, A, I, S> FslBoundary<Binding<A, I>, EngineResult> for FslEngine<'p, S>
 where
     S: FnMut(&Binding<A, I>) -> EngineRequest<'p>,
 {
-    fn report(&mut self, claim: &Claim<A, I, T>) -> FslReport<Answer<EngineResult, Q>> {
-        let Claim::Protocol(binding) = claim else {
-            // Composition and refinement are not this engine's kinds.
-            return FslReport::Unsupported {
-                cause: UnsupportedCause::requested_capability(),
-                construct: None,
-            };
-        };
+    fn report(&mut self, binding: &Binding<A, I>) -> FslReport<EngineResult> {
         let index = RequestIndex::new(0);
         // The request the caller supplies must be the claim's own kind.
         let item = match ((self.supply)(binding), binding.request.kind) {
@@ -236,8 +229,6 @@ where
         if record.protocol_analysis.is_none() {
             return without_result(&record);
         }
-        EngineResult::of(record).map_or(FslReport::Failed(None), |result| {
-            FslReport::Result(Answer::Protocol(result))
-        })
+        EngineResult::of(record).map_or(FslReport::Failed(None), FslReport::Result)
     }
 }

@@ -431,10 +431,8 @@ pub fn refuted_record() -> (
 /// Dispatch a `realizability` claim over `fixture` to FSL's registered engine
 /// and return its result, as TC-166 and TC-148 do.
 pub fn settle(fixture: &Realizability) -> filament_protocol::engine::EngineResult {
-    use std::convert::Infallible;
-
     use filament_protocol::dispatch::{
-        dispatch, Answer, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
+        dispatch, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
     };
     use filament_protocol::disposition::ClaimSettlement;
     use filament_protocol::engine::{engine_descriptor, EngineRequest, FslEngine};
@@ -443,11 +441,8 @@ pub fn settle(fixture: &Realizability) -> filament_protocol::engine::EngineResul
 
     use super::projection::{claim_of, Asked};
 
-    let mut boundary: ProviderBoundary<
-        '_,
-        Asked,
-        Answer<filament_protocol::engine::EngineResult, Infallible>,
-    > = ProviderBoundary::new();
+    let mut boundary: ProviderBoundary<'_, Asked, filament_protocol::engine::EngineResult> =
+        ProviderBoundary::new();
     let engine = FslEngine::new(fixture.package(), |_: &Binding<(), ()>| {
         EngineRequest::Realizability(Box::new(fixture.request()))
     })

@@ -6,14 +6,12 @@
 // Each test binary uses a different part of these helpers.
 #![allow(dead_code)]
 
-use filament_contract_model::CheckedNodeId;
 use std::cell::RefCell;
-use std::convert::Infallible;
 use std::rc::Rc;
 
 use filament_protocol::dispatch::{
-    Answer, BackendResult, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
-    ProtocolRequest, ProviderBoundary,
+    BackendResult, Binding, ChannelPremise, Fragment, Premises, ProtocolClaimKind, ProtocolRequest,
+    ProviderBoundary,
 };
 use filament_protocol::disposition::{FslBoundary, FslReport};
 use fsl_foundation::source::provenance::OccurrenceKey;
@@ -35,8 +33,8 @@ pub type Req = ProtocolRequest<Assumptions, &'static str>;
 pub type Bind = Binding<Assumptions, &'static str>;
 /// The unified claim a provider is asked about; these tests ask no
 /// composition or refinement, whose entries are therefore `()`.
-pub type Asked = Claim<Assumptions, &'static str, CheckedNodeId>;
-pub type Boundary = ProviderBoundary<'static, Asked, Answer<Sentinel, Infallible>>;
+pub type Asked = Binding<Assumptions, &'static str>;
+pub type Boundary = ProviderBoundary<'static, Asked, Sentinel>;
 
 /// The result a stand-in returns, with the parts the dispatcher reads.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -108,13 +106,10 @@ impl Standin {
     }
 }
 
-impl FslBoundary<Asked, Answer<Sentinel, Infallible>> for Standin {
-    fn report(&mut self, claim: &Asked) -> FslReport<Answer<Sentinel, Infallible>> {
-        let Claim::Protocol(bound) = claim else {
-            return FslReport::Failed(None);
-        };
+impl FslBoundary<Asked, Sentinel> for Standin {
+    fn report(&mut self, bound: &Asked) -> FslReport<Sentinel> {
         self.calls.0.borrow_mut().push(bound.clone());
-        (self.answer)(bound).map(Answer::Protocol)
+        (self.answer)(bound)
     }
 }
 

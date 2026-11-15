@@ -196,7 +196,7 @@ in Domain Object Coverage instead.
 | FR-040 | FR-040-AC-1..AC-4 | TC-011 (AC-1..AC-2); no living test for AC-3..AC-4 | 🚧 Planned — 2 of 4 criteria have a living traced test; 2 designated to tests deleted in FSL-1549 stage 1. |
 | FR-041 | FR-041-AC-1..AC-4 | no living test for AC-1..AC-4 | ⛔ Retired — every test of this row's 4 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised. |
 | FR-042 | FR-042-AC-1..AC-6 | no living test for AC-1..AC-6 | ⛔ Retired — every test of this row's 6 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised. |
-| FR-301 | FR-301-AC-1..AC-6 | TC-147 (AC-1..AC-6) | 🚧 Planned — refinement dispatch is implemented (FR-200..FR-204, `assume_guarantee`) but no test is tagged FR-301-AC-1..AC-6 or TC-147, and no linked FSL engine serves `refinement` (FSL implements FR-176/FR-177, ADR-010). |
+| FR-301 | FR-301-AC-1..AC-6 | TC-147 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_147_decide_protocol_refinement.rs`); the refinement is decided in `src/refinement.rs` over caller-supplied transition systems until FSL's compile and link call (S2) derives them. |
 | FR-302 | FR-302-AC-1..AC-5 | TC-148 (AC-1..AC-5) | ✅ Implemented for `realizability` (the `refinement` half lands with TL-9, whose decision procedure this repository owns) — all 5 criteria have living traced tests: a decisive `realizability` result carries exactly the witness its `native-run-result/2` protocol-analysis record holds (FSL's engine, FSpec FR-352), any other basis carries none, a changed witness is refused, a backend that writes no record settles `unsupported` with a warning, and a witness-bearing result is produced under `filament.protocol.result/v1-draft.2`. |
 | FR-043 | FR-043-AC-1..AC-8 | TC-149 (AC-1..AC-8) | ✅ Implemented — TC-149's eight tests admit the three packages of recipe R, replay the 30-case standard mutation corpus, and carry the reader's, the selection's and the identity and equality files' refusals unchanged. |
 | FR-044 | FR-044-AC-1..AC-7 | TC-150 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests. AC-1 compares lists and edges with `protocol_view`/`causal_relation`; AC-2 forbids local edge construction; AC-3 checks the consumer-owned refusals with their node ids and loci and that the linker builds no owner refusal; AC-4 checks absent, carrier and non-protocol refusals; AC-5 checks the checked-package signature and retired types; AC-6 checks the linker names no window view and links without a window package member; AC-7 checks, over recipe R, distinct concurrent branch identities and join edges, unordered branches that all reach the join, no new edge from reordered clock-selection input, and the retained selected clock binding. |
@@ -219,11 +219,11 @@ in Domain Object Coverage instead.
 | FR-151 | FR-151-AC-1..AC-9 | TC-161 (AC-1..AC-6, AC-8); TC-168 (AC-7); no living test for AC-9 | 🚧 Partial — 8 of 9 criteria have living traced tests; AC-9 (role internality) is blocked: FSpec FR-465 gives a role no internality member (against FR-050 and FR-211), so FSL's read view publishes none. |
 | FR-152 | FR-152-AC-1..AC-7 | TC-162 (AC-1..AC-5, AC-7); no living test for AC-6 | 🚧 Partial — 6 of 7 criteria have living traced tests; AC-6 awaits filament-specification's FR-249 derived-artifact identity rule and FR-062 `resultId` rule (`ix://agent-ix/filament-specification/FR-249`, `ix://agent-ix/filament-specification/FR-062`). |
 | FR-153 | FR-153-AC-1..AC-8 | TC-163 (AC-1..AC-7); TC-164 (AC-8) | ✅ Implemented — AC-1..AC-7 have living traced tests with no backend and with a later-registered stand-in; AC-8 runs FSL's real engine. |
-| FR-200 | FR-200-AC-1..AC-9 | TC-200 (AC-1..AC-9) | ✅ Implemented — all 9 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`); the composition is decided in `src/composition.rs` with no backend call. |
-| FR-201 | FR-201-AC-1..AC-6 | TC-201 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`). |
-| FR-202 | FR-202-AC-1..AC-7 | TC-202 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`) against a refinement stand-in registered at the provider boundary; no FSL engine linked today serves `refinement`. |
-| FR-203 | FR-203-AC-1..AC-7 | TC-203 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`). |
-| FR-204 | FR-204-AC-1..AC-12 | TC-204 (AC-1..AC-12) | ✅ Implemented — all 12 criteria have living traced tests (`tests/tc_200_dispatch_composition_and_refinement.rs`); AC-1..AC-7 against a refinement stand-in, AC-8..AC-12 against the composition procedure. |
+| FR-200 | FR-200-AC-1..AC-7, AC-9 | TC-200 (AC-1..AC-7, AC-9) | ✅ Implemented — all 8 criteria have living traced tests (`tests/tc_200_decide_composition.rs`); AC-8 is retired with the claim-kind field; the composition is decided in `src/composition.rs` with no backend call. |
+| FR-201 | FR-201-AC-1..AC-6 | TC-201 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_200_decide_composition.rs`). |
+| FR-202 | FR-202-AC-1..AC-7 | TC-202 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_147_decide_protocol_refinement.rs`). |
+| FR-203 | FR-203-AC-1..AC-7 | TC-203 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_decide_composition.rs`). |
+| FR-204 | FR-204-AC-1..AC-12 | TC-204 (AC-1..AC-12) | ✅ Implemented — all 12 criteria have living traced tests: AC-1..AC-7 for refinement in `tests/tc_147_decide_protocol_refinement.rs`, AC-8..AC-12 for composition in `tests/tc_200_decide_composition.rs`. |
 
 Behavioural totals across these 61 rows: 372 acceptance criteria, of which 195 carry a living traced test (the criteria `quire matrix` computes as tagged). `quire matrix` computes no retired or planned split, so none is stated.
 
@@ -317,7 +317,7 @@ a coverage claim in this matrix.
 | TC-054 | Assess loop bound and report proof as undischarged | Property | P0 | FR-056, FR-059 | ✅ Implemented — its tests carry every criterion of the rows above. |
 | TC-055 | Map FSL Unsupported and requires-bound outcomes to dispositions | Property | P0 | FR-057, FR-058 | ✅ Implemented — its tests carry every criterion of the rows above. |
 | TC-154 | Settle deadline branches and bind captures | Property | P0 | FR-100, FR-101 | ✅ Implemented — its tests carry every criterion of the rows above. |
-| TC-147 | Admit protocol refinement dispatch | Property | P0 | FR-301 | 🚧 Planned — no test is tagged with its 6 criteria; dispatch is implemented under FR-200..FR-204 and no linked FSL engine serves `refinement`. |
+| TC-147 | Decide protocol refinement claims in this library | Property | P0 | FR-301 | ✅ Implemented — its tests carry every FR-301 criterion (AC-1..AC-6). |
 | TC-148 | Carry a trace-position witness on the protocol result wire | Property | P0 | FR-302 | ✅ Implemented for `realizability` (`refinement` lands with TL-9) — its five tests carry FR-302-AC-1..AC-5 against FSL's real engine and record-writing stand-ins. |
 | TC-160 | Dispatch local-projection and realizability claims to FSL's backend | Property | P0 | FR-150 | ✅ Implemented — its tests carry every criterion of the row above. |
 | TC-161 | Bind communication and visibility premises | Property | P0 | FR-151 | 🚧 Partial — its tests carry FR-151-AC-1..AC-6 and AC-8; AC-7 is TC-168's and AC-9 is blocked. |
@@ -331,11 +331,11 @@ a coverage claim in this matrix.
 | TC-169 | Detect duplicate business effects independently of delivery | Property | P0 | FR-023 | ✅ Implemented — its test carries FR-023-AC-6. |
 | TC-170 | Run the timed-refund and compensated fan-out reference workflows end to end | Integration | P0 | FR-023, FR-100 | ✅ Implemented — one end-to-end run of each workflow; IT-005 is its procedure. |
 | TC-171 | Refuse a package whose choice owner or channel sender is unreadable | Property | P0 | FR-051, FR-052 | ✅ Implemented — its tests carry FR-051-AC-5 and FR-052-AC-5. |
-| TC-200 | Decide composition claims in this library | Property | P0 | FR-200 | ✅ Implemented — its tests carry every FR-200 criterion (AC-1..AC-9); the composition is decided in `src/composition.rs`, no backend is called. |
+| TC-200 | Decide composition claims in this library | Property | P0 | FR-200 | ✅ Implemented — its tests carry every FR-200 criterion (AC-1..AC-7, AC-9); the composition is decided in `src/composition.rs`, no backend is called. |
 | TC-201 | Bind composition dispositions to their premise lists and component subjects | Property | P0 | FR-201 | ✅ Implemented — its tests carry every FR-201 criterion (AC-1..AC-6). |
-| TC-202 | Carry refinement results without reinterpretation | Property | P0 | FR-202 | ✅ Implemented — its tests carry every FR-202 criterion, against a stand-in; no linked FSL engine serves `refinement`. |
+| TC-202 | Report refinement counterexamples and read verdicts into the axes | Property | P0 | FR-202 | ✅ Implemented — its tests carry every FR-202 criterion (AC-1..AC-7). |
 | TC-203 | Refuse circular guarantee dependencies as self-justifying | Property | P0 | FR-203 | ✅ Implemented — its tests carry every FR-203 criterion (AC-1..AC-7). |
-| TC-204 | Refuse a claim established under assumptions stronger than the request's | Property | P0 | FR-204 | ✅ Implemented — its tests carry every FR-204 criterion (AC-1..AC-12); AC-1..AC-7 against a refinement stand-in. |
+| TC-204 | Refuse a claim established under assumptions stronger than the request's | Property | P0 | FR-204 | ✅ Implemented — its tests carry every FR-204 criterion (AC-1..AC-12). |
 
 ## V1-PROT inventory
 
@@ -372,7 +372,7 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on FSL's engine |
 | V1-PROT-028 realizability | FR-150 (TC-166) | Backed on FSL's engine; witness carrier FR-302 is batch D |
 | V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204) | Decided in `src/composition.rs`; no backend |
-| V1-PROT-030 refinement | FR-202, FR-204; FR-301 | Stand-in; no linked FSL engine; FR-301 has no tagged test |
+| V1-PROT-030 refinement | FR-202, FR-204; FR-301 (TC-147) | Decided in `src/refinement.rs` over caller-supplied systems; deriving them from a linked protocol waits on FSL's compile and link call (S2) |
 | V1-PROT-031 no external effects | FR-025 (TC-003, TC-009) | Backed |
 | V1-RUN-003 protocol replay | TC-167; TC-050..TC-055 | Partial: the dynamic axes only |
 | V1-RUN-005, V1-RUN-006 independent axes | FR-014 (TC-011); TC-055, TC-154, TC-163 | Partial, and blocked for publication. Quoin #519 is closed and its intake (`quoin.protocol-scenario-intake/v1`, quoin-evidence) accepts a scenario record for IT-001..IT-003, but the canonical result (FR-006, FR-007) and the scenario record (FR-017) it carries are retired here with no successor, so there is no Protocol value to hand over |

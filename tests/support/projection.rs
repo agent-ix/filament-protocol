@@ -5,16 +5,14 @@
 // Each test binary uses a different part of these helpers.
 #![allow(dead_code)]
 
-use std::convert::Infallible;
-
 use filament_contract_model::CheckedNodeId;
 use filament_exact::{
     EffectiveId, NodeKey, ObjectId, ObjectReference, OriginalDeclarationKey, PathSegment,
     UniverseId,
 };
 use filament_protocol::dispatch::{
-    dispatch, Answer, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
-    ProtocolOutcome, ProtocolRequest, ProviderBoundary,
+    dispatch, Binding, ChannelPremise, Fragment, Premises, ProtocolClaimKind, ProtocolOutcome,
+    ProtocolRequest, ProviderBoundary,
 };
 use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, FslEngine};
 use filament_protocol::link::LinkedProtocol;
@@ -25,8 +23,8 @@ use fsl_route::ProviderOrigin;
 
 use super::dynamic::Dynamic;
 
-pub type Asked = Claim<(), (), CheckedNodeId>;
-pub type Boundary<'p> = ProviderBoundary<'p, Asked, Answer<EngineResult, Infallible>>;
+pub type Asked = Binding<(), ()>;
+pub type Boundary<'p> = ProviderBoundary<'p, Asked, EngineResult>;
 
 pub const RECORDS: &str = "record Ack { ok: Boolean; }\nrecord Note { ok: Boolean; }\n\
     record PickMsg { ok: Boolean; }\nrecord CancelMsg { ok: Boolean; }\n";

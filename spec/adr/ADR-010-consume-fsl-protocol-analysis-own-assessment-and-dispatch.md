@@ -33,7 +33,7 @@ relationships:
 
 ## Status
 
-Accepted; Decision 6 reverses the composition assumption on 2026-11-15. This record fixes the split between this library and FSL's
+Accepted; Decision 6 reverses the composition assumption on 2026-11-15 and Decision 7 the protocol refinement assumption on 2026-11-16. This record fixes the split between this library and FSL's
 `fsl-analyze` for the dynamic, projection, realizability, composition and
 refinement extension. It authors no requirement; it reserves requirement-id
 blocks and names, per capability, what this library owns and what it consumes.
@@ -74,7 +74,7 @@ Read from FSL `main` on 2026-11-10.
 | Loops | `repeat` with iteration counters and a progress check on the body graph (ADR-027 PS-6); `invariant`/`variant` blocks are parsed and lowered into the checked package | `fsl-eval/.../program.rs`; `fsl-forms/src/protocol_control.rs`; `fsl-semantics/src/check/lowering/protocol/controls.rs` |
 | Compensation in a model subject | Registration, activation, attempts, commit cutoff, `cend` (ADR-027 CP-1..5) | `fsl-eval/src/simulation/protocol/compensation.rs` |
 | Missing bounds | A requires-bound pre-check before exploration | `fsl-analyze/src/model_check/check.rs` |
-| Refinement | Safety half on the explicit-state product, liveness half under abstract fairness, a protocol as the abstract side, counterexample replay, simulation certificate (ADR-020; FSL FR-142..149) | `fsl-analyze/src/model_check/refine.rs`, `fsl-replay/src/refinement/protocol_system.rs` |
+| Refinement (model-level) | Safety half on the explicit-state product, liveness half under abstract fairness, a protocol as the abstract side, counterexample replay, simulation certificate (ADR-020; FSL FR-142..149) | `fsl-analyze/src/model_check/refine.rs`, `fsl-replay/src/refinement/protocol_system.rs` |
 | Assume-guarantee composition | Planner that discharges `rely` and `liveness-dependency` slots from proved guarantees and fairness implication, and writes the discharge record (FSL FR-530) | `fsl-replay/src/planner/compose.rs` |
 | Local projection, realizability | Claim-kind vocabulary (`local-projection`, `realizability`), the protocol-family applicability gate and the routing key only. No engine. A request for either kind that no engine serves settles `unsupported` with `unsupported_projection` / `unsupported-requested-capability` | `fsl-semantics/src/check/capability.rs`, `fsl-route/src/lib.rs`, `fsl-analyze/src/analyze.rs` |
 
@@ -137,12 +137,10 @@ them (FR-005). Those are different questions, and the split follows them.
    a local approximation and never reports `unsupported` as false, satisfied or
    successful.
 
-4. **FR-301's "explicit-state product construction" is FSL's.** The product
-   over the concrete and abstract protocol systems is `check_refinement`
-   (ADR-020 RE-1). FR-301, spec.md section 2, AD-001 Decisions item 7 and TC-147 are
-   amended with this record to say that the library dispatches a refinement
-   claim to FSL's refinement backend and carries its result, instead of
-   building the product over the FR-002 graph.
+4. **FR-301's "explicit-state product construction" was assumed to be FSL's.**
+   This decision is superseded by Decision 7: the protocol-level product is
+   built in this library. FSL's `check_refinement` (ADR-020 RE-1) stays the
+   model-level check.
 
 5. **Requirement-id blocks.** Later waves allocate local FR ids in these
    blocks, one per capability family. Ids are allocated within a block
@@ -176,9 +174,27 @@ them (FR-005). Those are different questions, and the split follows them.
    temporal obligation: the requester carries FSL's label for each guarantee,
    and the library evaluates no temporal formula and no model-level
    refinement. The library computes no fixed point; a cycle is refused as
-   circular reasoning (FSL FR-176). The protocol refinement procedure is
-   reversed the same way by a later change; until then `refinement` is
-   dispatched and carried as before.
+   circular reasoning (FSL FR-176).
+
+7. **Reversal for protocol refinement (2026-11-16): this library decides the
+   protocol-level refinement procedure.** Decision 4 assumed FSL's
+   `check_refinement` serves a `refinement` claim over two protocols. It
+   does not: FSL's refinement is a model-level check over a model subject
+   (FSL FR-142, FR-147: a model that refines a protocol is never kind
+   `refinement`), and no FSL API relates two protocols. The library therefore
+   owns, in `refinement`: observable trace inclusion by subset construction
+   over the specification's internal-step closure, with a paired replayable
+   counterexample for an extra trace; deadlock; divergence; the
+   stronger-assumption finding (FR-204); and `unsupported` for a replicated
+   role, a symbolic queue capacity or a construct a system's builder could not
+   step, which never refines. The precedence is unsupported, refuted,
+   incomplete, refines. The transition system is this library's own small
+   type; FSL exposes no read view that steps a linked protocol into labelled
+   states, so deriving one from a linked protocol is FSL's compile and link
+   call (S2), and until it lands a caller supplies the systems. Atomic and
+   temporal obligations and model-level refinement stay FSL's. FR-301 and
+   FR-202 state the procedure; the dispatch of a `refinement` claim to a
+   backend is removed with the `Claim`/`Answer` plumbing it needed.
 
 ## Per-ticket ownership
 
@@ -187,7 +203,7 @@ them (FR-005). Those are different questions, and the split follows them.
 | TL-11 dynamic roles, bounded queues, joins, proved loops | Exploration semantics for all of them (table above), except FSL gaps G3 to G5 | FR-050 to FR-099: link the role, queue, join and loop declarations; assess an observed history against role lifetime and population bound, queue capacity and overflow outcome, join settlement per policy, loop bound; map FSL `Unsupported` and requires-bound outcomes to typed dispositions (Decision 3) | Rewrite as assessment and carrying work over FSL's semantics; drop "implement exploration" and "loop invariants and variants" from this repository |
 | TL-6 core roles, messages, channels, control, compensation, replay | Compensation and channel steps for model subjects | FR-100 to FR-149: only the delta over the existing FR-002, FR-003, FR-004, FR-019 to FR-028 and FR-041 coverage. Each new requirement names the V1-PROT capability it closes and the existing requirement it extends; a capability those FRs already cover gets no new FR | Rewrite as a delta ticket; close the rows the existing FRs already cover |
 | TL-10 projection and realizability | Claim vocabulary and routing only. No engine (gaps G1, G2) | FR-150 to FR-199: dispatch of both kinds to FSL's backend once one exists; premise binding for communication and visibility premises; carrying a FSL witness with trace-position correspondence to the linked graph (FR-302); `unsupported` while no backend exists, with global conformance preserved | Rewrite to dispatch and carrying only; the decision procedures move to a ticket for the FSL code lead (G1, G2); keep blocked by that ticket |
-| TL-9 composition and refinement | Model-level refinement engine, protocol abstract side, replay, certificate; atomic and temporal obligations. FSL provides no protocol-level composition procedure (Decision 6) | FR-200 to FR-249: the protocol-level composition decision (cycles, discharge, stronger assumptions; Decision 6); dispatch of `refinement` to FSL's backend (amends FR-301); premise binding; carrying paired counterexamples and certificates | Composition: decided here (FR-200..FR-204). Refinement: dispatch and carrying |
+| TL-9 composition and refinement | Model-level refinement engine, protocol abstract side, replay, certificate; atomic and temporal obligations. FSL provides no protocol-level composition or refinement procedure (Decisions 6, 7) | FR-200 to FR-249: the protocol-level composition decision (cycles, discharge, stronger assumptions; Decision 6) and refinement decision (traces, deadlock, divergence, stronger assumptions; Decision 7); premise binding; paired counterexamples | Both decided here (FR-200..FR-204, FR-301) |
 | TL-8 reference workflows, integration, qualification | Backends for the corpora where FSL has them | Integration tests and evidence for each Protocol-owned cell, as IT and TC artifacts that cite the FR blocks above. No FR block; qualification adds no requirement of its own | Keep as the last layer; scope corpora to the capabilities that have backends, and mark projection and realizability corpora blocked on G1 and G2 |
 | TL-12 adopt the extension and delivery DAG | Not applicable | This record is the adoption: it fixes the split, reserves the blocks and names ownership. No further adoption artifact is owed | Close when this record merges |
 

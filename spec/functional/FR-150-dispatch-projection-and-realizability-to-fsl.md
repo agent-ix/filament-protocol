@@ -87,6 +87,6 @@ One disposition per requested claim (FR-029), carrying the backend's result, ref
 - [FR-002](./FR-002-link-finite-protocol-representation.md) supplies the linked graph whose source identities bind the returned result.
 - [FR-005](./FR-005-dispatch-independent-protocol-claims.md), [FR-029](./FR-029-return-one-disposition-per-requested-claim.md) and [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) supply closed dispatch, independence and premise binding.
 - [FR-153](./FR-153-settle-unsupported-while-no-fsl-backend-serves-the-kind.md) states the empty-candidate settlement.
-- [FR-301](./FR-301-admit-protocol-refinement-dispatch.md) states the same dispatch-and-carry rule for the `refinement` claim kind.
+- [FR-301](./FR-301-decide-protocol-refinement-claims.md) decides the `refinement` claim kind in this library rather than dispatching it.
 - `ix://agent-ix/filament-specification/FR-060` states the independence of global conformance from the advanced claims.
 - FSL ADR-017 fixes the protocol boundary of the checked package this library reads.
