@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! The handoff directory of recipe R, written in process by QSL's writer
-//! (QSL FR-517) from the recipe inputs under `tests/fixtures/checked-handoff`.
+//! The handoff directory of recipe R, written in process by FSL's writer
+//! (FSL FR-517) from the recipe inputs under `tests/fixtures/checked-handoff`.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use qsl_package::NativeJoinLimits;
-use quire_contract_model::{
+use filament_contract_model::{
     CheckedPackageEvidence, ClockConfiguration, ClockExactNumber, NativeJoinBudget,
 };
-use quire_spec_language::checked_handoff::{evidence, write, CheckedHandoffRequest, Corpus};
-use quire_spec_language::emit_checked_v2::{ClockSelection, Request};
+use filament_spec_language::checked_handoff::{evidence, write, CheckedHandoffRequest, Corpus};
+use filament_spec_language::emit_checked_v2::{ClockSelection, Request};
+use fsl_package::NativeJoinLimits;
 
 const DIR: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -62,8 +62,8 @@ fn recipe(kind: &str) -> (&'static str, Vec<(&'static str, ClockConfiguration)>)
 }
 
 /// The finite native-join ceilings every test pass states for itself: 2^20
-/// work steps and 2^20 logical storage units, the values QSL's own handoff
-/// example uses (QSL FR-531 gives a fixture no default).
+/// work steps and 2^20 logical storage units, the values FSL's own handoff
+/// example uses (FSL FR-531 gives a fixture no default).
 const NATIVE_JOIN: NativeJoinLimits = NativeJoinLimits::new(1 << 20, 1 << 20);
 
 /// A new native-join budget of [`NATIVE_JOIN`] for one pass.

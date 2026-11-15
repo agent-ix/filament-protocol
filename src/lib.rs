@@ -4,15 +4,15 @@
 //! This crate deliberately owns no native parser, source frontend, wire decoder,
 //! numeric interpretation, or formal profile. It admits the checked-package
 //! handoff through Contract IR's reader (FR-043), links a protocol clause over
-//! QSL's read view (FR-044), evaluates compensation slots and temporal evidence
-//! through QSL's checked-package evaluation entries (FR-045, FR-046), and keeps
+//! FSL's read view (FR-044), evaluates compensation slots and temporal evidence
+//! through FSL's checked-package evaluation entries (FR-045, FR-046), and keeps
 //! the compensation state machine and the claim and closure vocabulary.
 
 #![forbid(unsafe_code)]
 
 // Lets in-crate semantic test modules retain the same absolute paths as their
 // former integration-test location without exporting a second crate surface.
-extern crate self as quire_protocol;
+extern crate self as filament_protocol;
 
 // ---------------------------------------------------------------------------
 // Facade reservation (chunk C-00).
@@ -27,7 +27,7 @@ extern crate self as quire_protocol;
 // established here.
 // ---------------------------------------------------------------------------
 
-/// Dispatch of `composition` and `refinement` claims to QSL's backends (FR-200..204).
+/// Dispatch of `composition` and `refinement` claims to FSL's backends (FR-200..204).
 pub mod assume_guarantee;
 /// Count, allocation and deadline guards. Owner chunk: C-29 (submodule: C-30).
 pub mod bounds;
@@ -46,19 +46,19 @@ pub mod declarations;
 pub mod delivery_index;
 /// Exact-byte SHA-256 digest carriers.
 pub mod digest;
-/// Dispatch of `local-projection` and `realizability` claims to the backend QSL's registry selects.
+/// Dispatch of `local-projection` and `realizability` claims to the backend FSL's registry selects.
 pub mod dispatch;
-/// Typed dispositions for QSL `Unsupported` and requires-bound outcomes.
+/// Typed dispositions for FSL `Unsupported` and requires-bound outcomes.
 pub mod disposition;
 /// Assessment of an observed history against those declarations.
 pub mod dynamics;
-/// QSL's protocol analysis engine as the provider behind the dispatch boundary (FR-150..153).
+/// FSL's protocol analysis engine as the provider behind the dispatch boundary (FR-150..153).
 pub mod engine;
 pub mod evidence;
 /// Protocol identity newtypes. Owner chunk: C-07.
 pub mod ids;
 pub mod link;
-/// The derivation of an observation's checked node and workflow instance (QSpec FR-260-AC-5, FR-260-AC-6, FR-260-AC-9).
+/// The derivation of an observation's checked node and workflow instance (FSpec FR-260-AC-5, FR-260-AC-6, FR-260-AC-9).
 pub mod observation_link;
 /// Closed public operation and claim outcome algebras.
 pub mod outcome;

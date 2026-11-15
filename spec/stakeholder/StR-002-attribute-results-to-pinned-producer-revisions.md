@@ -3,21 +3,21 @@ id: StR-002
 title: "Attribute every result to the exact producer revisions behind it"
 type: StR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-012
+  - target: ix://agent-ix/filament-protocol/FR-012
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-013
+  - target: ix://agent-ix/filament-protocol/FR-013
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-017
+  - target: ix://agent-ix/filament-protocol/FR-017
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-018
+  - target: ix://agent-ix/filament-protocol/FR-018
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/NFR-001
+  - target: ix://agent-ix/filament-protocol/NFR-001
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: satisfied_by
 ---
 # StR-002: Attribute every result to the exact producer revisions behind it
@@ -63,7 +63,7 @@ through Engineering Assurance and Quoin. Affected parties are the external
 producer owners this repository consumes — the native compiler, observation,
 temporal, diagnostic-catalog, Engineering Assurance, Quoin, and E02 owners — each
 of whom is exposed when a result attributes an outcome to the wrong authority.
-quire-verification is an affected consumer, because it strictly reads the E02
+filament-verification is an affected consumer, because it strictly reads the E02
 projection derived from the attributed result.
 
 ## Context and Assumptions

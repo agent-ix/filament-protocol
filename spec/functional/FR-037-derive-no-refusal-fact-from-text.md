@@ -3,15 +3,15 @@ id: FR-037
 title: "Derive no refusal fact from display text"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-036
+  - target: ix://agent-ix/filament-protocol/FR-036
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-274
+  - target: ix://agent-ix/filament-specification/FR-274
     type: references
-  - target: ix://agent-ix/quire-specification/FR-271
+  - target: ix://agent-ix/filament-specification/FR-271
     type: references
 ---
 # FR-037: Derive no refusal fact from display text
@@ -55,7 +55,7 @@ The library SHALL NOT repair a shared typed interior across two distinct refusal
 ## Adopted vocabulary
 
 The location kinds this requirement refuses to synthesize are upstream's
-`ix://agent-ix/quire-specification/FR-274`, and the code vocabulary it refuses to
+`ix://agent-ix/filament-specification/FR-274`, and the code vocabulary it refuses to
 match on text is `FR-271`. Both are adopted by reference. The identity this
 requirement protects is
 [FR-014](./FR-014-typed-outcome-identity.md)'s typed outcome identity: kind

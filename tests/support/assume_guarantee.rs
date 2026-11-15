@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! The stand-in backend of TC-200 to TC-204. It is registered at the provider
-//! boundary under a descriptor QSL's registry accepts, records every call and
+//! boundary under a descriptor FSL's registry accepts, records every call and
 //! answers from a function of the call. It decides nothing.
 
 // Each test binary uses a different part of these helpers.
@@ -10,20 +10,20 @@ use std::cell::RefCell;
 use std::convert::Infallible;
 use std::rc::Rc;
 
-use qsl_foundation::BackendId;
-use qsl_replay::{InconclusiveCause, ItemLabel};
-use qsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
-use qsl_semantics::check::Capability;
-use quire_contract_model::CheckedNodeId;
-use quire_protocol::assume_guarantee::{
+use filament_contract_model::CheckedNodeId;
+use filament_protocol::assume_guarantee::{
     AssumeGuaranteeBinding, AssumeGuaranteeKind, AssumeGuaranteeRequest, AssumeGuaranteeResult,
     PremiseLists,
 };
-use quire_protocol::closure::AssessmentExecution;
-use quire_protocol::dispatch::{
+use filament_protocol::closure::AssessmentExecution;
+use filament_protocol::dispatch::{
     Answer, Claim, ClaimDisposition, ClaimRequest, Fragment, ProviderBoundary,
 };
-use quire_protocol::disposition::{QslBoundary, QslReport};
+use filament_protocol::disposition::{FslBoundary, FslReport};
+use fsl_foundation::BackendId;
+use fsl_replay::{InconclusiveCause, ItemLabel};
+use fsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
+use fsl_semantics::check::Capability;
 
 use super::dynamic::Dynamic;
 
@@ -88,7 +88,7 @@ impl AssumeGuaranteeResult<Entry> for Out {
     }
 }
 
-pub type Reply = Box<dyn Fn(&Bind) -> QslReport<Out>>;
+pub type Reply = Box<dyn Fn(&Bind) -> FslReport<Out>>;
 
 #[derive(Clone, Default)]
 pub struct Calls(Rc<RefCell<Vec<Bind>>>);
@@ -107,10 +107,10 @@ pub struct Standin {
     calls: Calls,
 }
 
-impl QslBoundary<Asked, Answer<Infallible, Out>> for Standin {
-    fn report(&mut self, claim: &Asked) -> QslReport<Answer<Infallible, Out>> {
+impl FslBoundary<Asked, Answer<Infallible, Out>> for Standin {
+    fn report(&mut self, claim: &Asked) -> FslReport<Answer<Infallible, Out>> {
         let Claim::AssumeGuarantee(bound) = claim else {
-            return QslReport::Failed(None);
+            return FslReport::Failed(None);
         };
         self.calls.0.borrow_mut().push(bound.clone());
         (self.answer)(bound).map(Answer::AssumeGuarantee)
@@ -126,7 +126,7 @@ pub fn serve(boundary: &mut Boundary, name: &str, kinds: &[Capability], answer: 
         None,
         None,
     )
-    .expect("a descriptor QSL's registry accepts");
+    .expect("a descriptor FSL's registry accepts");
     boundary
         .register(
             descriptor,
@@ -140,7 +140,7 @@ pub fn serve(boundary: &mut Boundary, name: &str, kinds: &[Capability], answer: 
 }
 
 pub fn always(result: Out) -> Reply {
-    Box::new(move |_| QslReport::Result(result.clone()))
+    Box::new(move |_| FslReport::Result(result.clone()))
 }
 
 /// A request over the roles `S` and `R` as component subjects, with the

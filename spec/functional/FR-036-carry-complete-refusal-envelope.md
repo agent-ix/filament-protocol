@@ -3,23 +3,23 @@ id: FR-036
 title: "Carry the complete typed refusal envelope"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: references
-  - target: ix://agent-ix/quire-specification/FR-047
+  - target: ix://agent-ix/filament-specification/FR-047
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-270
+  - target: ix://agent-ix/filament-specification/FR-270
     type: references
-  - target: ix://agent-ix/quire-specification/FR-271
+  - target: ix://agent-ix/filament-specification/FR-271
     type: references
-  - target: ix://agent-ix/quire-specification/FR-272
+  - target: ix://agent-ix/filament-specification/FR-272
     type: references
-  - target: ix://agent-ix/quire-specification/FR-273
+  - target: ix://agent-ix/filament-specification/FR-273
     type: references
-  - target: ix://agent-ix/quire-specification/FR-274
+  - target: ix://agent-ix/filament-specification/FR-274
     type: references
 ---
 # FR-036: Carry the complete typed refusal envelope
@@ -77,7 +77,7 @@ presence and cardinality only.
 | FR-036-AC-3 | The recorded axis and the retained interior are together sufficient to evaluate FR-014-AC-1's pairwise comparison of distinct axes without reading any display text, and a corpus whose refusing rows record only a two-valued admits/refuses disposition fails this criterion. | Test (TC-011) |
 | FR-036-AC-4 | An envelope whose domain is absent, outside the seven declared values, or inconsistent with its closed stage-to-domain mapping is refused. | Test (TC-011) |
 | FR-036-AC-5 | The partial-output state is explicit on every envelope and is inferred from neither an empty output nor the absence of a success value. | Test (TC-011) |
-| FR-036-AC-6 | Every local cause belongs to `quire.protocol/refusal/1`; every retained source cause names the exact FR-009-resolved source contract, and an unknown contract is retained as `unsupported-source-contract` rather than interpreted. | Test (TC-011) |
+| FR-036-AC-6 | Every local cause belongs to `filament.protocol/refusal/1`; every retained source cause names the exact FR-009-resolved source contract, and an unknown contract is retained as `unsupported-source-contract` rather than interpreted. | Test (TC-011) |
 
 ## Adopted vocabulary
 
@@ -109,7 +109,7 @@ source context is represented as unavailable, not invented from display data.
 - [FR-009](./FR-009-lock-external-producer-revisions.md) owns the version-lock
   entry that gates the catalog selection, and reports a scenario requiring an
   `unresolved` entry as unexecutable.
-- `ix://agent-ix/quire-specification/FR-047` and FR-270 through FR-274 inform
+- `ix://agent-ix/filament-specification/FR-047` and FR-270 through FR-274 inform
   source adapters but do not block local refusal execution.
 
 ## Status

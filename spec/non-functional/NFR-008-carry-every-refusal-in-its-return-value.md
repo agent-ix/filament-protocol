@@ -4,17 +4,17 @@ title: "Carry every refusal entirely in its return value"
 type: NFR
 quality_attribute: maintainability
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: constrains
-  - target: ix://agent-ix/quire-protocol/NFR-001
+  - target: ix://agent-ix/filament-protocol/NFR-001
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-002
+  - target: ix://agent-ix/filament-protocol/NFR-002
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: depends_on
 ---
 # NFR-008: Carry every refusal entirely in its return value
@@ -190,7 +190,7 @@ mutation cannot be run is recorded as unexecutable rather than as passing.
   language and containment; it forbids `unsafe` and it forbids local runners, and
   it forbids neither an out-of-band write nor a panic, which is why AC-3 and AC-4
   are stated here.
-- **Source contracts**: `ix://agent-ix/quire-specification/FR-270` through
+- **Source contracts**: `ix://agent-ix/filament-specification/FR-270` through
   `FR-274` are informative catalog objects. Protocol does not require them for
   its local envelope. An adapter selects an accepted source diagnostic contract
   explicitly or preserves it uninterpreted; it never guesses a nearest version.
@@ -204,4 +204,4 @@ In progress. The current refusal envelope/catalog and source-error retention
 exist but are not yet one public outcome surface. Task-017 establishes the
 shared operation/refusal foundation; Task-006 routes every final public path;
 Task-008 closes reproduction and source inventory. No local refusal axis is
-blocked on the proposed QSpec diagnostic catalog.
+blocked on the proposed FSpec diagnostic catalog.

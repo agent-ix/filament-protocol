@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! Exact trigger/capture/anchor activation over QObs owner facts.
+//! Exact trigger/capture/anchor activation over FObs owner facts.
 
-use qsl_package::protocol_view::{choice_visibility, ChoiceVisibility, ViewRefusal};
-use quire_contract_model::{CheckedNodeId, CheckedSemanticNodeV2};
-use quire_observation::authority::{completeness, observation, OpenClosed};
+use filament_contract_model::{CheckedNodeId, CheckedSemanticNodeV2};
+use filament_observation::authority::{completeness, observation, OpenClosed};
+use fsl_package::protocol_view::{choice_visibility, ChoiceVisibility, ViewRefusal};
 
 use crate::ids::{EffectId, RoleInstanceId, WorkflowInstanceId};
 
 use super::purity::PureAssessment;
 
-/// Owned choice-visibility evidence read from QSL's checked accessor
-/// (QSpec FR-172-AC-6): the `choice` control, the node that owns the decision
+/// Owned choice-visibility evidence read from FSL's checked accessor
+/// (FSpec FR-172-AC-6): the `choice` control, the node that owns the decision
 /// and the exact visible set in carried order. Only the accessor's result
 /// constructs it.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -22,11 +22,11 @@ pub struct ChoiceVisibilityEvidence {
 
 impl ChoiceVisibilityEvidence {
     /// Read the evidence of one checked `choice` control through
-    /// `qsl_package::protocol_view::choice_visibility`.
+    /// `fsl_package::protocol_view::choice_visibility`.
     ///
     /// # Errors
     ///
-    /// QSL's refusal when `node` is no well-formed `choice` control.
+    /// FSL's refusal when `node` is no well-formed `choice` control.
     pub fn read(node: &CheckedSemanticNodeV2) -> Result<Self, ViewRefusal> {
         choice_visibility(node).map(|checked| Self::from_checked(&checked))
     }
@@ -77,7 +77,7 @@ pub struct Binding {
     pub anchor: Box<[u8]>,
     /// Exact choice-visibility evidence (FR-479 activation binding).
     pub choice_visibility: ChoiceVisibilityEvidence,
-    /// Exact expected QObs observation identity bytes.
+    /// Exact expected FObs observation identity bytes.
     pub trigger_observation: Box<[u8]>,
     /// Exact trigger scope selected for closure authority.
     pub scope_identity: Box<str>,
@@ -150,7 +150,7 @@ pub enum Guard {
 /// Exact trigger evidence state.
 #[derive(Clone, Copy, Debug)]
 pub enum TriggerEvidence<'a> {
-    /// Strict QObs trigger view is available.
+    /// Strict FObs trigger view is available.
     Available(&'a observation::View),
     /// No trigger observation was admitted.
     Absent,
@@ -187,7 +187,7 @@ pub fn assess(
     offered: &Binding,
     guard: Guard,
     trigger: TriggerEvidence<'_>,
-    closure: &quire_observation::authority::closure::View,
+    closure: &filament_observation::authority::closure::View,
     completeness: &completeness::View,
 ) -> Result<Option<Record>, Refusal> {
     if guard == Guard::False {
@@ -226,7 +226,7 @@ fn mismatches(
     selected: &Binding,
     offered: &Binding,
     trigger: TriggerEvidence<'_>,
-    closure: &quire_observation::authority::closure::View,
+    closure: &filament_observation::authority::closure::View,
     completeness: &completeness::View,
 ) -> Vec<IdentityAxis> {
     let mut axes = Vec::new();

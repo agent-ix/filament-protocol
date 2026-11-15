@@ -3,22 +3,22 @@ id: FR-034
 title: "Derive the E02 projection identity"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-062
+  - target: ix://agent-ix/filament-specification/FR-062
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-249
+  - target: ix://agent-ix/filament-specification/FR-249
     type: references
-  - target: ix://agent-ix/quire-specification/FR-240
+  - target: ix://agent-ix/filament-specification/FR-240
     type: references
 ---
 # FR-034: Bind the E02 projection identity
 
 ## Description
 
-When a canonical protocol result is projected, the adapter SHALL emit the `TechniqueResult.resultId` required by QSpec FR-062 and FR-249.
+When a canonical protocol result is projected, the adapter SHALL emit the `TechniqueResult.resultId` required by FSpec FR-062 and FR-249.
 When a projection is emitted, the adapter SHALL retain exactly one unchanged canonical-result entry in `nativeArtifacts` with its source URI and the media type FR-062 states.
 When a projection is emitted, the adapter SHALL set every E02 target-binding field equal to its selected context.
 
@@ -38,14 +38,14 @@ provenance, or one refusal carrying a code from
 ## Behavior
 
 The adapter carries the `resultId` structure and source `resultKey` specified
-by QSpec FR-062 and FR-249. It performs exact-structure comparisons and derives
+by FSpec FR-062 and FR-249. It performs exact-structure comparisons and derives
 no hash identity. The target obligation and execution context remain separately
 checked against their selected values.
 
 The adapter validates the canonical protocol result before mapping it.
 `nativeArtifacts` carries exactly one canonical-result entry with the source
 URI and media type
-`application/vnd.agent-ix.quire-protocol-result+json;version=1-draft.1`. The
+`application/vnd.agent-ix.filament-protocol-result+json;version=1-draft.1`. The
 canonical-result bytes are carried unchanged; the adapter neither
 recanonicalises nor re-labels them.
 
@@ -84,12 +84,12 @@ and does not compute a digest for either one.
 | Derived portable projection result | `FR-249-derived-projection-result` | `resultId` per FR-062 |
 | Canonical protocol result (source) | `FR-240-canonical-protocol-result` | structural `resultKey` per FR-286 |
 
-The identity structure is owned by QSpec FR-062 and FR-249 and is consumed by
+The identity structure is owned by FSpec FR-062 and FR-249 and is consumed by
 reference rather than restated here.
 
 ### Resolved and opaque source details
 
-Accepted Quire Specification FS02 fixes a source-reader refusal to
+Accepted Filament Specification FS02 fixes a source-reader refusal to
 `invalid-source-result`; `identity-mismatch` applies after source validation to
 a target-context mismatch.
 
@@ -98,7 +98,7 @@ a target-context mismatch.
   this artifact declares neither." The derived projection identity is fully specified; the
   source identity it consumes is not. This requirement consumes the source
   identity as an exact opaque value and declares no kind for it. Owner:
-  `quire-specification`.
+  `filament-specification`.
 
 ## Dependencies
 
@@ -108,5 +108,5 @@ a target-context mismatch.
   refusal set this identity is emitted with.
 - [FR-011](./FR-011-consumer-identity-discipline.md) supplies the identity
   discipline.
-- `ix://agent-ix/quire-specification/FR-062` states the result identity,
+- `ix://agent-ix/filament-specification/FR-062` states the result identity,
   native-artifact entry and no-display-text rule.

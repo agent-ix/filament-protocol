@@ -3,23 +3,23 @@ id: FR-005
 title: "Dispatch independent protocol claims"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-029
+  - target: ix://agent-ix/filament-protocol/FR-029
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-030
+  - target: ix://agent-ix/filament-protocol/FR-030
     type: contains
-  - target: ix://agent-ix/quire-specification/FR-060
+  - target: ix://agent-ix/filament-specification/FR-060
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-249
+  - target: ix://agent-ix/filament-specification/FR-249
     type: references
-  - target: ix://agent-ix/quire-specification/FR-280
+  - target: ix://agent-ix/filament-specification/FR-280
     type: references
-  - target: ix://agent-ix/quire-specification/FR-281
+  - target: ix://agent-ix/filament-specification/FR-281
     type: references
 ---
 # FR-005: Dispatch independent protocol claims
@@ -32,7 +32,7 @@ When either FR-029 or FR-030 is unsatisfied for a requested claim, the dispatche
 ## Inputs
 
 The exact conformance report produced by FR-004 plus ordered requests naming one
-`ix://agent-ix/quire-specification/FR-290` claim kind each —
+`ix://agent-ix/filament-specification/FR-290` claim kind each —
 `global-conformance`, `monitorability`, `local-projection`, `refinement`,
 `realizability` or `composition` —
 with admitted fragments, closed backend selections, assumptions, budgets, and
@@ -105,11 +105,11 @@ results. The Outputs list is therefore a reference, not a local enumeration.
 
 ### Accepted owner rulings
 
-`ix://agent-ix/quire-specification/FR-290`'s **Vocabulary authority** section,
-landed by `agent-ix/quire-specification#116`, is the accepted authority for the
+`ix://agent-ix/filament-specification/FR-290`'s **Vocabulary authority** section,
+landed by `agent-ix/filament-specification#116`, is the accepted authority for the
 six capability kinds this requirement dispatches; Protocol's advertised
 claim-kind vocabulary is exactly those six labels and it authors none of its own.
-QSpec #29/#31/#40 fixes FR-290 claim kinds, FR-281 strength/cardinality, FR-291
+FSpec #29/#31/#40 fixes FR-290 claim kinds, FR-281 strength/cardinality, FR-291
 admitted fragments, FR-292 analysis backends, FR-217 role internality,
 FR-210/FR-287 subject membership and FR-283 projection refusal codes. Protocol
 imports those exact values. Production exposes no arbitrary backend callback;
@@ -119,6 +119,6 @@ an advanced claim without an accepted local implementation returns
 ## Dependencies
 
 - [FR-004](./FR-004-assess-finite-global-conformance.md).
-- `ix://agent-ix/quire-specification/FR-060`.
+- `ix://agent-ix/filament-specification/FR-060`.
 - Parts: [FR-029](./FR-029-return-one-disposition-per-requested-claim.md),
   [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md).

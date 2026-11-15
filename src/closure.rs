@@ -692,7 +692,7 @@ impl ClosureState {
 /// global success:
 ///
 /// ```compile_fail
-/// let _ = quire_protocol::closure::CompleteGlobalConformance {};
+/// let _ = filament_protocol::closure::CompleteGlobalConformance {};
 /// ```
 ///
 /// Nor can one axis's state be substituted for another's. `FR-284` requires
@@ -700,7 +700,7 @@ impl ClosureState {
 /// substitutable, so the types are unrelated and substitution does not compile:
 ///
 /// ```compile_fail
-/// use quire_protocol::closure::{DecisionScopeClosure, GlobalConformanceClosure};
+/// use filament_protocol::closure::{DecisionScopeClosure, GlobalConformanceClosure};
 /// let _: GlobalConformanceClosure = DecisionScopeClosure::of(ScopeState::Closed);
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

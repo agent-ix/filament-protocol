@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! TC-168: a linked channel carries its sender, receiver and message type, and
-//! a linked choice its owner and visible set, as QSL's read view publishes
+//! a linked choice its owner and visible set, as FSL's read view publishes
 //! them; the dispatcher forwards the channel ends it linked (FR-051-AC-4,
 //! FR-052-AC-4, FR-151-AC-7).
 
@@ -11,18 +11,18 @@ mod support {
     pub mod standin;
 }
 
+use filament_protocol::dispatch::{dispatch, ProtocolClaimKind};
+use fsl_package::protocol_view::{channel_endpoints, choice_visibility};
+use fsl_replay::{SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
 use ix_trace_rs::trace;
-use qsl_package::protocol_view::{channel_endpoints, choice_visibility};
-use qsl_replay::{SettlementBasis, Truth};
-use qsl_semantics::check::Capability;
-use quire_protocol::dispatch::{dispatch, ProtocolClaimKind};
 use support::dynamic::Dynamic;
 use support::projection::{worked, CANCELLED, PICK};
 use support::standin::{always, request, serve, Boundary, Sentinel};
 
 #[test]
 #[trace("TC-168", "FR-051-AC-4")]
-fn a_linked_channel_carries_its_ends_and_message_type_as_qsl_reads_them() {
+fn a_linked_channel_carries_its_ends_and_message_type_as_fsl_reads_them() {
     let dynamic = worked(PICK, CANCELLED);
     let declarations = dynamic.linked().declarations();
     for (channel, sender, receiver) in [
@@ -41,7 +41,7 @@ fn a_linked_channel_carries_its_ends_and_message_type_as_qsl_reads_them() {
             .iter()
             .find(|candidate| candidate.node_id == node)
             .expect("the channel node");
-        let ends = channel_endpoints(graph_node).expect("QSL reads the ends");
+        let ends = channel_endpoints(graph_node).expect("FSL reads the ends");
         assert_eq!(&declared.message_type, ends.message_type);
     }
     let order = declarations
@@ -69,14 +69,14 @@ fn a_linked_choice_carries_its_owner_and_visible_set() {
         .iter()
         .find(|candidate| candidate.node_id == choice.control)
         .expect("the choice node");
-    let evidence = choice_visibility(graph_node).expect("QSL reads the choice");
+    let evidence = choice_visibility(graph_node).expect("FSL reads the choice");
     assert_eq!(&choice.control, evidence.choice);
     assert_eq!(&choice.owner, evidence.owner);
     assert_eq!(choice.visible.len(), 1);
     assert_eq!(
         choice.visible.iter().collect::<Vec<_>>(),
         evidence.visible,
-        "the visible nodes, in QSL's order"
+        "the visible nodes, in FSL's order"
     );
     assert_eq!(choice.key, dynamic.key(&choice.control));
 }
@@ -119,7 +119,7 @@ fn the_backend_receives_each_channels_ends_and_message_type_as_linked() {
             .iter()
             .find(|candidate| &candidate.node_id == node)
             .expect("the channel node");
-        let ends = channel_endpoints(graph_node).expect("QSL reads the ends");
+        let ends = channel_endpoints(graph_node).expect("FSL reads the ends");
         assert_eq!(&call.channels[index].message_type, ends.message_type);
     }
     assert_eq!(

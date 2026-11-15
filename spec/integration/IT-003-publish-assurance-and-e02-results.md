@@ -3,17 +3,17 @@ id: IT-003
 title: "Publish typed assurance and E02 results"
 type: IT
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: verifies
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: verifies
-  - target: ix://agent-ix/quire-protocol/NFR-002
+  - target: ix://agent-ix/filament-protocol/NFR-002
     type: verifies
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: verifies
 ---
 # IT-003: Publish typed assurance and E02 results
@@ -28,7 +28,7 @@ runner, transcript parser, evidence store, or sufficiency decision.
 
 The protocol library produces canonical and E02 result values. Engineering
 Assurance supplies bounded execution context and typed transport;
-quire-verification supplies the E02 strict reader; Quoin retains evidence.
+filament-verification supplies the E02 strict reader; Quoin retains evidence.
 
 ### Owner boundaries
 
@@ -36,7 +36,7 @@ quire-verification supplies the E02 strict reader; Quoin retains evidence.
 | --- | --- | --- |
 | A (compiled protocol) | The admitted package the canonical result derives from, at one explicit contract version | Substitute one contract version's result for another's |
 | Engineering Assurance | Bounded execution context, typed request/result transport, run and budget identity | Spawn a process, parse stdout, or decide a verdict from transcript text |
-| quire-verification (E02) | The strict E02 reader and its finding vocabulary | Author a second reader, relax a finding, or declare sufficiency |
+| filament-verification (E02) | The strict E02 reader and its finding vocabulary | Author a second reader, relax a finding, or declare sufficiency |
 | Quoin | Retained evidence, provenance and limitations | Add a local evidence store, catalogue, or human-disposition path |
 | This repository | Canonical protocol results, the total source-bound E02 projection, typed refusals | — |
 
@@ -52,7 +52,7 @@ handoff (NFR-005), never where it is kept afterwards or whether it suffices.
 ## Preconditions
 
 Every external contract consumed by this integration resolves through the
-FR-009 version-lock manifest before any request is submitted. QSL `/1` and `/2`
+FR-009 version-lock manifest before any request is submitted. FSL `/1` and `/2`
 are both supplied by current exact revision
 `2736b62b2f741496590d099d71478b3044d638d6`; neither may substitute for the
 other.
@@ -64,7 +64,7 @@ are unexecutable:
 | Required acceptance | Actual state |
 | --- | --- |
 | Engineering Assurance #34/#102 publish an accepted, dependency-compatible Rust request/result interface | Delivered initially by PR 46 at `d9d30232f9a5314d664d87a86346294325831c62`; exact compatible revision `9237ce50ce19c6d6c937705bfde4b64adcc9d16b` is selected by qverify and remains valid despite `publish = false` |
-| The exact E02 revision is accepted | qverify issue #44 published exact compatible consumer revision `293e342c6f5e2c69738956ff5165f75761b0364a`, preserving the accepted `quire-verification/e02-draft-2` schema and strict-reader contract |
+| The exact E02 revision is accepted | qverify issue #44 published exact compatible consumer revision `293e342c6f5e2c69738956ff5165f75761b0364a`, preserving the accepted `filament-verification/e02-draft-2` schema and strict-reader contract |
 | Quoin Protocol scenario-record intake is accepted | Quoin is a Rust workspace with an evidence store, but its existing experiment and operational record operations do not accept FR-017; a typed intake operation is missing |
 
 Stating the remaining Quoin precondition as satisfied would make the integration
@@ -151,7 +151,7 @@ claims nothing.
 
 Engineering Assurance `producer_execution` and qverify FR-007/E02 are delivered
 at the exact compatible revisions above. The Quoin Protocol scenario-record
-intake must still be accepted at an exact revision. QSL `/1` and `/2` are
+intake must still be accepted at an exact revision. FSL `/1` and `/2` are
 already pinnable; FR-009's gate order and entry-status table are normative.
 
 ## Notes
@@ -161,7 +161,7 @@ store or an alternate reader or runner.
 
 This integration is the last in the chain and depends on IT-001 and IT-002
 completing. It therefore inherits their unresolved entries. Closing IT-003
-establishes no QObs observation adequacy, QCI native/TL agreement, evidence
+establishes no FObs observation adequacy, QCI native/TL agreement, evidence
 sufficiency or campaign completion.
 
 ## Traceability

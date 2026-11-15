@@ -3,7 +3,7 @@ id: TC-002
 title: "Link and discriminate finite protocol structure"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: verifies
 ---
 # TC-002: Link and discriminate finite protocol structure
@@ -41,7 +41,7 @@ a static slot identity; reuse one subject with incompatible binding facts; omit
 internality and offer `Internal`, `external ` and another unknown spelling.
 Mutate the independently selected slot compatibility, then offer a producer
 kind compatible only by equal spelling and a valid producer-local kind whose
-spelling differs from the QSL binding kind. Submit an absent, older and unknown
+spelling differs from the FSL binding kind. Submit an absent, older and unknown
 static/runtime binding-contract version and a version-1 compiled artifact.
 Replay one exact FR-262 relationship, reuse its key with
 conflicting declaration or endpoints, supply two distinct relationship keys for

@@ -3,9 +3,9 @@ id: TC-154
 title: "Settle deadline branches and bind captures"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-100
+  - target: ix://agent-ix/filament-protocol/FR-100
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-101
+  - target: ix://agent-ix/filament-protocol/FR-101
     type: verifies
 ---
 # TC-154: Settle deadline branches and bind captures

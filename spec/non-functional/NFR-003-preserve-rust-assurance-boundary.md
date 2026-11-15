@@ -4,33 +4,33 @@ title: "Preserve the Rust assurance boundary"
 type: NFR
 quality_attribute: maintainability
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-004
+  - target: ix://agent-ix/filament-protocol/ADR-004
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-005
+  - target: ix://agent-ix/filament-protocol/ADR-005
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-007
+  - target: ix://agent-ix/filament-protocol/ADR-007
     type: references
-  - target: ix://agent-ix/quire-protocol/US-007
+  - target: ix://agent-ix/filament-protocol/US-007
     type: derives_from
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: constrains
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: constrains
 ---
 # NFR-003: Preserve the Rust assurance boundary

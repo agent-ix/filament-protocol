@@ -3,15 +3,15 @@ id: FR-033
 title: "Preserve result lineage integrity"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: part_of
-  - target: ix://agent-ix/quire-specification/FR-061
+  - target: ix://agent-ix/filament-specification/FR-061
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-248
+  - target: ix://agent-ix/filament-specification/FR-248
     type: references
-  - target: ix://agent-ix/quire-specification/FR-282
+  - target: ix://agent-ix/filament-specification/FR-282
     type: references
-  - target: ix://agent-ix/quire-specification/FR-240
+  - target: ix://agent-ix/filament-specification/FR-240
     type: references
 ---
 # FR-033: Preserve result lineage integrity
@@ -76,7 +76,7 @@ predecessor has an incomplete key rather than a defaulted one.
 
 ### Accepted owner ruling
 
-QSpec #29 fixes result identity under FR-286 and refuses same identity with
+FSpec #29 fixes result identity under FR-286 and refuses same identity with
 different canonical bytes. Supersession is an explicit predecessor relation,
 never a total order derived from key order, timestamp or source position. This
 requirement preserves that accepted relation and invents no global result order.
@@ -85,5 +85,5 @@ requirement preserves that accepted relation and invents no global result order.
 
 - [FR-006](./FR-006-produce-canonical-protocol-results.md) is the parent this
   requirement is part of.
-- `ix://agent-ix/quire-specification/FR-061` states the dependence relations,
+- `ix://agent-ix/filament-specification/FR-061` states the dependence relations,
   the lineage refusals and the supersession rule.

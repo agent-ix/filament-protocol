@@ -3,9 +3,9 @@ id: TC-016
 title: "Compose complete scenario evidence without storing it"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-017
+  - target: ix://agent-ix/filament-protocol/FR-017
     type: verifies
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: verifies
 ---
 # TC-016: Compose Complete Scenario Evidence Without Storing It

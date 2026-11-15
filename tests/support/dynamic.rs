@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Checked packages for the dynamic-roles, queues, joins and loops tests
-//! (TC-050 to TC-055): one QSL unit compiled by QSL's writer (QSL FR-517) and
+//! (TC-050 to TC-055): one FSL unit compiled by FSL's writer (FSL FR-517) and
 //! admitted by Contract IR's reader. The population `workers` the replicated
 //! role draws from is added to the recipe model in memory.
 
@@ -9,15 +9,15 @@
 
 use std::path::PathBuf;
 
-use qsl_semantics::check::wire_id::WireGraph;
-use quire_contract_model::{CheckedNodeId, CheckedPackageReadLimits, CheckedPackageV2};
-use quire_exact::NodeKey;
-use quire_protocol::checked_package::{admit, HandoffFiles};
-use quire_protocol::disposition::Construct;
-use quire_protocol::dynamics::ObservationRef;
-use quire_protocol::ids::{MessageId, RoleInstanceId, WorkflowInstanceId};
-use quire_protocol::link::{link, LinkedProtocol};
-use quire_spec_language::checked_handoff::Corpus;
+use filament_contract_model::{CheckedNodeId, CheckedPackageReadLimits, CheckedPackageV2};
+use filament_exact::NodeKey;
+use filament_protocol::checked_package::{admit, HandoffFiles};
+use filament_protocol::disposition::Construct;
+use filament_protocol::dynamics::ObservationRef;
+use filament_protocol::ids::{MessageId, RoleInstanceId, WorkflowInstanceId};
+use filament_protocol::link::{link, LinkedProtocol};
+use filament_spec_language::checked_handoff::Corpus;
+use fsl_semantics::check::wire_id::WireGraph;
 
 use super::handoff::{join_budget, request, written_request};
 
@@ -40,8 +40,8 @@ fn source(lifetime: &str, max: u64, bag_loss: &str) -> String {
     };
     format!(
         r#"language "ix:native" edition "1-draft";
-profile v = "quire.model.complete/v1";
-profile p = "quire.protocol.finite-global/v1";
+profile v = "filament.model.complete/v1";
+profile p = "filament.protocol.finite-global/v1";
 model M = "agent-ix/checked-handoff";
 function both using v(a: Boolean, b: Boolean, c: Boolean): Boolean pure {{ a and b and c }}
 protocol Flow using p over (input: M::Workflow) on origin {{
@@ -143,7 +143,7 @@ impl Dynamic {
         Self::over_text(&source(lifetime, max, bag_loss), holder, model_path)
     }
 
-    /// The package of the QSL unit `text`, compiled over the recipe model.
+    /// The package of the FSL unit `text`, compiled over the recipe model.
     pub fn from_source(text: &str) -> Self {
         let holder = tempfile::tempdir().expect("temporary directory");
         let model_path: PathBuf = holder.path().join("model.semantic-ir.json");
@@ -229,7 +229,7 @@ impl Dynamic {
         Construct::of(&self.package, node)
     }
 
-    /// QSL's key for `node`.
+    /// FSL's key for `node`.
     pub fn key(&self, node: &CheckedNodeId) -> NodeKey {
         WireGraph::new(
             self.package

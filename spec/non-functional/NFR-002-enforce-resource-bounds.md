@@ -4,25 +4,25 @@ title: "Enforce protocol and caller resource bounds"
 type: NFR
 quality_attribute: performance_efficiency
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-006
+  - target: ix://agent-ix/filament-protocol/US-006
     type: derives_from
-  - target: ix://agent-ix/quire-specification/NFR-020
+  - target: ix://agent-ix/filament-specification/NFR-020
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: constrains
 ---
 # NFR-002: Enforce protocol and caller resource bounds
@@ -99,7 +99,7 @@ compensation.
 
 ## Dependencies
 
-- `ix://agent-ix/quire-specification/NFR-020` is the formal-clause source.
+- `ix://agent-ix/filament-specification/NFR-020` is the formal-clause source.
 - [FR-001](../functional/FR-001-admit-selected-protocol-profile.md).
 - [FR-002](../functional/FR-002-link-finite-protocol-representation.md).
 - [FR-003](../functional/FR-003-assess-compensation-state.md).

@@ -4,7 +4,7 @@
 //! policies, delivery premises and key orders, join settlements and loop
 //! maxima of a linked protocol.
 //!
-//! This is an assessment of one history, not an exploration. QSL owns the step
+//! This is an assessment of one history, not an exploration. FSL owns the step
 //! semantics (ADR-027); nothing here steps a protocol, evaluates a `until`
 //! predicate, a key expression or a join predicate, or infers a bound, an end
 //! or an exit the history does not show. A violation is reported against the
@@ -23,15 +23,15 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use qsl_eval::simulation::protocol::Unsupported;
-use qsl_package::protocol_view::Delivery;
-use qsl_package::{
+use filament_contract_model::CheckedNodeId;
+use filament_exact::{Integer, NodeKey};
+use fsl_eval::simulation::protocol::Unsupported;
+use fsl_package::protocol_view::Delivery;
+use fsl_package::{
     OccurrenceKeyError, ProtocolOccurrenceSchema, RoleLifetime, RoleReplication,
     WorkflowInstanceIdentity,
 };
-use qsl_semantics::check::{ChannelOverflow, CheckedOutstanding, LossSelector};
-use quire_contract_model::CheckedNodeId;
-use quire_exact::{Integer, NodeKey};
+use fsl_semantics::check::{ChannelOverflow, CheckedOutstanding, LossSelector};
 
 use crate::declarations::{
     Capacity, ChannelDeclaration, Declarations, JoinPolicy, Ordering, RoleDeclaration,
@@ -49,19 +49,19 @@ pub enum HistoryRefusal {
         /// The node the fact named.
         node: CheckedNodeId,
     },
-    /// A spawn, retire or end fact names a static role, which QSL never
+    /// A spawn, retire or end fact names a static role, which FSL never
     /// spawns: only its activity is observable.
     StaticRoleLifecycle {
         /// The static role.
         role: CheckedNodeId,
     },
-    /// A join or loop fact's workflow identity is not text QSL can key an
+    /// A join or loop fact's workflow identity is not text FSL can key an
     /// occurrence by (non-UTF-8).
     WorkflowNotText {
         /// The workflow identity bytes.
         workflow: Box<[u8]>,
     },
-    /// QSL's occurrence key refused the fact's workflow, control or repeat
+    /// FSL's occurrence key refused the fact's workflow, control or repeat
     /// ordinals.
     Occurrence(OccurrenceKeyError),
     /// A join fact names a branch label the join does not list.
@@ -85,9 +85,9 @@ pub struct ObservationRef {
     pub identity: Box<[u8]>,
 }
 
-/// Validate a join or loop fact's occurrence against QSL's schema: the
+/// Validate a join or loop fact's occurrence against FSL's schema: the
 /// control, its owner, the workflow identity and one repeat ordinal for each
-/// enclosing `repeat` (QSL FR-384 "Runtime key binding"). Occurrences that
+/// enclosing `repeat` (FSL FR-384 "Runtime key binding"). Occurrences that
 /// differ in any of these never merge.
 pub(crate) fn bind_occurrence(
     declarations: &Declarations,
@@ -135,7 +135,7 @@ pub enum RoleEvent {
     /// The observation that ends the workflow instance holding the role: the
     /// end of a `workflow` lifetime.
     WorkflowEnd,
-    /// The step QSL ADR-027 RR-4 ends a `scope` lifetime by: no running thread
+    /// The step FSL ADR-027 RR-4 ends a `scope` lifetime by: no running thread
     /// can reach a node the role owns, the effect of a template it owns or an
     /// open registration of one.
     ScopeEnd,
@@ -490,7 +490,7 @@ pub struct ChannelAssessment {
 pub enum ChannelOutcome {
     /// The channel was assessed.
     Assessed(ChannelAssessment),
-    /// QSL would report an `Unsupported` cause for the channel (FR-057); no
+    /// FSL would report an `Unsupported` cause for the channel (FR-057); no
     /// capacity, order or premise judgment is made.
     Unsupported {
         /// The channel.
@@ -536,7 +536,7 @@ pub fn assess_channels(
     Ok(outcomes)
 }
 
-/// The literal capacity QSL steps, or the `Unsupported` cause for a channel it
+/// The literal capacity FSL steps, or the `Unsupported` cause for a channel it
 /// does not.
 fn steppable_capacity(channel: &ChannelDeclaration) -> Result<u64, UnsupportedCause> {
     let Capacity::Literal(capacity) = channel.capacity else {
@@ -757,7 +757,7 @@ pub struct JoinFact {
     pub join: CheckedNodeId,
     /// The workflow instance holding the occurrence.
     pub workflow: WorkflowInstanceId,
-    /// One ordinal for each enclosing `repeat`, outermost first, as QSL's
+    /// One ordinal for each enclosing `repeat`, outermost first, as FSL's
     /// occurrence key binds them.
     pub repeat_ordinals: Vec<Integer>,
     /// What was observed.
@@ -820,14 +820,14 @@ pub struct JoinAssessment {
 pub enum JoinOutcome {
     /// The occurrence was assessed.
     Assessed(JoinAssessment),
-    /// QSL would report an `Unsupported` cause for the join (FR-057); the
+    /// FSL would report an `Unsupported` cause for the join (FR-057); the
     /// occurrence is reported neither settled nor unsettled.
     Unsupported {
         /// The workflow instance of the occurrence.
         workflow: WorkflowInstanceId,
         /// The enclosing `repeat` ordinals of the occurrence.
         repeat_ordinals: Vec<Integer>,
-        /// The cause, as QSL reports it.
+        /// The cause, as FSL reports it.
         cause: UnsupportedCause,
         /// The join control and its locus.
         construct: Construct,
@@ -836,7 +836,7 @@ pub enum JoinOutcome {
 
 /// Assess `facts` against the join declarations of `declarations`.
 ///
-/// A join declaration with no fact yields no occurrence. A join QSL would
+/// A join declaration with no fact yields no occurrence. A join FSL would
 /// report `Unsupported` for yields one [`JoinOutcome::Unsupported`] for each
 /// occurrence (workflow instance and enclosing repeat ordinals) the history
 /// names.
@@ -1017,7 +1017,7 @@ pub struct LoopFact {
     pub control: CheckedNodeId,
     /// The workflow instance holding the occurrence.
     pub workflow: WorkflowInstanceId,
-    /// One ordinal for each enclosing `repeat`, outermost first, as QSL's
+    /// One ordinal for each enclosing `repeat`, outermost first, as FSL's
     /// occurrence key binds them.
     pub repeat_ordinals: Vec<Integer>,
     /// What was observed.

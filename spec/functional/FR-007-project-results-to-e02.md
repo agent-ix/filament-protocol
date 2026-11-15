@@ -3,50 +3,50 @@ id: FR-007
 title: "Project canonical results to E02"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-006
+  - target: ix://agent-ix/filament-protocol/ADR-006
     type: references
-  - target: ix://agent-ix/quire-protocol/US-002
+  - target: ix://agent-ix/filament-protocol/US-002
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-034
+  - target: ix://agent-ix/filament-protocol/FR-034
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-035
+  - target: ix://agent-ix/filament-protocol/FR-035
     type: contains
-  - target: ix://agent-ix/quire-specification/FR-062
+  - target: ix://agent-ix/filament-specification/FR-062
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-201
+  - target: ix://agent-ix/filament-specification/FR-201
     type: references
-  - target: ix://agent-ix/quire-specification/FR-240
+  - target: ix://agent-ix/filament-specification/FR-240
     type: references
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-242
+  - target: ix://agent-ix/filament-specification/FR-242
     type: references
-  - target: ix://agent-ix/quire-specification/FR-244
+  - target: ix://agent-ix/filament-specification/FR-244
     type: references
-  - target: ix://agent-ix/quire-specification/FR-245
+  - target: ix://agent-ix/filament-specification/FR-245
     type: references
-  - target: ix://agent-ix/quire-specification/FR-246
+  - target: ix://agent-ix/filament-specification/FR-246
     type: references
-  - target: ix://agent-ix/quire-specification/FR-248
+  - target: ix://agent-ix/filament-specification/FR-248
     type: references
-  - target: ix://agent-ix/quire-specification/FR-249
+  - target: ix://agent-ix/filament-specification/FR-249
     type: references
-  - target: ix://agent-ix/quire-specification/FR-280
+  - target: ix://agent-ix/filament-specification/FR-280
     type: references
-  - target: ix://agent-ix/quire-specification/FR-282
+  - target: ix://agent-ix/filament-specification/FR-282
     type: references
-  - target: ix://agent-ix/quire-specification/FR-283
+  - target: ix://agent-ix/filament-specification/FR-283
     type: references
-  - target: ix://agent-ix/quire-verification/FR-007
+  - target: ix://agent-ix/filament-verification/FR-007
     type: depends_on
 ---
 # FR-007: Project canonical results to E02
 
 ## Description
 
-When a canonical protocol result and exact portable evidence context are submitted, the adapter SHALL emit one source-bound `quire-verification/e02-draft-2` `TechniqueResult` through the atomic requirements FR-034 and FR-035 that together discharge source requirement FR-062.
+When a canonical protocol result and exact portable evidence context are submitted, the adapter SHALL emit one source-bound `filament-verification/e02-draft-2` `TechniqueResult` through the atomic requirements FR-034 and FR-035 that together discharge source requirement FR-062.
 When either atomic requirement FR-034 or FR-035 is unsatisfied, the adapter SHALL emit one stable typed refusal and no output result.
 
 ## Inputs
@@ -112,7 +112,7 @@ derived from, not as a second definition.
 `FR-249` is the derived result this requirement emits; FR-062 owns its
 `resultId` structure, which this requirement consumes by reference.
 
-The E02 target vocabularies belong to `quire-verification` and reach this
+The E02 target vocabularies belong to `filament-verification` and reach this
 repository only through FR-062's mapping table. No E02 member is spelled here.
 
 The source result is validated under its strict reader before projection. The
@@ -120,7 +120,7 @@ adapter compares the source result key by the FR-286 structure.
 
 ### Accepted rulings and remaining external gate
 
-Quire Specification FS02 resolved the earlier source-domain gaps. FR-283 assigns
+Filament Specification FS02 resolved the earlier source-domain gaps. FR-283 assigns
 a strict source-result read failure to `invalid-source-result`; FR-284
 closes progress/closure; FR-285 closes participation; and FR-249 declares the
 mapping total for selected source and target revisions. FR-034 and FR-035 adopt
@@ -131,9 +131,9 @@ those rulings exactly.
   this artifact declares neither." The projection consumes that identity as an exact
   opaque value and declares no kind for it. Recorded by
   [FR-034](./FR-034-derive-e02-projection-identity.md). Owner:
-  `quire-specification`.
+  `filament-specification`.
 - **qverify acceptance.** Issue #32 accepted the strict
-  `quire-verification/e02-draft-2` schema/reader contract at `d2fc0d8`; issue
+  `filament-verification/e02-draft-2` schema/reader contract at `d2fc0d8`; issue
   #44 published dependency-compatible consumer revision
   `293e342c6f5e2c69738956ff5165f75761b0364a`, which Protocol pins exactly with
   its accepted Engineering Assurance edge.
@@ -143,5 +143,5 @@ those rulings exactly.
 - [FR-034](./FR-034-derive-e02-projection-identity.md) and
   [FR-035](./FR-035-map-source-states-to-e02.md) are this requirement's parts.
 - [FR-006](./FR-006-produce-canonical-protocol-results.md).
-- `ix://agent-ix/quire-specification/FR-062`.
-- `ix://agent-ix/quire-verification/FR-007` and `quire-verification/e02-draft-2`.
+- `ix://agent-ix/filament-specification/FR-062`.
+- `ix://agent-ix/filament-verification/FR-007` and `filament-verification/e02-draft-2`.

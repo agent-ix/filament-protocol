@@ -3,17 +3,17 @@ id: FR-039
 title: "Preserve every typed cause and disposition distinctly"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-036
+  - target: ix://agent-ix/filament-protocol/FR-036
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-002
+  - target: ix://agent-ix/filament-protocol/NFR-002
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-272
+  - target: ix://agent-ix/filament-specification/FR-272
     type: references
-  - target: ix://agent-ix/quire-specification/FR-270
+  - target: ix://agent-ix/filament-specification/FR-270
     type: references
 ---
 # FR-039: Preserve every typed cause and disposition distinctly
@@ -58,7 +58,7 @@ The library SHALL represent a zero diagnostic-detail budget as a suppressed rend
 
 ## Adopted vocabulary
 
-Local typed causes are FR-008's closed `quire.protocol/refusal/1` members. Source
+Local typed causes are FR-008's closed `filament.protocol/refusal/1` members. Source
 causes are retained from their exact selected contracts. The resource-incomplete
 outcome is [NFR-002](../non-functional/NFR-002-enforce-resource-bounds.md)'s and
 the completed-with-empty-findings outcome is

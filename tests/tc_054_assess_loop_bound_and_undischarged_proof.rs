@@ -7,13 +7,13 @@ mod support {
     pub mod handoff;
 }
 
-use ix_trace_rs::trace;
-use quire_protocol::disposition::{
+use filament_protocol::disposition::{
     request_discharge, DischargeStatus, LoopProof, UnsupportedCause,
 };
-use quire_protocol::dynamics::{
+use filament_protocol::dynamics::{
     assess_loops, LoopAssessment, LoopBoundViolation, LoopEvent, LoopFact,
 };
+use ix_trace_rs::trace;
 use support::dynamic::{at, workflow, Dynamic};
 
 fn run(dynamic: &Dynamic, control: &str, iterations: usize, exit: bool) -> LoopAssessment {
@@ -95,9 +95,9 @@ fn the_loop_assessment_takes_and_holds_no_closure_axis() {
 #[test]
 #[trace("TC-054", "FR-056-AC-5")]
 fn a_loop_inside_a_repeat_is_one_occurrence_for_each_iteration() {
-    use qsl_package::OccurrenceKeyError;
-    use quire_exact::Integer;
-    use quire_protocol::dynamics::HistoryRefusal;
+    use filament_exact::Integer;
+    use filament_protocol::dynamics::HistoryRefusal;
+    use fsl_package::OccurrenceKeyError;
     let dynamic = Dynamic::with("workflow", 3);
     let facts = |ordinals: &[u64], iterations: usize| -> Vec<LoopFact> {
         (0..iterations)
@@ -229,7 +229,7 @@ fn undischarged_is_the_only_discharge_status_and_no_proof_field_exists() {
 #[test]
 #[trace("TC-054", "FR-056-AC-6")]
 fn a_fact_naming_no_declared_loop_refuses_the_history() {
-    use quire_protocol::dynamics::HistoryRefusal;
+    use filament_protocol::dynamics::HistoryRefusal;
     let dynamic = Dynamic::with("workflow", 3);
     let join = dynamic.named("control", "JoinAll");
     let fact = LoopFact {
@@ -247,10 +247,10 @@ fn a_fact_naming_no_declared_loop_refuses_the_history() {
 
 #[test]
 #[trace("TC-054", "FR-056-AC-7")]
-fn a_workflow_identity_qsl_cannot_key_refuses_the_history() {
-    use qsl_package::OccurrenceKeyError;
-    use quire_protocol::dynamics::HistoryRefusal;
-    use quire_protocol::ids::WorkflowInstanceId;
+fn a_workflow_identity_fsl_cannot_key_refuses_the_history() {
+    use filament_protocol::dynamics::HistoryRefusal;
+    use filament_protocol::ids::WorkflowInstanceId;
+    use fsl_package::OccurrenceKeyError;
     let dynamic = Dynamic::with("workflow", 3);
     let refused = |identity: &[u8]| {
         let fact = LoopFact {

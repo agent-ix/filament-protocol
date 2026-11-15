@@ -1,41 +1,41 @@
 ---
 type: master-requirements
-name: quire-protocol
+name: filament-protocol
 org: agent-ix
 component_type: rust-library
 implementation_language: rust
 tags:
-  - native-quire
+  - native-filament
   - protocol
   - conformance
   - compensation
   - rust
 depends_on: []
 relationships:
-  - target: ix://agent-ix/quire-specification/FR-050
+  - target: ix://agent-ix/filament-specification/FR-050
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-061
+  - target: ix://agent-ix/filament-specification/FR-061
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-062
+  - target: ix://agent-ix/filament-specification/FR-062
     type: depends_on
-  - target: ix://agent-ix/quire-verification/FR-007
+  - target: ix://agent-ix/filament-verification/FR-007
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-042
+  - target: ix://agent-ix/filament-protocol/FR-042
     type: contains
 standards_alignment:
   - iso-iec-ieee-29148
   - iso-iec-ieee-29119
 ---
 # Master Requirements Specification
-## Quire Protocol Rust Library
+## Filament Protocol Rust Library
 
 ## 1. Purpose
 
 This specification governs the first-party Rust library that consumes one exact
-accepted and frozen native Quire protocol profile and implements its bounded
+accepted and frozen native Filament protocol profile and implements its bounded
 representation, compensation, finite conformance, canonical result, and E02
 projection contracts.
-The authored formal meaning remains in `agent-ix/quire-specification`; this
+The authored formal meaning remains in `agent-ix/filament-specification`; this
 repository owns its strict implementation and evidence-backed conformance.
 
 ## 2. Scope
@@ -53,7 +53,7 @@ repository owns its strict implementation and evidence-backed conformance.
 
 ### 2.2 Out of Scope
 
-- Native Quire grammar, parsing, compiler-internal/source linking, compiler
+- Native Filament grammar, parsing, compiler-internal/source linking, compiler
   diagnostics, and source editing. Protocol's typed artifact-to-runtime graph
   linking is in scope.
 - Temporal syntax/evaluation and observation collection/correlation authority.
@@ -61,8 +61,8 @@ repository owns its strict implementation and evidence-backed conformance.
 - Generic producer execution, evidence persistence, method catalogues, sufficiency,
   qualification disposition, or public release policy.
 - Projection, realizability, composition and refinement algorithms, and
-  protocol exploration semantics (dynamic roles, queues, joins, loops); QSL owns
-  them ([ADR-010](adr/ADR-010-consume-qsl-protocol-analysis-own-assessment-and-dispatch.md)).
+  protocol exploration semantics (dynamic roles, queues, joins, loops); FSL owns
+  them ([ADR-010](adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md)).
   This library dispatches the claims
   ([FR-301](functional/FR-301-admit-protocol-refinement-dispatch.md)) and
   carries the results.
@@ -80,9 +80,9 @@ narrower portable E02 result from each validated source result.
 
 ### 3.2 Intended Users
 
-- Native Quire compiler and runtime integrators.
+- Native Filament compiler and runtime integrators.
 - Protocol and compensation verification owners.
-- Engineering Assurance and quire-verification consumers.
+- Engineering Assurance and filament-verification consumers.
 
 ## 4. Requirements Architecture
 
@@ -107,7 +107,7 @@ Local immutable identifiers begin at `StR-001`, `US-001`, `FR-001`, `NFR-001`,
 `IT-001`, `TC-001`, `ADR-001`, `TM-001`, `AP-001`, and `AD-001`.
 Each namespace is allocated without reuse. FR ids are allocated sequentially
 from `FR-001` to `FR-049`; `FR-050` to `FR-249` are reserved in blocks by
-[ADR-010](adr/ADR-010-consume-qsl-protocol-analysis-own-assessment-and-dispatch.md),
+[ADR-010](adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md),
 and `FR-301` onward are allocated separately. The highest allocated identifiers
 are currently `StR-005`, `US-007`, `FR-047` (`FR-301` and `FR-302` in the
 separate range), `NFR-008`, `IT-003`, `TC-153`, `ADR-010`, `TM-001`, `AP-001`, and `AD-001`.
@@ -159,11 +159,11 @@ boundary. Four external or semantic owners publish values used at their own
 boundaries:
 
 - Whether a requested evaluator ran:
-  `ix://agent-ix/quire-specification/FR-241`, five members.
+  `ix://agent-ix/filament-specification/FR-241`, five members.
 - The truth of an assessed obligation:
-  `ix://agent-ix/quire-specification/FR-242`, four members.
+  `ix://agent-ix/filament-specification/FR-242`, four members.
 - Why a projection to E02 was refused:
-  `ix://agent-ix/quire-specification/FR-283`, whose spellings are kebab-case
+  `ix://agent-ix/filament-specification/FR-283`, whose spellings are kebab-case
   and "distinct from the snake_case native producer codes of FR-271".
 - Why an offered artifact was not admitted: the producer's own
   `protocol_artifact::Error`, with its `Invalid` and `Unsupported` payloads,
@@ -250,19 +250,19 @@ version-2 linked graph, downstream modules accept independently constructed
 models, canonical result assembly accepts caller-built duplicates of upstream
 states, and E02 projection and scenario handoff do not exist on `main`.
 Version-lock resolution now exists as the Task-013 mechanism. Task-009 has
-completed the concrete QSL `/1` and `/2` intake handoff; Tasks 010–011 retain
+completed the concrete FSL `/1` and `/2` intake handoff; Tasks 010–011 retain
 the other producer integrations. The distinct consumer-owned delivery index is
 complete under Task-019/#66. Task status and executable coverage are stated
 only by TM-001 and Plan-001; module presence does not close an aggregate
 requirement.
 
-The current accepted compiler pin is QSL `2736b62`; the compiled-protocol `/1`,
+The current accepted compiler pin is FSL `2736b62`; the compiled-protocol `/1`,
 `/2`, and `/3` handoffs are owner-addressed and the `/1` Service/Provider
-authorities are distinct. The direct QObs pin is accepted C00
+authorities are distinct. The direct FObs pin is accepted C00
 runtime/authority revision `924006300f45b38483be1cbdf99b68f899b7d368`,
 from merged owner PR #27. Task-020's owner-acceptance prerequisite is satisfied.
 Protocol recognizes the owner's partial, activation, authority-bundle v1/v2
-and lineage interfaces without copying their schemas; QObs repair and
+and lineage interfaces without copying their schemas; FObs repair and
 aggregate-query remain explicit typed unsupported consumer capabilities until
 Protocol owns adapters for them.
 E02's draft-2 schema/reader contract is accepted at qverify revision `d2fc0d8`
@@ -287,40 +287,40 @@ defines its contract. An entry here is a reference, not a pin: FR-009's
 version-lock manifest carries the pinned revision and the resolution status, and
 its entry-status table records why each is currently `unresolved`.
 
-- `agent-ix/quire-specification` — the formal-clause source. FR-047, FR-050
+- `agent-ix/filament-specification` — the formal-clause source. FR-047, FR-050
   through FR-062, and NFR-020/NFR-021 define the semantics this repository
   consumes — FR-047 owns the typed located cause vocabulary FR-008 and FR-036
   adopt, and it sits outside the FR-050..FR-062 block;
   FR-200 through FR-283 are the domain object layer it references for every
   protocol, temporal and observation noun. Open questions this repository raised
   against that layer are issues 28 and 29.
-- `agent-ix/quire-spec-language` — the A-owned native compiler and its
+- `agent-ix/filament-spec-language` — the A-owned native compiler and its
   compiled-protocol artifact contracts. The pin is `6c8c401`, A's promoted
   FR-052 compatibility correction, FR-051 checked activation-guard selection,
   committed owner-addressed `/1` and `/2` handoffs, and distinct `/1`
   Service/Provider authorities after release `v0.2.0`; issues 40, 78, 98, 112
   and 114 owned that delivery and have landed. This is the only native compiler
   reader in the admitted path, and this repository adds no second one.
-- `agent-ix/quire-observation` — the F-owned observation producer interface and
+- `agent-ix/filament-observation` — the F-owned observation producer interface and
   authority contracts. Accepted runtime references, partial/activation facts,
   revisioned authority bundles and bounded lineage are consumed locally at
   accepted PR #27 merge `9240063`.
-  Complete-global-conformance closure remains Protocol-owned and is not a QObs
+  Complete-global-conformance closure remains Protocol-owned and is not a FObs
   artifact; repair and aggregate-query are not Protocol adapters at this pin.
-- `agent-ix/quire-verification` FR-007 and `quire-verification/e02-draft-2` —
+- `agent-ix/filament-verification` FR-007 and `filament-verification/e02-draft-2` —
   the accepted E02 strict reader, generated types, JCS implementation and
   finding vocabulary at exact compatible consumer revision
   `293e342c6f5e2c69738956ff5165f75761b0364a`.
 - `agent-ix/engineering-assurance` issue 34 — the delivered typed Rust producer-
   execution request/result boundary, consumed at its exact accepted git pin.
 - The selected diagnostic catalog, whose identity, revision and byte digest
-  FR-008 binds. `quire-specification` FR-270 records that the only catalog
+  FR-008 binds. `filament-specification` FR-270 records that the only catalog
   offered is a proposed native diagnostic interpretation that describes itself as
   not adopted or implemented, so this reference names no adopted artifact yet.
 - `agent-ix/quoin` — the external Rust evidence-retention owner. Its existing
   experiment and operational records do not accept FR-017; Task-011 waits for a
   structured Protocol scenario-record operation rather than coercing either.
-- `agent-ix/quire-contract-ir` issue 71 — the downstream consumer of Protocol's
+- `agent-ix/filament-contract-ir` issue 71 — the downstream consumer of Protocol's
   complete borrowed result-map view for native/TL correspondence and joining.
 
 The complete-global-conformance closure record is **not** an external reference.

@@ -3,7 +3,7 @@ id: TC-051
 title: "Assess role lifetime and population bound"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-053
+  - target: ix://agent-ix/filament-protocol/FR-053
     type: verifies
 ---
 # TC-051: Assess role lifetime and population bound

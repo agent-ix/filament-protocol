@@ -3,15 +3,15 @@ id: FR-022
 title: "Enforce the authored finite compensation retry bound"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-020
+  - target: ix://agent-ix/filament-protocol/FR-020
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-058
+  - target: ix://agent-ix/filament-specification/FR-058
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-235
+  - target: ix://agent-ix/filament-specification/FR-235
     type: references
-  - target: ix://agent-ix/quire-specification/FR-239
+  - target: ix://agent-ix/filament-specification/FR-239
     type: references
 ---
 # FR-022: Enforce the authored finite compensation retry bound
@@ -26,9 +26,9 @@ When a registration carries no authored retry bound, the evaluator SHALL treat t
 ## Inputs
 
 A compensation registration typed by
-`ix://agent-ix/quire-specification/FR-233`, its retry policy typed by
-`ix://agent-ix/quire-specification/FR-239`, and the compensation attempts typed
-by `ix://agent-ix/quire-specification/FR-235`.
+`ix://agent-ix/filament-specification/FR-233`, its retry policy typed by
+`ix://agent-ix/filament-specification/FR-239`, and the compensation attempts typed
+by `ix://agent-ix/filament-specification/FR-235`.
 
 ## Outputs
 
@@ -72,7 +72,7 @@ policy.
 
 ### Accepted owner ruling
 
-Quire Specification #28/#31 defines the attempt as an authored FR-287 key. The
+Filament Specification #28/#31 defines the attempt as an authored FR-287 key. The
 bound counts distinct admitted keys under one registration, including the
 initial attempt and every admitted outcome. Exact replay counts once. An
 over-bound candidate refuses before retention and leaves the prior count
@@ -83,7 +83,7 @@ unchanged. Only the authored predecessor/successor relation orders retries.
 - [FR-003](./FR-003-assess-compensation-state.md) aggregates this requirement.
 - [FR-020](./FR-020-register-compensation-once-per-effect.md) supplies the
   registration the retry policy is bound to.
-- `ix://agent-ix/quire-specification/FR-058` establishes the bounded retry policy
+- `ix://agent-ix/filament-specification/FR-058` establishes the bounded retry policy
   and the refusal rule.
-- `ix://agent-ix/quire-specification/FR-239` types the policy and exact counting
+- `ix://agent-ix/filament-specification/FR-239` types the policy and exact counting
   rule.

@@ -3,7 +3,7 @@ id: TC-010
 title: "Preserve Rust and shared assurance containment"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: verifies
 ---
 # TC-010: Preserve Rust and shared assurance containment

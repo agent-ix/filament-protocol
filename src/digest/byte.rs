@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! Exact-byte SHA-256 for the content digests FR-009 and FR-015 keep.
 //!
-//! Quire Spec Language no longer publishes a digest type (QSL-1261), so the
+//! Filament Specification Language no longer publishes a digest type (QSL-1261), so the
 //! consumer holds the one carrier its own version-lock and result digests need.
 //! It is not an integrity digest of a checked package (FR-047).
 

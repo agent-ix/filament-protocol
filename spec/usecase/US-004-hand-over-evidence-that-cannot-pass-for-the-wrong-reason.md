@@ -3,7 +3,7 @@ id: US-004
 title: "Hand over evidence that cannot pass for the wrong reason"
 type: US
 relationships:
-  - target: ix://agent-ix/quire-protocol/StR-002
+  - target: ix://agent-ix/filament-protocol/StR-002
     type: traces_to
 ---
 # US-004: Hand over evidence that cannot pass for the wrong reason

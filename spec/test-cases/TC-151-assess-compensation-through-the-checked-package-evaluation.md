@@ -3,19 +3,19 @@ id: TC-151
 title: "Assess compensation through the checked-package evaluation"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-045
+  - target: ix://agent-ix/filament-protocol/FR-045
     type: verifies
 ---
 # TC-151: Assess compensation through the checked-package evaluation
 
 ## Description
 
-Verify the compensation assessment over qsl-eval's package-only slot
+Verify the compensation assessment over fsl-eval's package-only slot
 evaluation, including the supported per-binder charge log.
 
 ## Test Procedure
 
-Run QSL FR-520's reachable outcome-map rows over **R**'s `Full` and `Partial`
+Run FSL FR-520's reachable outcome-map rows over **R**'s `Full` and `Partial`
 compensations; keep `tc_003`'s assertions, restating report-based assertions on
 the outcome map; supply an incomplete population, a missing target and a
 missing achieved state and an unavailable binder; run a retry bound of `n` and

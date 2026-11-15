@@ -44,18 +44,18 @@ fn code(text: &str) -> String {
 }
 
 /// FR-047-AC-1: after the repoint no source file or manifest names
-/// `quire_spec_language::number`.
+/// `filament_spec_language::number`.
 #[test]
 #[trace("FR-047-AC-1", "TC-153")]
 fn no_source_or_manifest_names_the_number_module() {
-    let named = ["quire_spec_language", "number"].join("::");
+    let named = ["filament_spec_language", "number"].join("::");
     for (path, text) in crate_text() {
         assert!(!code(&text).contains(&named), "{path} names {named}");
     }
-    // The control: the crate does name the QSL root it imports from.
+    // The control: the crate does name the FSL root it imports from.
     assert!(crate_text()
         .iter()
-        .any(|(_, text)| text.contains("quire_spec_language::checked_handoff")));
+        .any(|(_, text)| text.contains("filament_spec_language::checked_handoff")));
 }
 
 /// FR-047-AC-2: no `handoff-writer` feature and no retired format identity
@@ -65,9 +65,9 @@ fn no_source_or_manifest_names_the_number_module() {
 #[trace("FR-047-AC-2", "TC-153")]
 fn no_retired_feature_or_format_identity_remains() {
     let identities = [
-        ["quire.compiled-protocol", "/1"].concat(),
-        ["quire.compiled-protocol", "/2"].concat(),
-        ["quire.protocol.v2-mutations", "/1"].concat(),
+        ["filament.compiled-protocol", "/1"].concat(),
+        ["filament.compiled-protocol", "/2"].concat(),
+        ["filament.protocol.v2-mutations", "/1"].concat(),
     ];
     for (path, text) in crate_text() {
         let live = code(&text);

@@ -3,7 +3,7 @@ id: US-005
 title: "Adopt upstream nouns by reference"
 type: US
 relationships:
-  - target: ix://agent-ix/quire-protocol/StR-003
+  - target: ix://agent-ix/filament-protocol/StR-003
     type: traces_to
 ---
 # US-005: Adopt upstream nouns by reference

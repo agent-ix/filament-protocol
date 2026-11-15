@@ -3,7 +3,7 @@ id: TC-148
 title: "Carry a trace-position witness on the protocol result wire"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-302
+  - target: ix://agent-ix/filament-protocol/FR-302
     type: verifies
 ---
 # TC-148: Carry a trace-position witness on the protocol result wire
@@ -12,9 +12,9 @@ relationships:
 
 Verify that a `realizability` or `refinement` claim settled `decisive-witness`
 or `decisive-counterexample` carries a byte-exact trace-position witness, with
-each component present exactly as `ix://agent-ix/quire-specification/FR-351`
+each component present exactly as `ix://agent-ix/filament-specification/FR-351`
 states for the protocol family, under contract version
-`quire.protocol.result/v1-draft.2`, that every other
+`filament.protocol.result/v1-draft.2`, that every other
 settlement basis carries none, and that an absent `native-run-result/2` record
 settles `unsupported` rather than a substitute witness.
 
@@ -37,4 +37,4 @@ Removing, reordering or normalizing any witness component, or substituting a
 default for an absent one, refuses the result rather than repairing it. The
 absent-record case settles `unsupported` with a warning naming the required
 capability and carries no substitute witness. Every emitted result carries the
-explicitly selected contract version `quire.protocol.result/v1-draft.2`.
+explicitly selected contract version `filament.protocol.result/v1-draft.2`.

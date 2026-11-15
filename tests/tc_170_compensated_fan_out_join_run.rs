@@ -10,20 +10,20 @@ mod support {
 
 use std::num::NonZeroU32;
 
-use ix_trace_rs::trace;
-use quire_protocol::compensation::algebra::{
+use filament_protocol::compensation::algebra::{
     AttemptAdmission, AttemptFact, AttemptLedger, AttemptOutcome, Definition, EffectDisposition,
     ForwardFact, Limits as AlgebraLimits, Registry,
 };
-use quire_protocol::compensation::purity::{CapabilityInventory, PureAssessment};
-use quire_protocol::dynamics::{assess_joins, JoinEvent, JoinFact, JoinOutcome};
-use quire_protocol::ids::{AttemptId, DefinitionId, EffectId};
+use filament_protocol::compensation::purity::{CapabilityInventory, PureAssessment};
+use filament_protocol::dynamics::{assess_joins, JoinEvent, JoinFact, JoinOutcome};
+use filament_protocol::ids::{AttemptId, DefinitionId, EffectId};
+use ix_trace_rs::trace;
 use support::dynamic::{at, workflow, Dynamic};
 
 struct Pure;
 
 impl CapabilityInventory for Pure {
-    fn capabilities(&self) -> &[quire_protocol::compensation::purity::Capability] {
+    fn capabilities(&self) -> &[filament_protocol::compensation::purity::Capability] {
         &[]
     }
 }

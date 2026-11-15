@@ -1,38 +1,38 @@
 [package]
-name = "quire-protocol"
+name = "filament-protocol"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.98.1"
 license = "AGPL-3.0-or-later"
-description = "Strict consumer boundary for accepted native Quire protocol packages"
+description = "Strict consumer boundary for accepted native Filament protocol packages"
 publish = false
 
 [dependencies]
-# QSL main, followed by branch; Cargo.lock holds the commit. `checked-handoff`
-# is the feature that publishes `Selection` (QSL FR-517), which the admission
+# FSL main, followed by branch; Cargo.lock holds the commit. `checked-handoff`
+# is the feature that publishes `Selection` (FSL FR-517), which the admission
 # compares an admitted package with.
-quire-spec-language = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main", features = ["checked-handoff"] }
-qsl-foundation = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-# The bytes-only identity and equality files (QSL FR-531, FR-533).
-qsl-package = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-# The checked-package evaluation entries (QSL FR-390, FR-520, FR-531, FR-533).
-qsl-eval = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-# The channel overflow, loss selector and outstanding vocabulary (QSL FR-308,
+filament-spec-language = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename", features = ["checked-handoff"] }
+fsl-foundation = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+# The bytes-only identity and equality files (FSL FR-531, FR-533).
+fsl-package = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+# The checked-package evaluation entries (FSL FR-390, FR-520, FR-531, FR-533).
+fsl-eval = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+# The channel overflow, loss selector and outstanding vocabulary (FSL FR-308,
 # FR-218) the declarations retain, and the wire graph that keys protocol nodes in tests.
-qsl-semantics = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-# The capability-backend registry and candidate sets (QSL FR-075, FR-290), the
+fsl-semantics = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+# The capability-backend registry and candidate sets (FSL FR-075, FR-290), the
 # truth and settlement-basis vocabulary and the separating-witness record.
-qsl-route = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-# The protocol analysis engine and its `analyze` item adapters (QSL ADR-036).
-qsl-analyze = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-qsl-replay = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-quire-eval = { git = "https://github.com/agent-ix/quire-eval", branch = "main" }
-quire-exact = { git = "https://github.com/agent-ix/quire-exact", branch = "main" }
-quire-semantic-value = { git = "https://github.com/agent-ix/quire-semantic-value", branch = "main" }
+fsl-route = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+# The protocol analysis engine and its `analyze` item adapters (FSL ADR-036).
+fsl-analyze = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+fsl-replay = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+filament-eval = { git = "https://github.com/agent-ix/filament-eval", branch = "main" }
+filament-exact = { git = "https://github.com/agent-ix/filament-exact", branch = "main" }
+filament-semantic-value = { git = "https://github.com/agent-ix/filament-semantic-value", branch = "main" }
 # Contract IR's checked-package reader (FR-043); the one reader of the format.
-quire-contract-model = { git = "https://github.com/agent-ix/quire-contract-ir", branch = "main" }
-quire-observation = { git = "https://github.com/agent-ix/quire-observation", branch = "main" }
-quire-verification-contracts = { git = "https://github.com/agent-ix/quire-verification-contracts", branch = "main" }
+filament-contract-model = { git = "https://github.com/agent-ix/filament-contract-ir", branch = "main" }
+filament-observation = { git = "https://github.com/agent-ix/filament-observation", branch = "fsl-rename" }
+filament-verification-contracts = { git = "https://github.com/agent-ix/filament-verification-contracts", branch = "main" }
 # Owner of the claim-strength vocabulary (EA FR-022). Only the serde-only
 # `claim-strength` feature: no serde_json, no arbitrary_precision.
 engineering-assurance = { version = "=0.7.1", git = "https://github.com/agent-ix/engineering-assurance", branch = "main", default-features = false, features = ["claim-strength"] }
@@ -42,13 +42,13 @@ sha2 = "=0.10.9"
 
 [dev-dependencies]
 # The owner's static-bundle test fixture (tc_003_compensation).
-quire-observation = { git = "https://github.com/agent-ix/quire-observation", branch = "main", features = ["test-support"] }
+filament-observation = { git = "https://github.com/agent-ix/filament-observation", branch = "fsl-rename", features = ["test-support"] }
 ix-trace-rs = { git = "https://github.com/agent-ix/ix-trace-rs", branch = "main" }
-# QSL's public front end, which a realizability subject is built from in tests
-# (a `CheckedPackage` is QSL's in-process form; the handoff does not carry it).
-qsl-cst = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-qsl-forms = { git = "https://github.com/agent-ix/quire-spec-language", branch = "main" }
-quire-checked = { git = "https://github.com/agent-ix/quire-eval", branch = "main" }
+# FSL's public front end, which a realizability subject is built from in tests
+# (a `CheckedPackage` is FSL's in-process form; the handoff does not carry it).
+fsl-cst = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+fsl-forms = { git = "https://github.com/agent-ix/filament-spec-language", branch = "fsl-rename" }
+filament-checked = { git = "https://github.com/agent-ix/filament-eval", branch = "main" }
 serde_json = "=1.0.151"
 tempfile = "3"
 

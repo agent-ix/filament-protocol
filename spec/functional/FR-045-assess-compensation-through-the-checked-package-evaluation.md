@@ -3,12 +3,12 @@ id: FR-045
 title: "Assess compensation through the checked-package evaluation"
 type: FR
 relationships:
-  - { target: ix://agent-ix/quire-protocol/US-001, type: implements }
-  - { target: ix://agent-ix/quire-protocol/FR-003, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-024, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-025, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-044, type: depends_on }
-  - { target: ix://agent-ix/quire-spec-language/FR-520, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/US-001, type: implements }
+  - { target: ix://agent-ix/filament-protocol/FR-003, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-024, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-025, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-044, type: depends_on }
+  - { target: ix://agent-ix/filament-spec-language/FR-520, type: depends_on }
 ---
 # FR-045: Assess compensation through the checked-package evaluation
 
@@ -16,9 +16,9 @@ relationships:
 
 When compensation is assessed, the library SHALL evaluate each guard, retry
 relation, recovery predicate and capture through the checked-package evaluation
-entry that evaluates from a `CheckedPackageV2` alone (qsl-eval's protocol-slot
+entry that evaluates from a `CheckedPackageV2` alone (fsl-eval's protocol-slot
 evaluation), SHALL map each
-outcome as QSL FR-520's outcome map states, and SHALL keep the compensation state
+outcome as FSL FR-520's outcome map states, and SHALL keep the compensation state
 machine (registration, ordering, attempts, retry bound as a count, recovery
 decision) in this library.
 
@@ -38,7 +38,7 @@ of the retired `graph.rs` outcome.
 - The engine shall map `Evaluated(Completed(true))`, `Evaluated(Completed(false))`,
   `Unavailable`, `Evaluated(Undefined)`, `CallFailure::Admission`,
   `Evaluated(Refused)`, the family's unsupported result and
-  `Evaluated(Incomplete)` as QSL FR-520's outcome map states.
+  `Evaluated(Incomplete)` as FSL FR-520's outcome map states.
 - The engine shall never read an undefined, refused, incomplete or unavailable
   result as a Boolean (FR-024-AC-6).
 - The engine shall perform no network, storage, telemetry or business-operation
@@ -46,26 +46,26 @@ of the retired `graph.rs` outcome.
 - The engine shall read a retry bound as the node's `attempts maximum` argument
   through `protocol_view`.
 - The engine shall consume the checked-package slot result through the typed
-  protocol evaluation boundary described by QSL FR-520.
+  protocol evaluation boundary described by FSL FR-520.
 
 ## Acceptance Criteria
 
 | ID | Criteria | Verification |
 | --- | --- | --- |
-| FR-045-AC-1 | For every outcome-map row that an admitted compensation in **R** can reach today, the test produces the successor outcome: true and false `trigger.guard` and `retry.relation`, an unavailable binder, a wrongly typed value and a meter one below measured usage. R has no admitted input that produces the unsupported-construct row; that row is excluded from this criterion until the checked-package owner admits such an input. Recovery-predicate rows remain excluded while the QSL bare projection refuses R's comprehension binder. | Test |
+| FR-045-AC-1 | For every outcome-map row that an admitted compensation in **R** can reach today, the test produces the successor outcome: true and false `trigger.guard` and `retry.relation`, an unavailable binder, a wrongly typed value and a meter one below measured usage. R has no admitted input that produces the unsupported-construct row; that row is excluded from this criterion until the checked-package owner admits such an input. Recovery-predicate rows remain excluded while the FSL bare projection refuses R's comprehension binder. | Test |
 | FR-045-AC-2 | The behaviors of FR-020-AC-1 to AC-5, FR-021, FR-022, FR-023 and FR-024-AC-1 to AC-6 asserted by `tc_003` hold with the same assertions, the report-based ones restated on the outcome map. | Test |
 | FR-045-AC-3 | A recovery supply with an incomplete population, a missing target state, a missing achieved state or an unavailable binder never yields a true recovery, and no engine function converts an evaluation result to a Boolean (no `unwrap_or(false)`, no `as_bool`). | Test |
 | FR-045-AC-4 | A retry bound of `n` read from `attempts maximum` admits exactly `n` attempts, counting the initial attempt, and `n + 1` is the retry-bound refusal. | Test |
 | FR-045-AC-5 | The compensation assessment performs no I/O: execute it under a denied-syscall harness and inspect the compensation module's dependency tree for I/O crates; the assessment completes and the module names no I/O crate. | Test |
-| FR-045-AC-6 | Compensation assessment consumes QSL's package-only checked-slot result as the typed slot outcome through the public evaluation boundary. | Test |
+| FR-045-AC-6 | Compensation assessment consumes FSL's package-only checked-slot result as the typed slot outcome through the public evaluation boundary. | Test |
 | FR-045-AC-7 | Once AC-8's per-binder charge-log gate is met, each compensation assessment reports attribution as supported; it returns no `unsupported` attribution result and substitutes no zero entry for a missing binder charge. | Test |
-| FR-045-AC-8 | Once QSL's per-binder charge log with its accounting version exists, as QSL FR-520-AC-11 states it and where that criterion puts it, the assessment consumes it: each binder read has its own entry, an unread binder has none, and the entries with the unattributed entry equal the call's total. | Test |
+| FR-045-AC-8 | Once FSL's per-binder charge log with its accounting version exists, as FSL FR-520-AC-11 states it and where that criterion puts it, the assessment consumes it: each binder read has its own entry, an unread binder has none, and the entries with the unattributed entry equal the call's total. | Test |
 
 ## Dependencies
 
-- QSL FR-520 and QSL FR-390 (`evaluate_protocol_slot`), QSL FR-519
-  (`protocol_view`), FR-044. QSL delivers the evaluation entry that evaluates
-  from a `CheckedPackageV2` alone as `BarePackage` (QSL FR-531, FR-533). It
+- FSL FR-520 and FSL FR-390 (`evaluate_protocol_slot`), FSL FR-519
+  (`protocol_view`), FR-044. FSL delivers the evaluation entry that evaluates
+  from a `CheckedPackageV2` alone as `BarePackage` (FSL FR-531, FR-533). It
   assumes no source package in this repository.
 - [FR-003](FR-003-assess-compensation-state.md) states the assessment contract;
   this requirement changes only its evaluation source.

@@ -3,13 +3,13 @@ id: TC-013
 title: "Resolve the version-lock manifest"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-012
+  - target: ix://agent-ix/filament-protocol/FR-012
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-016
+  - target: ix://agent-ix/filament-protocol/FR-016
     type: verifies
-  - target: ix://agent-ix/quire-protocol/NFR-006
+  - target: ix://agent-ix/filament-protocol/NFR-006
     type: verifies
 ---
 # TC-013: Resolve the version-lock manifest

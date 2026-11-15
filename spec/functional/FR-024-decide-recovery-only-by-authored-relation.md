@@ -3,21 +3,21 @@ id: FR-024
 title: "Decide recovery only by the authored recovery relation"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-023
+  - target: ix://agent-ix/filament-protocol/FR-023
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-057
+  - target: ix://agent-ix/filament-specification/FR-057
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-058
+  - target: ix://agent-ix/filament-specification/FR-058
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-238
+  - target: ix://agent-ix/filament-specification/FR-238
     type: references
-  - target: ix://agent-ix/quire-specification/FR-263
+  - target: ix://agent-ix/filament-specification/FR-263
     type: references
-  - target: ix://agent-ix/quire-specification/FR-264
+  - target: ix://agent-ix/filament-specification/FR-264
     type: references
-  - target: ix://agent-ix/quire-specification/FR-268
+  - target: ix://agent-ix/filament-specification/FR-268
     type: references
 ---
 # FR-024: Decide recovery only by the authored recovery relation
@@ -34,12 +34,12 @@ The evaluator SHALL accept no caller-provided recovery callback on a production 
 ## Inputs
 
 A compensation registration and its authored recovery relation typed by
-`ix://agent-ix/quire-specification/FR-238`, the retained target and achieved
+`ix://agent-ix/filament-specification/FR-238`, the retained target and achieved
 states, the immutable captures of
-`ix://agent-ix/quire-specification/FR-232`, the declared finite population of
-`ix://agent-ix/quire-specification/FR-263` with its membership rule
-`ix://agent-ix/quire-specification/FR-264`, and the progress and closure
-authority of `ix://agent-ix/quire-specification/FR-268`.
+`ix://agent-ix/filament-specification/FR-232`, the declared finite population of
+`ix://agent-ix/filament-specification/FR-263` with its membership rule
+`ix://agent-ix/filament-specification/FR-264`, and the progress and closure
+authority of `ix://agent-ix/filament-specification/FR-268`.
 
 ## Outputs
 
@@ -69,7 +69,7 @@ and attempts beyond the retry bound cannot produce recovery success", and
 `FR-057-AC-4` that "Missing state, commit or compensation-effect inputs yield
 incomplete/pending rather than recovery success".
 
-Production walks only the admitted QSL typed recovery expression under its exact
+Production walks only the admitted FSL typed recovery expression under its exact
 resolved state/temporal contract. An unknown or out-of-profile expression is
 unsupported; source refusal and resource incompleteness remain their own
 outcomes. A panic-capable or effectful callback is not a production input.
@@ -83,7 +83,7 @@ outcomes. A panic-capable or effectful callback is not a production input.
 | FR-024-AC-3 | An aggregating recovery relation reports success only under a complete declared population with its exact membership rule, exact arithmetic over the captured amount, and applicable completeness authority. | Test (TC-003) |
 | FR-024-AC-4 | A missing target state, achieved state, commit, compensation effect, population member, membership authority or completeness authority yields incomplete or pending rather than recovery success. | Test (TC-003) |
 | FR-024-AC-5 | A successful compensating-operation invocation and a `successful` attempt outcome each produce no recovery success on their own. | Test (TC-003) |
-| FR-024-AC-6 | Production accepts no recovery callback; every supported relation is evaluated from its admitted typed QSL expression under the selected capability/accountant, and unsupported, source-refused and resource-incomplete outcomes are never coerced to Boolean recovery. | Test (TC-003, TC-009) |
+| FR-024-AC-6 | Production accepts no recovery callback; every supported relation is evaluated from its admitted typed FSL expression under the selected capability/accountant, and unsupported, source-refused and resource-incomplete outcomes are never coerced to Boolean recovery. | Test (TC-003, TC-009) |
 
 ## Adopted vocabulary
 
@@ -97,9 +97,9 @@ outcomes. A panic-capable or effectful callback is not a production input.
 
 ### Accepted owner ruling
 
-Quire Specification #28 fixes the relation key and distinct FR-287 effect keys.
+Filament Specification #28 fixes the relation key and distinct FR-287 effect keys.
 The relation type remains open by design: Protocol interprets only the admitted
-typed expression through the selected QSL state/temporal contracts and refuses
+typed expression through the selected FSL state/temporal contracts and refuses
 an unsupported expression; it never maps an unknown relation to full or partial
 recovery. Aggregation uses the exact declared effect-key population, so replay
 and a distinct duplicate effect remain distinguishable.
@@ -109,7 +109,7 @@ and a distinct duplicate effect remain distinguishable.
 - [FR-003](./FR-003-assess-compensation-state.md) aggregates this requirement.
 - [FR-023](./FR-023-preserve-attempt-and-effect-distinctness.md) supplies the
   attempt and effect facts a recovery decision reads but never infers from.
-- `ix://agent-ix/quire-specification/FR-057` establishes the typed recovery
+- `ix://agent-ix/filament-specification/FR-057` establishes the typed recovery
   relation and its retained states.
-- `ix://agent-ix/quire-specification/FR-058` establishes the declared-population
+- `ix://agent-ix/filament-specification/FR-058` establishes the declared-population
   requirement for aggregating recovery.

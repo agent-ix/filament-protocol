@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! The link of an admitted QObs observation record to a checked node and a
-//! workflow instance (QSpec FR-260-AC-5, FR-260-AC-6, FR-260-AC-9, FR-261).
+//! The link of an admitted FObs observation record to a checked node and a
+//! workflow instance (FSpec FR-260-AC-5, FR-260-AC-6, FR-260-AC-9, FR-261).
 //!
 //! The record carries neither field. Both are derived from members it
 //! carries: the declared binding identity, resolved through the assessment's
@@ -10,9 +10,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use quire_contract_model::CheckedNodeId;
-use quire_observation::authority::observation;
-use quire_observation::{AdmittedBundleKey, QualifiedSubject};
+use filament_contract_model::CheckedNodeId;
+use filament_observation::authority::observation;
+use filament_observation::{AdmittedBundleKey, QualifiedSubject};
 
 /// The assessment's declared role mapping: each declared binding identity and
 /// the checked nodes (events, compensations or responses) it resolves to. One

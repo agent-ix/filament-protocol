@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! FR-200, FR-201, FR-202, FR-203, FR-204: dispatch of `composition` and
-//! `refinement` claims to the backend QSL's registry selects.
+//! `refinement` claims to the backend FSL's registry selects.
 //!
-//! QSL decides every composition and refinement answer: the product
-//! construction, the premise discharge and the fixed-point slot are QSL's
-//! (QSL FR-530, `quire-specification` FR-176, FR-177, FR-489). This module
+//! FSL decides every composition and refinement answer: the product
+//! construction, the premise discharge and the fixed-point slot are FSL's
+//! (FSL FR-530, `filament-specification` FR-176, FR-177, FR-489). This module
 //! binds the claim to its component subjects and its four premise lists, asks
 //! the one backend FR-290 names through the same registry and provider
 //! boundary as FR-150 ([`ProviderBoundary`](crate::dispatch::ProviderBoundary)), and carries what comes back
@@ -16,11 +16,11 @@
 //! lists that differ from the request's, and a refinement result may not
 //! retain an assumption identity the request did not state.
 
-use qsl_foundation::BackendId;
-use qsl_replay::ItemLabel;
-use qsl_replay::{SettlementBasis, Truth};
-use qsl_semantics::check::Capability;
-use quire_contract_model::CheckedNodeId;
+use filament_contract_model::CheckedNodeId;
+use fsl_foundation::BackendId;
+use fsl_replay::ItemLabel;
+use fsl_replay::{SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
 
 use crate::closure::AssessmentExecution;
 use crate::declarations::Declarations;
@@ -39,7 +39,7 @@ pub enum AssumeGuaranteeKind {
 }
 
 impl AssumeGuaranteeKind {
-    /// QSL's capability kind for the claim kind.
+    /// FSL's capability kind for the claim kind.
     #[must_use]
     pub const fn capability(self) -> Capability {
         match self {
@@ -49,7 +49,7 @@ impl AssumeGuaranteeKind {
     }
 }
 
-/// One of the four premise lists of `quire-specification` FR-489.
+/// One of the four premise lists of `filament-specification` FR-489.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PremiseList {
     /// `environment`.
@@ -145,9 +145,9 @@ pub struct AssumeGuaranteeBinding<T> {
 }
 
 /// What the dispatcher reads of a backend's composition or refinement result.
-/// The result itself is QSL's and is carried unchanged.
+/// The result itself is FSL's and is carried unchanged.
 pub trait AssumeGuaranteeResult<T> {
-    /// The result label, as QSL's backend states it.
+    /// The result label, as FSL's backend states it.
     fn label(&self) -> ItemLabel;
     /// The assessment-execution value the result states, when it states one.
     fn stated_execution(&self) -> Option<AssessmentExecution>;
@@ -193,12 +193,12 @@ pub struct LabelReading {
     pub basis: Option<SettlementBasis>,
 }
 
-/// Read a composition result's label through the `quire-specification`
+/// Read a composition result's label through the `filament-specification`
 /// FR-360 table (execution and truth) and the FR-489 Settlement table (basis).
 ///
 /// `failed` states its own execution, `failed` or `resource-incomplete`, and
 /// the backend's statement is read only when it is one of those two. A label
-/// the tables do not contain, `incomplete` included (QSL FR-331 states an
+/// the tables do not contain, `incomplete` included (FSL FR-331 states an
 /// incomplete result as `failed`), reads into nothing. No value is read from
 /// a certificate, counterexample, witness or discharge record, and `refused`
 /// is never derived.

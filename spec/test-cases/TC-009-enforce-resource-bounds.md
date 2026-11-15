@@ -3,7 +3,7 @@ id: TC-009
 title: "Enforce every protocol resource boundary"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/NFR-002
+  - target: ix://agent-ix/filament-protocol/NFR-002
     type: verifies
 ---
 # TC-009: Enforce every protocol resource boundary

@@ -7,14 +7,14 @@
 //! consumers:
 //!
 //! ```compile_fail
-//! use quire_protocol::compensation::recovery::RecoveryRelation;
+//! use filament_protocol::compensation::recovery::RecoveryRelation;
 //! ```
 
 #![deny(clippy::wildcard_enum_match_arm)]
 
 use std::collections::BTreeSet;
 
-use quire_observation::authority::{completeness, population};
+use filament_observation::authority::{completeness, population};
 
 use crate::bounds::inventory::{BudgetDimension, SourceSite};
 use crate::bounds::{SiteId, SiteKind};
@@ -48,7 +48,7 @@ pub struct Limits {
     pub max_state_bytes: usize,
     /// Exact authored bytes in one selected relation.
     pub max_relation_bytes: usize,
-    /// Bytes retained from one strict QObs authority document.
+    /// Bytes retained from one strict FObs authority document.
     pub max_authority_bytes: usize,
     /// Members in one aggregating relation.
     pub max_population_members: usize,
@@ -350,12 +350,12 @@ pub(crate) trait RecoveryRelation {
     fn evaluate(&self, target: &State, achieved: &State, members: &[EffectId]) -> bool;
 }
 
-/// Strict QObs population and completeness authority for an aggregate relation.
+/// Strict FObs population and completeness authority for an aggregate relation.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct PopulationEvidence<'a> {
-    /// Strict-read QObs declared population.
+    /// Strict-read FObs declared population.
     pub population: &'a population::View,
-    /// Strict-read QObs completeness assertion.
+    /// Strict-read FObs completeness assertion.
     pub completeness: &'a completeness::View,
     /// Independently established compensation effects offered to the relation.
     pub effects: &'a [EffectId],

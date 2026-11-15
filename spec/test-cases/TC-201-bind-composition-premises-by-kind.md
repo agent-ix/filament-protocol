@@ -3,14 +3,14 @@ id: TC-201
 title: "Bind composition dispositions to their premise lists and component subjects"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-201
+  - target: ix://agent-ix/filament-protocol/FR-201
     type: verifies
 ---
 # TC-201: Bind composition dispositions to their premise lists and component subjects
 
 ## Description
 
-Verify separate premise lists, subject binding and undischarged-slot retention, with a stand-in for the QSL call boundary and no local analysis.
+Verify separate premise lists, subject binding and undischarged-slot retention, with a stand-in for the FSL call boundary and no local analysis.
 
 ## Test Procedure
 

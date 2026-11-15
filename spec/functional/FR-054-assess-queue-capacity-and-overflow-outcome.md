@@ -3,17 +3,17 @@ id: FR-054
 title: "Assess an observed history against queue capacity and overflow outcome"
 type: FR
 relationships:
-  - { target: ix://agent-ix/quire-protocol/US-001, type: implements }
-  - { target: ix://agent-ix/quire-protocol/ADR-010, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-004, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-027, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-028, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-041, type: references }
-  - { target: ix://agent-ix/quire-specification/FR-170, type: references }
-  - { target: ix://agent-ix/quire-specification/FR-171, type: references }
-  - { target: ix://agent-ix/quire-spec-language/ADR-027, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-051, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-057, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/US-001, type: implements }
+  - { target: ix://agent-ix/filament-protocol/ADR-010, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-004, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-027, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-028, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-041, type: references }
+  - { target: ix://agent-ix/filament-specification/FR-170, type: references }
+  - { target: ix://agent-ix/filament-specification/FR-171, type: references }
+  - { target: ix://agent-ix/filament-spec-language/ADR-027, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-051, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-057, type: depends_on }
 ---
 # FR-054: Assess an observed history against queue capacity and overflow outcome
 
@@ -42,7 +42,7 @@ Per channel: the observed maximum occupancy, whether it stayed within capacity, 
 - For an `unordered` channel whose overflow loses its `head` or `tail`, the evaluator shall return the disposition of FR-057 for that channel.
 - The evaluator shall report each violation without repairing it (FR-027).
 - The evaluator shall refuse a history that names a node that is not a declared channel, naming the node, and return no assessment.
-- This requirement states no step semantics. QSL owns the exploration semantics (QSL ADR-027); this library assesses one admitted observation history (ADR-010 Decision 2).
+- This requirement states no step semantics. FSL owns the exploration semantics (FSL ADR-027); this library assesses one admitted observation history (ADR-010 Decision 2).
 
 ## Acceptance Criteria
 
@@ -60,5 +60,5 @@ Per channel: the observed maximum occupancy, whether it stayed within capacity, 
 
 ## Dependencies
 
-- [ADR-010](../adr/ADR-010-consume-qsl-protocol-analysis-own-assessment-and-dispatch.md) fixes what this library owns for dynamic roles, bounded queues, joins and loops, and what QSL owns.
-- QSL ADR-027 states the step semantics this requirement does not restate; QSpec FR-170 and FR-171 state the thresholds and overflow rules the criteria cite.
+- [ADR-010](../adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md) fixes what this library owns for dynamic roles, bounded queues, joins and loops, and what FSL owns.
+- FSL ADR-027 states the step semantics this requirement does not restate; FSpec FR-170 and FR-171 state the thresholds and overflow rules the criteria cite.

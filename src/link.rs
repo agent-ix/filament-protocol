@@ -2,9 +2,9 @@
 //! FR-044: the linked finite protocol representation of one `protocol_clause`
 //! of an admitted [`CheckedPackageV2`].
 //!
-//! The lists come from QSL's [`protocol_view`] and the causal relation from
-//! QSL's [`causal_relation`]; this module owns no table of nodes and builds no
-//! causal edge. A read QSL cannot answer is QSL's own [`ViewRefusal`], carried
+//! The lists come from FSL's [`protocol_view`] and the causal relation from
+//! FSL's [`causal_relation`]; this module owns no table of nodes and builds no
+//! causal edge. A read FSL cannot answer is FSL's own [`ViewRefusal`], carried
 //! unchanged; a node or member the linker itself reads from the package and
 //! cannot find is the linker's own refusal. No partial representation
 //! accompanies either.
@@ -12,36 +12,36 @@
 //! The retired wire types do not resolve through this crate.
 //!
 //! ```compile_fail,E0432
-//! use quire_protocol::link::Package;
+//! use filament_protocol::link::Package;
 //! ```
 //!
 //! ```compile_fail,E0432
-//! use quire_protocol::link::Handle;
+//! use filament_protocol::link::Handle;
 //! ```
 //!
 //! ```compile_fail,E0432
-//! use quire_protocol::link::Declaration;
+//! use filament_protocol::link::Declaration;
 //! ```
 //!
 //! ```compile_fail,E0432
-//! use quire_protocol::wire::Package;
+//! use filament_protocol::wire::Package;
 //! ```
 
 use crate::declarations::Declarations;
-use qsl_package::protocol_view::{
-    causal_relation, control_operation, delivery, locus, protocol_view, temporal_binding,
-    CausalEdge, ControlOperation, ProtocolView, Scheduling, ViewRefusal,
-};
-use quire_contract_model::{
+use filament_contract_model::{
     CheckedNodeId, CheckedPackageV2, CheckedProtocolActivationRow, CheckedSemanticNodeV2,
     CheckedSourceMapEntry, CheckedTerm, LiteralKind, TemporalBinding,
+};
+use fsl_package::protocol_view::{
+    causal_relation, control_operation, delivery, locus, protocol_view, temporal_binding,
+    CausalEdge, ControlOperation, ProtocolView, Scheduling, ViewRefusal,
 };
 
 /// A consumer-owned refusal produced while linking an admitted protocol.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum LinkRefusal {
-    /// QSL could not answer a typed read. The owner's refusal is preserved
-    /// exactly as QSL returned it; the linker never constructs one.
+    /// FSL could not answer a typed read. The owner's refusal is preserved
+    /// exactly as FSL returned it; the linker never constructs one.
     View(ViewRefusal),
     /// A node listed by the protocol view is absent from the package graph.
     UnreadableNode {
@@ -55,15 +55,15 @@ pub enum LinkRefusal {
         /// The member the linker needed.
         member: &'static str,
     },
-    /// QSL's occurrence schema of the packages' protocols could not be read.
-    Occurrence(qsl_package::OccurrenceRefusal),
-    /// A node has no QSL structural key.
+    /// FSL's occurrence schema of the packages' protocols could not be read.
+    Occurrence(fsl_package::OccurrenceRefusal),
+    /// A node has no FSL structural key.
     UnkeyedNode {
         /// The node.
         node: CheckedNodeId,
     },
     /// A declaration member the linker reads is present but not a value the
-    /// QSL layout admits for it.
+    /// FSL layout admits for it.
     MalformedMember {
         /// The node read.
         node: CheckedNodeId,
@@ -141,7 +141,7 @@ fn integer(term: &CheckedTerm) -> Option<u64> {
     else {
         return None;
     };
-    // QSL encodes an integer literal as its canonical decimal string only.
+    // FSL encodes an integer literal as its canonical decimal string only.
     match value.as_str() {
         Some(value) if !value.is_empty() && value.bytes().all(|byte| byte.is_ascii_digit()) => {
             value.parse().ok()
@@ -309,7 +309,7 @@ impl LinkedProtocol {
         &self.declarations
     }
 
-    /// The causal edges, exactly as QSL's `causal_relation` returns them.
+    /// The causal edges, exactly as FSL's `causal_relation` returns them.
     pub fn edges(&self) -> &[CausalEdge] {
         &self.edges
     }
@@ -319,8 +319,8 @@ impl LinkedProtocol {
 ///
 /// # Errors
 ///
-/// QSL's own [`ViewRefusal`], unchanged inside [`LinkRefusal::View`], for
-/// every read QSL answers with a refusal: an absent or non-protocol node, a
+/// FSL's own [`ViewRefusal`], unchanged inside [`LinkRefusal::View`], for
+/// every read FSL answers with a refusal: an absent or non-protocol node, a
 /// `protocol_reference` carrier, a node lacking a member its layout states.
 /// The linker's own refusals identify a listed node or member it cannot read
 /// ([`LinkRefusal::UnreadableNode`], [`LinkRefusal::MissingMember`]),

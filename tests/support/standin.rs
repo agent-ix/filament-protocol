@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! The stand-in backend of TC-160 to TC-163. It is registered at the provider
-//! boundary under a descriptor QSL's registry accepts, records every call it
+//! boundary under a descriptor FSL's registry accepts, records every call it
 //! receives, and answers from a function of the call. It decides nothing.
 
 // Each test binary uses a different part of these helpers.
@@ -10,25 +10,25 @@ use std::cell::RefCell;
 use std::convert::Infallible;
 use std::rc::Rc;
 
-use qsl_foundation::source::provenance::OccurrenceKey;
-use qsl_foundation::witness::{
-    ObservationIdentity, RuntimeValuePath, ValuePathStep, ValuePathSubject,
-};
-use qsl_foundation::BackendId;
-use qsl_replay::{
-    InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TracePosition, Truth,
-};
-use qsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
-use qsl_semantics::check::Capability;
-use quire_protocol::dispatch::{
+use filament_protocol::dispatch::{
     Answer, BackendResult, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
     ProtocolRequest, ProviderBoundary,
 };
-use quire_protocol::disposition::{QslBoundary, QslReport};
+use filament_protocol::disposition::{FslBoundary, FslReport};
+use fsl_foundation::source::provenance::OccurrenceKey;
+use fsl_foundation::witness::{
+    ObservationIdentity, RuntimeValuePath, ValuePathStep, ValuePathSubject,
+};
+use fsl_foundation::BackendId;
+use fsl_replay::{
+    InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TracePosition, Truth,
+};
+use fsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
+use fsl_semantics::check::Capability;
 
 use super::dynamic::Dynamic;
 
-/// The channel components QSL's read view does not publish yet.
+/// The channel components FSL's read view does not publish yet.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Rest {
     pub sender: &'static str,
@@ -83,7 +83,7 @@ impl BackendResult for Sentinel {
     }
 }
 
-pub type Reply = Box<dyn Fn(&Bind) -> QslReport<Sentinel>>;
+pub type Reply = Box<dyn Fn(&Bind) -> FslReport<Sentinel>>;
 
 /// The calls a stand-in received.
 #[derive(Clone, Default)]
@@ -109,10 +109,10 @@ impl Standin {
     }
 }
 
-impl QslBoundary<Asked, Answer<Sentinel, Infallible>> for Standin {
-    fn report(&mut self, claim: &Asked) -> QslReport<Answer<Sentinel, Infallible>> {
+impl FslBoundary<Asked, Answer<Sentinel, Infallible>> for Standin {
+    fn report(&mut self, claim: &Asked) -> FslReport<Answer<Sentinel, Infallible>> {
         let Claim::Protocol(bound) = claim else {
-            return QslReport::Failed(None);
+            return FslReport::Failed(None);
         };
         self.calls.0.borrow_mut().push(bound.clone());
         (self.answer)(bound).map(Answer::Protocol)
@@ -138,7 +138,7 @@ pub fn serve(boundary: &mut Boundary, name: &str, kinds: &[Capability], answer: 
         None,
         None,
     )
-    .expect("a descriptor QSL's registry accepts");
+    .expect("a descriptor FSL's registry accepts");
     boundary
         .register(
             descriptor,
@@ -153,7 +153,7 @@ pub fn serve(boundary: &mut Boundary, name: &str, kinds: &[Capability], answer: 
 
 /// An answer that returns `result` for every call.
 pub fn always(result: Sentinel) -> Reply {
-    Box::new(move |_| QslReport::Result(result.clone()))
+    Box::new(move |_| FslReport::Result(result.clone()))
 }
 
 pub fn rest() -> Rest {
@@ -208,8 +208,8 @@ pub fn witness(dynamic: &Dynamic, steps: Vec<ValuePathStep>) -> SeparatingWitnes
     let occurrence = OccurrenceKey::generated(dynamic.key(dynamic.clause()));
     SeparatingWitnessRecord {
         quantifier: Some(occurrence.clone()),
-        deciding_element: qsl_replay::DecidingElement::Value(quire_exact::Value::Integer(
-            quire_exact::Integer::from(600_i64),
+        deciding_element: fsl_replay::DecidingElement::Value(filament_exact::Value::Integer(
+            filament_exact::Integer::from(600_i64),
         )),
         index: Some(2),
         value_path: RuntimeValuePath {

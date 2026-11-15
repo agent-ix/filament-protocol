@@ -3,7 +3,7 @@ id: TC-006
 title: "Produce and strictly read canonical protocol results"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: verifies
 ---
 # TC-006: Produce and strictly read canonical protocol results

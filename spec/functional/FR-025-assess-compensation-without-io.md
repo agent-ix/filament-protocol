@@ -3,15 +3,15 @@ id: FR-025
 title: "Assess compensation without performing I/O"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-055
+  - target: ix://agent-ix/filament-specification/FR-055
     type: references
-  - target: ix://agent-ix/quire-specification/FR-056
+  - target: ix://agent-ix/filament-specification/FR-056
     type: references
-  - target: ix://agent-ix/quire-specification/FR-057
+  - target: ix://agent-ix/filament-specification/FR-057
     type: references
 ---
 # FR-025: Assess compensation without performing I/O
@@ -49,7 +49,7 @@ carries its own no-invocation criterion where its own prose names an action.
 
 Engineering Assurance owns whole-process containment; this requirement covers
 only the library's own API surface and declared dependency inventory, as
-`ix://agent-ix/quire-protocol/NFR-002` already scopes for resource enforcement.
+`ix://agent-ix/filament-protocol/NFR-002` already scopes for resource enforcement.
 
 ## Acceptance Criteria
 
@@ -78,6 +78,6 @@ these terms.
 - [FR-003](./FR-003-assess-compensation-state.md) aggregates this requirement.
 - [FR-010](./FR-010-consumer-boundary-domain.md) bounds what this repository owns
   versus what an external producer supplies.
-- `ix://agent-ix/quire-specification/FR-055`, `FR-056` and `FR-057` establish the
+- `ix://agent-ix/filament-specification/FR-055`, `FR-056` and `FR-057` establish the
   no-business-action and no-compensating-operation rules this requirement
   enforces as a boundary.

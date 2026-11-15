@@ -3,15 +3,15 @@ id: FR-040
 title: "Emit no success value beside a fatal refusal"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-014
+  - target: ix://agent-ix/filament-protocol/FR-014
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-036
+  - target: ix://agent-ix/filament-protocol/FR-036
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: depends_on
 ---
 # FR-040: Emit no success value beside a fatal refusal

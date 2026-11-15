@@ -3,14 +3,14 @@ id: TC-203
 title: "Carry declared fixed-point cycles as typed unsupported"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-203
+  - target: ix://agent-ix/filament-protocol/FR-203
     type: verifies
 ---
 # TC-203: Carry declared fixed-point cycles as typed unsupported
 
 ## Description
 
-Verify the typed unsupported disposition for a declared cycle and the absence of any local fixed point, with a stand-in for the QSL call boundary and no local analysis.
+Verify the typed unsupported disposition for a declared cycle and the absence of any local fixed point, with a stand-in for the FSL call boundary and no local analysis.
 
 ## Test Procedure
 
@@ -18,4 +18,4 @@ Request a composition whose declaration holds a two-guarantee cycle. Feed a stan
 
 ## Expected Results
 
-The cycle settles `unsupported` with QSL's cause name and node ids; other outcomes are carried unmapped; no cycle guarantee is an assumption; one call is made; the acyclic claim is unchanged.
+The cycle settles `unsupported` with FSL's cause name and node ids; other outcomes are carried unmapped; no cycle guarantee is an assumption; one call is made; the acyclic claim is unchanged.

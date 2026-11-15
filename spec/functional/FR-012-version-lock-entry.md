@@ -4,19 +4,19 @@ title: "Version-lock entry"
 type: FR
 object: entity
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-009
+  - target: ix://agent-ix/filament-protocol/ADR-009
     type: references
-  - target: ix://agent-ix/quire-protocol/US-003
+  - target: ix://agent-ix/filament-protocol/US-003
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: specifies
-  - target: ix://agent-ix/quire-specification/FR-201
+  - target: ix://agent-ix/filament-specification/FR-201
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-204
+  - target: ix://agent-ix/filament-specification/FR-204
     type: depends_on
 ---
 # FR-012: Version-lock entry
@@ -119,9 +119,9 @@ order is not a causal dependency and says nothing about the order in which
   boundary as authority.
 - [FR-008](./FR-008-return-typed-refusals.md) owns the refusal envelope returned
   when an entry is absent, unpinned, duplicated or digest-mismatched.
-- `ix://agent-ix/quire-specification/FR-201` selects the digest domain of
+- `ix://agent-ix/filament-specification/FR-201` selects the digest domain of
   `content_digest`.
-- `ix://agent-ix/quire-specification/FR-204` establishes that equal field values
+- `ix://agent-ix/filament-specification/FR-204` establishes that equal field values
   do not imply equal objects.
 
 ## Status

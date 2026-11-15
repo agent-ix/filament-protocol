@@ -1,18 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agent-ix.org/schemas/quire/contract-ir-result-map-v1.schema.json",
+  "$id": "https://agent-ix.org/schemas/filament/contract-ir-result-map-v1.schema.json",
   "title": "Protocol Result to Contract IR Mapping v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["completeness", "contract", "correction", "decisionSupport", "execution", "identity", "nativeCorrespondenceIdentity", "nativeSubjectIdentity", "outcome", "progressAndClosure", "settlement", "sourceResult", "truth"],
   "properties": {
-    "contract": { "const": "quire.protocol.contract-ir-result-map/v1" },
+    "contract": { "const": "filament.protocol.contract-ir-result-map/v1" },
     "identity": { "$ref": "#/$defs/sha256" },
     "sourceResult": {
       "type": "object", "additionalProperties": false,
       "required": ["contract", "resultKey"],
       "properties": {
-        "contract": { "const": "quire.protocol.result/v1-draft.1" },
+        "contract": { "const": "filament.protocol.result/v1-draft.1" },
         "resultKey": { "$ref": "#/$defs/resultKey" }
       }
     },

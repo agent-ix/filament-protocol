@@ -3,17 +3,17 @@ id: FR-020
 title: "Register compensation once per established forward effect"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-019
+  - target: ix://agent-ix/filament-protocol/FR-019
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-056
+  - target: ix://agent-ix/filament-specification/FR-056
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-226
+  - target: ix://agent-ix/filament-specification/FR-226
     type: references
-  - target: ix://agent-ix/quire-specification/FR-233
+  - target: ix://agent-ix/filament-specification/FR-233
     type: references
-  - target: ix://agent-ix/quire-specification/FR-234
+  - target: ix://agent-ix/filament-specification/FR-234
     type: references
 ---
 # FR-020: Register compensation once per established forward effect
@@ -28,14 +28,14 @@ When a registration is created, the evaluator SHALL NOT invoke the compensating 
 ## Inputs
 
 An admitted compensation definition, a successfully established forward effect
-typed by `ix://agent-ix/quire-specification/FR-226` with its exact
+typed by `ix://agent-ix/filament-specification/FR-226` with its exact
 workflow/effect identity, and the triggered obligation of
 [FR-019](./FR-019-derive-obligation-activation-state.md).
 
 ## Outputs
 
 Compensation registrations typed by
-`ix://agent-ix/quire-specification/FR-233`, each retaining its source definition
+`ix://agent-ix/filament-specification/FR-233`, each retaining its source definition
 and forward effect identity; or a typed violation or refusal.
 
 ## Behavior
@@ -54,7 +54,7 @@ identity, so a registration key with an absent effect component compares only to
 absence.
 
 The registration's lifecycle position is
-`ix://agent-ix/quire-specification/FR-234`. This requirement establishes no
+`ix://agent-ix/filament-specification/FR-234`. This requirement establishes no
 lifecycle labels of its own.
 
 ## Acceptance Criteria
@@ -77,7 +77,7 @@ lifecycle labels of its own.
 
 ### Accepted owner ruling
 
-QSpec #28/#31 fixes registration to the qualified FR-288 compensation
+FSpec #28/#31 fixes registration to the qualified FR-288 compensation
 definition plus the exact FR-287 effect key. Exact replay is idempotent; a
 distinct effect remains distinct even at the same static node. The
 implementation imports those keys and never detects duplication from payload,
@@ -88,6 +88,6 @@ timestamp, source position or display text.
 - [FR-003](./FR-003-assess-compensation-state.md) aggregates this requirement.
 - [FR-019](./FR-019-derive-obligation-activation-state.md) supplies the activated
   obligation a registration is paired against.
-- `ix://agent-ix/quire-specification/FR-056` establishes registration, its
+- `ix://agent-ix/filament-specification/FR-056` establishes registration, its
   retained components, the duplicate-registration rule and the rule that the
   evaluator "does not invoke the compensating operation".

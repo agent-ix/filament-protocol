@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! FR-057, FR-058, FR-059: QSL's `Unsupported` causes and requires-bound
+//! FR-057, FR-058, FR-059: FSL's `Unsupported` causes and requires-bound
 //! outcomes carried as typed non-success dispositions.
 //!
-//! QSL decides what a protocol construct can do; when it reports that it
+//! FSL decides what a protocol construct can do; when it reports that it
 //! cannot step a construct (`Unsupported`) or that a request names a domain
 //! it has no bound for (`RequiresBound`), this module carries that report
 //! unchanged, bound to the construct and to the exact premises of the request.
 //! Nothing here approximates, truncates, defaults or completes the analysis:
 //! neither disposition is a success, and the only calls a claim's settlement
-//! makes into QSL carry the claim itself, never a bound.
+//! makes into FSL carry the claim itself, never a bound.
 //!
 //! The premises are generic: the dispatcher of FR-005, FR-029 and FR-030 owns
 //! the premise record and supplies it; this module retains it byte for byte.
 
-use qsl_eval::simulation::protocol::Unsupported;
-use qsl_eval::simulation::RequiresBound;
-use qsl_foundation::bound::{DomainKey, DomainKind};
-use qsl_foundation::BackendId;
-use qsl_replay::{SettlementBasis, Truth};
-use qsl_semantics::check::Capability;
-use quire_contract_model::{CheckedNodeId, CheckedPackageV2, CheckedSourceMapEntry};
-use quire_semantic_value::catalog::CatalogCode;
+use filament_contract_model::{CheckedNodeId, CheckedPackageV2, CheckedSourceMapEntry};
+use filament_semantic_value::catalog::CatalogCode;
+use fsl_eval::simulation::protocol::Unsupported;
+use fsl_eval::simulation::RequiresBound;
+use fsl_foundation::bound::{DomainKey, DomainKind};
+use fsl_foundation::BackendId;
+use fsl_replay::{SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
 
 use crate::closure::AssessmentExecution;
 use crate::declarations::LoopDeclaration;
@@ -48,21 +48,21 @@ impl Construct {
     }
 }
 
-/// The cause of an `unsupported` disposition, as QSL reports it.
+/// The cause of an `unsupported` disposition, as FSL reports it.
 ///
-/// QSL's `Unsupported` publishes no name accessor, only the variant itself, so
+/// FSL's `Unsupported` publishes no name accessor, only the variant itself, so
 /// the cause is carried as that typed value and compared as that value; its
 /// name is the variant's, which is what a debug rendering of the carried
 /// value shows.
 #[derive(Clone, Debug)]
 pub enum UnsupportedCause {
-    /// A construct QSL's protocol system does not step, as QSL reported it.
+    /// A construct FSL's protocol system does not step, as FSL reported it.
     Construct(Unsupported),
-    /// A construct QSL steps but this library's own assessment of an observed
-    /// history does not (ADR-010: QSL owns the engines). No QSL `Unsupported`
+    /// A construct FSL steps but this library's own assessment of an observed
+    /// history does not (ADR-010: FSL owns the engines). No FSL `Unsupported`
     /// variant stands behind it.
     Assessment(AssessmentUnsupported),
-    /// A claim or discharge no QSL engine serves, with QSL's own catalog code
+    /// A claim or discharge no FSL engine serves, with FSL's own catalog code
     /// for it.
     RequestedCapability(CatalogCode),
     /// A cause the caller received from outside and could not type as either
@@ -72,12 +72,12 @@ pub enum UnsupportedCause {
 }
 
 /// A construct this library's assessment of an observed history does not
-/// assess, although QSL steps it.
+/// assess, although FSL steps it.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AssessmentUnsupported {
-    /// A `join predicate(..)`: the predicate is QSL's to evaluate.
+    /// A `join predicate(..)`: the predicate is FSL's to evaluate.
     JoinPredicate,
-    /// An unordered channel whose overflow loses its head or tail: QSL steps
+    /// An unordered channel whose overflow loses its head or tail: FSL steps
     /// it over a send-ordered queue this library does not reconstruct.
     UnorderedLossSelector,
 }
@@ -103,9 +103,9 @@ impl PartialEq for UnsupportedCause {
 impl Eq for UnsupportedCause {}
 
 impl UnsupportedCause {
-    /// QSL's cause for a request no engine serves:
+    /// FSL's cause for a request no engine serves:
     /// `unsupported_projection`/`unsupported-requested-capability`, spelled
-    /// as QSL spells it wherever it settles such an item. QSL exports no
+    /// as FSL spells it wherever it settles such an item. FSL exports no
     /// constant for it.
     #[must_use]
     pub const fn requested_capability() -> Self {
@@ -126,7 +126,7 @@ impl UnsupportedCause {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Warning {
     /// No accepted backend serves the capability kind the claim requires
-    /// (QSL FR-290, this library's FR-153): the kind, and the backend the
+    /// (FSL FR-290, this library's FR-153): the kind, and the backend the
     /// request named when it named one.
     UnservedCapability {
         /// The required capability kind.
@@ -140,7 +140,7 @@ pub enum Warning {
 /// satisfied, conformant or successful, and the source of no derived result.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UnsupportedDisposition<P> {
-    /// QSL's cause, by name.
+    /// FSL's cause, by name.
     pub cause: UnsupportedCause,
     /// The construct, by checked node and locus; absent when the cause
     /// concerns the whole claim and no one construct.
@@ -171,12 +171,12 @@ impl<P> UnsupportedDisposition<P> {
     }
 }
 
-/// A requires-bound disposition: QSL's outcome unchanged, with its unbounded
+/// A requires-bound disposition: FSL's outcome unchanged, with its unbounded
 /// domains. It is non-success on its own axis, folded into no conformance,
 /// progress or closure value, and carries no partial result.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RequiresBoundDisposition<P> {
-    /// QSL's outcome, unchanged.
+    /// FSL's outcome, unchanged.
     pub outcome: RequiresBound,
     /// The construct the bound is missing for; absent when the report names
     /// none.
@@ -186,7 +186,7 @@ pub struct RequiresBoundDisposition<P> {
 }
 
 impl<P> RequiresBoundDisposition<P> {
-    /// Each unbounded domain with the key and kind QSL names.
+    /// Each unbounded domain with the key and kind FSL names.
     pub fn domains(&self) -> impl Iterator<Item = (&DomainKey, DomainKind)> {
         self.outcome.domains.iter()
     }
@@ -195,11 +195,11 @@ impl<P> RequiresBoundDisposition<P> {
 /// A typed non-success disposition. It has no success variant.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Disposition<P> {
-    /// QSL reported an `Unsupported` cause, or no engine serves the request.
+    /// FSL reported an `Unsupported` cause, or no engine serves the request.
     Unsupported(UnsupportedDisposition<P>),
-    /// QSL reported unbounded domains.
+    /// FSL reported unbounded domains.
     RequiresBound(RequiresBoundDisposition<P>),
-    /// QSL's backend returned a refusal, by its catalog code.
+    /// FSL's backend returned a refusal, by its catalog code.
     Refused(RefusedDisposition<P>),
     /// The selected backend failed for exactly this claim.
     Failed(FailedDisposition<P>),
@@ -225,81 +225,81 @@ pub struct FailedDisposition<P> {
     pub premises: P,
 }
 
-/// What QSL reported for one claim.
+/// What FSL reported for one claim.
 #[derive(Clone, Debug)]
-pub enum QslReport<R> {
-    /// QSL's result, carried unchanged by the caller's own result type.
+pub enum FslReport<R> {
+    /// FSL's result, carried unchanged by the caller's own result type.
     Result(R),
-    /// QSL reported an `Unsupported` cause for a construct.
+    /// FSL reported an `Unsupported` cause for a construct.
     Unsupported {
         /// The cause.
         cause: UnsupportedCause,
         /// The construct, when the report names one.
         construct: Option<Construct>,
     },
-    /// QSL reported a requires-bound outcome for a construct.
+    /// FSL reported a requires-bound outcome for a construct.
     RequiresBound {
         /// The outcome, unchanged.
         outcome: RequiresBound,
         /// The construct, when the report names one.
         construct: Option<Construct>,
     },
-    /// QSL's backend returned a refusal, by its catalog code.
+    /// FSL's backend returned a refusal, by its catalog code.
     Refusal(CatalogCode),
     /// The selected backend failed.
     Failed(Option<CatalogCode>),
 }
 
-impl<R> QslReport<R> {
+impl<R> FslReport<R> {
     /// The same report with its result, when it has one, passed through `f`.
-    pub fn map<S>(self, f: impl FnOnce(R) -> S) -> QslReport<S> {
+    pub fn map<S>(self, f: impl FnOnce(R) -> S) -> FslReport<S> {
         match self {
-            Self::Result(result) => QslReport::Result(f(result)),
-            Self::Unsupported { cause, construct } => QslReport::Unsupported { cause, construct },
+            Self::Result(result) => FslReport::Result(f(result)),
+            Self::Unsupported { cause, construct } => FslReport::Unsupported { cause, construct },
             Self::RequiresBound { outcome, construct } => {
-                QslReport::RequiresBound { outcome, construct }
+                FslReport::RequiresBound { outcome, construct }
             }
-            Self::Refusal(code) => QslReport::Refusal(code),
-            Self::Failed(diagnostic) => QslReport::Failed(diagnostic),
+            Self::Refusal(code) => FslReport::Refusal(code),
+            Self::Failed(diagnostic) => FslReport::Failed(diagnostic),
         }
     }
 }
 
-/// The call boundary into QSL's protocol analysis.
+/// The call boundary into FSL's protocol analysis.
 ///
 /// This seam is deliberately minimal. A request carries the claim and nothing
 /// else: there is no parameter through which this library could pass a bound
-/// it chose. A report is a result, a refusal QSL's backend returned, an
+/// it chose. A report is a result, a refusal FSL's backend returned, an
 /// `Unsupported` cause or requires-bound outcome with an optional construct,
 /// or a failure of the backend; a disposition carries its own warnings.
-pub trait QslBoundary<C, R> {
-    /// Ask QSL about `claim`.
-    fn report(&mut self, claim: &C) -> QslReport<R>;
+pub trait FslBoundary<C, R> {
+    /// Ask FSL about `claim`.
+    fn report(&mut self, claim: &C) -> FslReport<R>;
 }
 
 /// One claim's settlement, independent of every other claim's.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ClaimSettlement<R, P> {
-    /// QSL answered; the result is carried with the request's premises.
+    /// FSL answered; the result is carried with the request's premises.
     Result {
-        /// QSL's result, unchanged.
+        /// FSL's result, unchanged.
         result: R,
         /// The premises of the request.
         premises: P,
     },
-    /// QSL reported no result for the claim.
+    /// FSL reported no result for the claim.
     Disposition(Disposition<P>),
 }
 
 /// Settle one claim against `boundary`, binding the report to `premises`.
 pub fn settle_claim<C, R, P>(
-    boundary: &mut (impl QslBoundary<C, R> + ?Sized),
+    boundary: &mut (impl FslBoundary<C, R> + ?Sized),
     claim: &C,
     premises: P,
 ) -> ClaimSettlement<R, P> {
     match boundary.report(claim) {
-        QslReport::Result(result) => ClaimSettlement::Result { result, premises },
-        QslReport::Unsupported { cause, construct } => {
+        FslReport::Result(result) => ClaimSettlement::Result { result, premises },
+        FslReport::Unsupported { cause, construct } => {
             ClaimSettlement::Disposition(Disposition::Unsupported(UnsupportedDisposition {
                 cause,
                 construct,
@@ -307,19 +307,19 @@ pub fn settle_claim<C, R, P>(
                 warnings: Vec::new(),
             }))
         }
-        QslReport::Refusal(code) => {
+        FslReport::Refusal(code) => {
             ClaimSettlement::Disposition(Disposition::Refused(RefusedDisposition {
                 code,
                 premises,
             }))
         }
-        QslReport::Failed(diagnostic) => {
+        FslReport::Failed(diagnostic) => {
             ClaimSettlement::Disposition(Disposition::Failed(FailedDisposition {
                 diagnostic,
                 premises,
             }))
         }
-        QslReport::RequiresBound { outcome, construct } => {
+        FslReport::RequiresBound { outcome, construct } => {
             ClaimSettlement::Disposition(Disposition::RequiresBound(RequiresBoundDisposition {
                 outcome,
                 construct,
@@ -332,7 +332,7 @@ pub fn settle_claim<C, R, P>(
 /// Settle each of `claims` against `boundary`: exactly one settlement per
 /// claim, in order, none derived from another claim's.
 pub fn settle_claims<C, R, P: Clone>(
-    boundary: &mut (impl QslBoundary<C, R> + ?Sized),
+    boundary: &mut (impl FslBoundary<C, R> + ?Sized),
     claims: &[(C, P)],
 ) -> Vec<ClaimSettlement<R, P>> {
     claims
@@ -345,7 +345,7 @@ pub fn settle_claims<C, R, P: Clone>(
 // FR-059: loop invariant and variant stay undischarged
 // ---------------------------------------------------------------------------
 
-/// A loop proof's discharge status. QSL serves no engine that discharges a
+/// A loop proof's discharge status. FSL serves no engine that discharges a
 /// `repeat`'s invariant or variant, so this library produces exactly one.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DischargeStatus {
@@ -382,7 +382,7 @@ impl LoopProof {
 }
 
 /// The disposition of a request to discharge `declaration`'s invariant or
-/// variant: `unsupported`, carrying QSL's requested-capability cause, bound to
+/// variant: `unsupported`, carrying FSL's requested-capability cause, bound to
 /// the request's premises. The construct and its locus are the loop's own
 /// control's, read from `package`.
 #[must_use]

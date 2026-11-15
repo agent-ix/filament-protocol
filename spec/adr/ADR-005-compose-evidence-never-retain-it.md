@@ -4,13 +4,13 @@ title: "Compose acceptance evidence, never retain it"
 type: ADR
 status: accepted
 relationships:
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-017
+  - target: ix://agent-ix/filament-protocol/FR-017
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/AD-001
+  - target: ix://agent-ix/filament-protocol/AD-001
     type: depends_on
 ---
 # ADR-005: Compose acceptance evidence, never retain it

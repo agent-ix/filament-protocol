@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! TC-200 to TC-204: `composition` and `refinement` claims dispatched to the
-//! backend QSL's registry selects, their results carried unchanged and bound
+//! backend FSL's registry selects, their results carried unchanged and bound
 //! to the request they were established for (FR-200 to FR-204).
 
 mod support {
@@ -9,28 +9,28 @@ mod support {
     pub mod handoff;
 }
 
-use ix_trace_rs::trace;
-use qsl_eval::simulation::StateKey;
-use qsl_foundation::BackendId;
-use qsl_replay::{
-    InconclusiveCause, ItemLabel, PairedAssumptionPath, PremiseOutcome, ProtocolAssumptionReason,
-    ProtocolAssumptionWitness, SettlementBasis, Truth,
-};
-use qsl_semantics::check::Capability;
-use quire_contract_model::CheckedNodeId;
-use quire_protocol::assume_guarantee::{
+use filament_contract_model::CheckedNodeId;
+use filament_protocol::assume_guarantee::{
     read_composition_label, read_refinement_label, AssumeGuaranteeKind, IdentityMismatch,
     PremiseList, PremiseLists,
 };
-use quire_protocol::closure::AssessmentExecution;
-use quire_protocol::dispatch::{
+use filament_protocol::closure::AssessmentExecution;
+use filament_protocol::dispatch::{
     dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal, ProtocolOutcome,
 };
-use quire_protocol::disposition::{
-    ClaimSettlement, Disposition, QslReport, UnsupportedCause, Warning,
+use filament_protocol::disposition::{
+    ClaimSettlement, Disposition, FslReport, UnsupportedCause, Warning,
 };
-use quire_protocol::refusal::ProtocolCauseKind;
-use quire_semantic_value::catalog::CatalogCode;
+use filament_protocol::refusal::ProtocolCauseKind;
+use filament_semantic_value::catalog::CatalogCode;
+use fsl_eval::simulation::StateKey;
+use fsl_foundation::BackendId;
+use fsl_replay::{
+    InconclusiveCause, ItemLabel, PairedAssumptionPath, PremiseOutcome, ProtocolAssumptionReason,
+    ProtocolAssumptionWitness, SettlementBasis, Truth,
+};
+use fsl_semantics::check::Capability;
+use ix_trace_rs::trace;
 use support::assume_guarantee::{
     always, foreign, honest, request, serve, Bind, Boundary, Calls, Claims, Out, Req, Settled,
 };
@@ -96,7 +96,7 @@ fn unsupported_with(cause: UnsupportedCause) -> Boundary {
         &mut boundary,
         "b",
         &BOTH,
-        Box::new(move |_| QslReport::Unsupported {
+        Box::new(move |_| FslReport::Unsupported {
             cause: cause.clone(),
             construct: None,
         }),
@@ -116,12 +116,12 @@ fn serving(result: Out) -> (Boundary, Calls) {
         &mut boundary,
         "composer",
         &BOTH,
-        Box::new(move |bound| QslReport::Result(honest(&bound.request, result.clone()))),
+        Box::new(move |bound| FslReport::Result(honest(&bound.request, result.clone()))),
     );
     (boundary, calls)
 }
 
-/// QSL's typed `premise-unproved` cause, which belongs to an `inconclusive`
+/// FSL's typed `premise-unproved` cause, which belongs to an `inconclusive`
 /// result (FR-489).
 fn unproved() -> InconclusiveCause {
     InconclusiveCause::PremiseUnproved {
@@ -130,7 +130,7 @@ fn unproved() -> InconclusiveCause {
     }
 }
 
-/// QSL FR-148's typed strengthened-assumption cause and witness.
+/// FSL FR-148's typed strengthened-assumption cause and witness.
 fn strengthened() -> InconclusiveCause {
     InconclusiveCause::ProtocolAssumptionNotEstablished(ProtocolAssumptionWitness {
         reason: ProtocolAssumptionReason::Strengthened,
@@ -366,7 +366,7 @@ fn the_disposition_equals_the_backends_result_and_nothing_when_it_returns_none()
         &mut silent,
         "silent",
         &BOTH,
-        Box::new(|_| QslReport::Failed(None)),
+        Box::new(|_| FslReport::Failed(None)),
     );
     assert!(matches!(
         disposition(one(&mut silent, &dynamic, &asked)),
@@ -705,7 +705,7 @@ fn refused_is_never_derived_and_a_refinement_label_reads_into_nothing() {
         &mut boundary,
         "b",
         &BOTH,
-        Box::new(|_| QslReport::Refusal(malformed())),
+        Box::new(|_| FslReport::Refusal(malformed())),
     );
     let Disposition::Refused(refusal) = disposition(one(
         &mut boundary,
@@ -773,7 +773,7 @@ fn other_cycle_outcomes_are_not_remapped_to_unsupported() {
         &mut refusing,
         "b",
         &BOTH,
-        Box::new(|_| QslReport::Refusal(malformed())),
+        Box::new(|_| FslReport::Refusal(malformed())),
     );
     let Disposition::Refused(refusal) = disposition(one(&mut refusing, &dynamic, &asked)) else {
         panic!("not refused");
@@ -830,9 +830,9 @@ fn a_proved_member_does_not_discharge_the_cycle_or_make_it_success() {
         &BOTH,
         Box::new(|bound| {
             if bound.request.cycles.is_empty() {
-                QslReport::Result(honest(&bound.request, proved()))
+                FslReport::Result(honest(&bound.request, proved()))
             } else {
-                QslReport::Unsupported {
+                FslReport::Unsupported {
                     cause: UnsupportedCause::requested_capability(),
                     construct: None,
                 }
@@ -871,9 +871,9 @@ fn an_unsupported_cycle_leaves_an_acyclic_claim_unchanged() {
         &BOTH,
         Box::new(|bound| {
             if bound.request.cycles.is_empty() {
-                QslReport::Result(honest(&bound.request, proved()))
+                FslReport::Result(honest(&bound.request, proved()))
             } else {
-                QslReport::Unsupported {
+                FslReport::Unsupported {
                     cause: UnsupportedCause::requested_capability(),
                     construct: None,
                 }
@@ -1009,7 +1009,7 @@ fn a_refused_refinement_leaves_other_claims_unchanged_and_calls_no_fallback() {
                 .as_mut()
                 .expect("retained")
                 .push(extra.clone());
-            QslReport::Result(out)
+            FslReport::Result(out)
         }),
     );
     let composition = request(&dynamic, COMPOSITION);

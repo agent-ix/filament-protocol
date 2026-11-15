@@ -3,9 +3,9 @@ id: StR-005
 title: "Promote behind a gate that executes what it claims"
 type: StR
 relationships:
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/NFR-004
+  - target: ix://agent-ix/filament-protocol/NFR-004
     type: satisfied_by
 ---
 # StR-005: Promote behind a gate that executes what it claims

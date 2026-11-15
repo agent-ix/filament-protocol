@@ -2,8 +2,8 @@
 //! FR-050, FR-051, FR-052: the authored role, channel, join and loop
 //! declarations of one linked `protocol_clause`.
 //!
-//! Every value is read from the checked node's own content, through QSL's
-//! `delivery` and `queue_capacity` accessors wherever QSL publishes one. The
+//! Every value is read from the checked node's own content, through FSL's
+//! `delivery` and `queue_capacity` accessors wherever FSL publishes one. The
 //! module keeps no table of its own, mints no identity (a role instance
 //! identity exists only where an observation names it), supplies no default
 //! for an absent bound, overflow policy or `outstanding` rule, and evaluates
@@ -11,30 +11,30 @@
 //! stays a reference to its function node, and a loop's invariant and variant
 //! stay references to their checked nodes.
 
-use qsl_package::protocol_view::{
+use filament_contract_model::{CheckedNodeId, CheckedPackageV2, CheckedTerm, LiteralKind};
+use filament_exact::NodeKey;
+use fsl_package::protocol_view::{
     await_anchor, channel_endpoints, choice_visibility, control_operation, delivery,
     queue_capacity, ControlOperation, Delivery, ProtocolView, QueueCapacity,
 };
-use qsl_package::{
+use fsl_package::{
     protocol_occurrence_schemas_from_read, ProtocolOccurrenceSchema, RoleReplication,
 };
-use qsl_semantics::check::wire_id::WireGraph;
-use qsl_semantics::check::{ChannelOverflow, CheckedOutstanding, LossSelector};
-use quire_contract_model::{CheckedNodeId, CheckedPackageV2, CheckedTerm, LiteralKind};
-use quire_exact::NodeKey;
+use fsl_semantics::check::wire_id::WireGraph;
+use fsl_semantics::check::{ChannelOverflow, CheckedOutstanding, LossSelector};
 
 use crate::link::{argument, node, reference, LinkRefusal};
 
-/// One authored role. The replication is QSL's own `RoleReplication`, read
+/// One authored role. The replication is FSL's own `RoleReplication`, read
 /// through its occurrence schema: a static role is [`RoleReplication::Static`]
 /// and a replicated role is one declaration with its population, `max` and
-/// lifetime, never expanded into instances. QSL's `max` is required, so no
+/// lifetime, never expanded into instances. FSL's `max` is required, so no
 /// default is ever substituted for an absent one.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RoleDeclaration {
     /// The checked `role` node.
     pub node: CheckedNodeId,
-    /// QSL's structural key of the node.
+    /// FSL's structural key of the node.
     pub key: NodeKey,
     /// Static, or replicated with population, maximum and lifetime.
     pub replication: RoleReplication,
@@ -83,30 +83,30 @@ pub struct ChannelDeclaration {
     pub node: CheckedNodeId,
     /// The checked `queue` node of the channel.
     pub queue: CheckedNodeId,
-    /// The `role` node that sends, as QSL's `channel_endpoints` reads it.
+    /// The `role` node that sends, as FSL's `channel_endpoints` reads it.
     pub sender: CheckedNodeId,
-    /// The `role` node that receives, as QSL's `channel_endpoints` reads it.
+    /// The `role` node that receives, as FSL's `channel_endpoints` reads it.
     pub receiver: CheckedNodeId,
-    /// The type node of the message the channel carries, as QSL's
+    /// The type node of the message the channel carries, as FSL's
     /// `channel_endpoints` reads it.
     pub message_type: CheckedNodeId,
-    /// The delivery premise, as QSL's `delivery` accessor reads it.
+    /// The delivery premise, as FSL's `delivery` accessor reads it.
     pub delivery: Delivery,
     /// The authored ordering.
     pub ordering: Ordering,
-    /// The authored capacity, as QSL's `queue_capacity` accessor reads it.
+    /// The authored capacity, as FSL's `queue_capacity` accessor reads it.
     pub capacity: Capacity,
-    /// The authored overflow policy; QSL's grammar requires one.
+    /// The authored overflow policy; FSL's grammar requires one.
     pub overflow: ChannelOverflow,
 }
 
 /// One authored `choice`: who decides and what that role sees at the
-/// decision, as QSL's `choice_visibility` reads it.
+/// decision, as FSL's `choice_visibility` reads it.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ChoiceDeclaration {
     /// The `choice` control node.
     pub control: CheckedNodeId,
-    /// QSL's structural key of the control.
+    /// FSL's structural key of the control.
     pub key: NodeKey,
     /// The `protocol` or `role` node that owns the decision.
     pub owner: CheckedNodeId,
@@ -115,7 +115,7 @@ pub struct ChoiceDeclaration {
     pub visible: Vec<CheckedNodeId>,
 }
 
-/// A join's authored policy (QSpec FR-171).
+/// A join's authored policy (FSpec FR-171).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum JoinPolicy {
     /// `join all`.
@@ -134,7 +134,7 @@ pub enum JoinPolicy {
 pub struct JoinDeclaration {
     /// The `parallel` control node.
     pub control: CheckedNodeId,
-    /// QSL's structural key of the control.
+    /// FSL's structural key of the control.
     pub key: NodeKey,
     /// The authored policy.
     pub policy: JoinPolicy,
@@ -164,7 +164,7 @@ impl JoinDeclaration {
 pub struct LoopDeclaration {
     /// The `repeat` control node.
     pub control: CheckedNodeId,
-    /// QSL's structural key of the control.
+    /// FSL's structural key of the control.
     pub key: NodeKey,
     /// The authored iteration maximum, or `None` when the loop has none.
     pub maximum: Option<u64>,
@@ -174,7 +174,7 @@ pub struct LoopDeclaration {
     pub variant: Option<CheckedNodeId>,
 }
 
-/// One authored `await`: the closed window `within [lower, upper]` that QSL
+/// One authored `await`: the closed window `within [lower, upper]` that FSL
 /// publishes on the checked node, in the units of the named clock and counted
 /// from the anchor instant of the awaited `after` event. Never interpreted
 /// here beyond its bounds.
@@ -182,7 +182,7 @@ pub struct LoopDeclaration {
 pub struct AwaitDeclaration {
     /// The `await` control node.
     pub control: CheckedNodeId,
-    /// QSL's structural key of the control.
+    /// FSL's structural key of the control.
     pub key: NodeKey,
     /// The authored lower bound of the window.
     pub lower: u64,
@@ -191,8 +191,8 @@ pub struct AwaitDeclaration {
     /// The authored clock name.
     pub clock: Box<str>,
     /// The `event` control or `compensation` template the await follows
-    /// (the target of QSL's published `after = {kind, target}`), read from
-    /// QSL's checked await accessor.
+    /// (the target of FSL's published `after = {kind, target}`), read from
+    /// FSL's checked await accessor.
     pub anchor: CheckedNodeId,
 }
 
@@ -211,7 +211,7 @@ pub struct Declarations {
 }
 
 impl Declarations {
-    /// QSL's occurrence schema of the clause: its roles, controls and repeat
+    /// FSL's occurrence schema of the clause: its roles, controls and repeat
     /// dimensions, which key every join and loop occurrence.
     #[must_use]
     pub fn schema(&self) -> &ProtocolOccurrenceSchema {
@@ -514,7 +514,7 @@ fn channel(
     })
 }
 
-/// The overflow policy a queue authors; QSL's grammar requires one.
+/// The overflow policy a queue authors; FSL's grammar requires one.
 fn overflow(
     package: &CheckedPackageV2,
     queue: &CheckedNodeId,

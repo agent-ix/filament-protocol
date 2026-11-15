@@ -10,18 +10,18 @@ mod support {
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use ix_trace_rs::trace;
-use qsl_package::protocol_view::{
-    causal_relation, control_operation, protocol_view, temporal_binding, CausalEdge,
-    ControlOperation, EdgeKind, ViewRefusal,
-};
-use quire_contract_model::{
+use filament_contract_model::{
     read_checked_package, CheckedNodeId, CheckedPackageDispatchResult, CheckedPackageReadLimits,
     CheckedPackageV2, CheckedSemanticNodeV2, ClockConfiguration,
 };
-use quire_protocol::checked_package::{admit, HandoffFiles};
-use quire_protocol::link::{link, LinkRefusal, LinkedProtocol};
-use quire_spec_language::checked_handoff::Corpus;
+use filament_protocol::checked_package::{admit, HandoffFiles};
+use filament_protocol::link::{link, LinkRefusal, LinkedProtocol};
+use filament_spec_language::checked_handoff::Corpus;
+use fsl_package::protocol_view::{
+    causal_relation, control_operation, protocol_view, temporal_binding, CausalEdge,
+    ControlOperation, EdgeKind, ViewRefusal,
+};
+use ix_trace_rs::trace;
 use serde_json::Value;
 use support::handoff::{join_budget, request, written, written_request, written_source, Handoff};
 
@@ -157,7 +157,7 @@ fn no_source_constructs_a_causal_edge() {
             .filter(|line| !line.trim_start().starts_with("//"))
         {
             // `compensation/algebra.rs` owns a different `CausalEdge`: an
-            // authored order over milestones, unrelated to QSL's relation.
+            // authored order over milestones, unrelated to FSL's relation.
             let own_milestone_edge = path.ends_with("src/compensation/algebra.rs");
             if own_milestone_edge {
                 assert!(
@@ -248,7 +248,7 @@ fn absent_carrier_and_non_protocol_nodes_return_the_owners_refusal() {
     // `protocol_reference`.
     let mut json: Value =
         serde_json::from_slice(&handoff.files["checked-package.json"]).expect("package JSON");
-    qsl_semantics::check::wire_id::resolve_operand_slots(&mut json)
+    fsl_semantics::check::wire_id::resolve_operand_slots(&mut json)
         .expect("the owner's operand rows resolve");
     let nodes = json["semantic_graph"]["nodes"]
         .as_array_mut()
@@ -283,7 +283,7 @@ fn absent_carrier_and_non_protocol_nodes_return_the_owners_refusal() {
     entry["ordinal"] = Value::from(0);
     entry["role"] = Value::from("expression");
     map.push(entry);
-    qsl_semantics::check::wire_id::write_operand_rows(&mut json);
+    fsl_semantics::check::wire_id::write_operand_rows(&mut json);
     let bytes = serde_json::to_vec(&json).expect("respelled package");
     let result = read_checked_package(
         &bytes,
@@ -356,21 +356,21 @@ fn names_a_window_view(source: &str) -> bool {
 #[trace("TC-150", "FR-044-AC-6")]
 fn the_window_scan_covers_path_and_braced_imports() {
     assert!(names_a_window_view(
-        "use qsl_package::protocol_view::Window;"
+        "use fsl_package::protocol_view::Window;"
     ));
     assert!(names_a_window_view(
-        "use qsl_package::protocol_view::{protocol_view, Window, ViewRefusal};"
+        "use fsl_package::protocol_view::{protocol_view, Window, ViewRefusal};"
     ));
     assert!(names_a_window_view(
-        "use qsl_package::protocol_view::{\n    causal_relation,\n    window_binding,\n};"
+        "use fsl_package::protocol_view::{\n    causal_relation,\n    window_binding,\n};"
     ));
     assert!(!names_a_window_view(
-        "// a window is an evaluation input\nuse qsl_package::protocol_view::{causal_relation, locus};"
+        "// a window is an evaluation input\nuse fsl_package::protocol_view::{causal_relation, locus};"
     ));
 }
 
 /// FR-044 no-relabel: the linker never constructs one of the owner's
-/// `ViewRefusal` values; it carries only the refusal QSL itself returned.
+/// `ViewRefusal` values; it carries only the refusal FSL itself returned.
 #[test]
 #[trace("TC-150", "FR-044-AC-3")]
 fn the_linker_constructs_no_owner_refusal() {
@@ -388,7 +388,7 @@ fn the_linker_constructs_no_owner_refusal() {
 }
 
 /// FR-044-AC-7: recipe R carries the selected temporal content through the
-/// link result, while its causal edges remain exactly QSL's authored relation.
+/// link result, while its causal edges remain exactly FSL's authored relation.
 #[test]
 #[trace("TC-150", "FR-044-AC-7")]
 fn recipe_r_retains_selected_clock_and_owner_causal_edges() {
@@ -713,7 +713,7 @@ fn duplicate_role_authority_is_refused_at_the_later_role() {
 /// Recipe R with its first choice control respelled as a `repeat` whose
 /// `maximum` argument is the given term value; admitted by the checked reader.
 fn repeat_package(maximum: Value) -> (Box<CheckedPackageV2>, CheckedNodeId) {
-    use qsl_package::protocol_view::{control_operation, ControlOperation};
+    use fsl_package::protocol_view::{control_operation, ControlOperation};
 
     let (handoff, package) = recipe("event_position");
     let sequence = package
@@ -724,7 +724,7 @@ fn repeat_package(maximum: Value) -> (Box<CheckedPackageV2>, CheckedNodeId) {
         .expect("recipe R includes a choice control");
     let mut json: Value =
         serde_json::from_slice(&handoff.files["checked-package.json"]).expect("package JSON");
-    qsl_semantics::check::wire_id::resolve_operand_slots(&mut json)
+    fsl_semantics::check::wire_id::resolve_operand_slots(&mut json)
         .expect("the owner's operand rows resolve");
     let nodes = json["semantic_graph"]["nodes"].as_array().expect("nodes");
     let index = package
@@ -819,7 +819,7 @@ fn repeat_package(maximum: Value) -> (Box<CheckedPackageV2>, CheckedNodeId) {
     dependencies.dedup();
     repeat["dependencies"] = Value::Array(dependencies);
 
-    qsl_semantics::check::wire_id::write_operand_rows(&mut json);
+    fsl_semantics::check::wire_id::write_operand_rows(&mut json);
     let bytes = serde_json::to_vec(&json).expect("mutated package");
     let result = read_checked_package(
         &bytes,
@@ -895,7 +895,7 @@ fn conflicting_channel_premises_are_refused_at_both_nodes() {
 
 /// FR-044-AC-5: the link entry takes `CheckedPackageV2` and `CheckedNodeId`
 /// and answers `LinkedProtocol` or `LinkRefusal`; the retired wire
-/// types are compile-fail doctests of `quire_protocol::link`.
+/// types are compile-fail doctests of `filament_protocol::link`.
 #[test]
 #[trace("TC-150", "FR-044-AC-5")]
 fn the_link_entry_names_the_checked_package_types() {

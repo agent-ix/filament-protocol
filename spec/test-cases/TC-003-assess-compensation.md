@@ -3,7 +3,7 @@ id: TC-003
 title: "Assess compensation, retry, commit, and recovery"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: verifies
 ---
 # TC-003: Assess compensation, retry, commit, and recovery

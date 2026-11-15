@@ -3,37 +3,37 @@ id: FR-008
 title: "Return typed source-bound refusals"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-008
+  - target: ix://agent-ix/filament-protocol/ADR-008
     type: references
-  - target: ix://agent-ix/quire-specification/FR-047
+  - target: ix://agent-ix/filament-specification/FR-047
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/US-002
+  - target: ix://agent-ix/filament-protocol/US-002
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-036
+  - target: ix://agent-ix/filament-protocol/FR-036
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-037
+  - target: ix://agent-ix/filament-protocol/FR-037
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-038
+  - target: ix://agent-ix/filament-protocol/FR-038
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-039
+  - target: ix://agent-ix/filament-protocol/FR-039
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-040
+  - target: ix://agent-ix/filament-protocol/FR-040
     type: contains
-  - target: ix://agent-ix/quire-specification/FR-270
+  - target: ix://agent-ix/filament-specification/FR-270
     type: references
-  - target: ix://agent-ix/quire-specification/FR-271
+  - target: ix://agent-ix/filament-specification/FR-271
     type: references
-  - target: ix://agent-ix/quire-specification/FR-272
+  - target: ix://agent-ix/filament-specification/FR-272
     type: references
-  - target: ix://agent-ix/quire-specification/FR-273
+  - target: ix://agent-ix/filament-specification/FR-273
     type: references
-  - target: ix://agent-ix/quire-specification/FR-274
+  - target: ix://agent-ix/filament-specification/FR-274
     type: references
 ---
 # FR-008: Return typed source-bound refusals
@@ -121,7 +121,7 @@ identity. The local `ProtocolStage` members are exactly `contract-resolution`,
 `incomplete-evidence`, `unsupported-capability`, and
 `projection-finding-loss`. Payload fields are typed per member; a generic text
 payload cannot stand in for one. This closed vocabulary is versioned as
-`quire.protocol/refusal/1` and is not an interpretation of an upstream catalog.
+`filament.protocol/refusal/1` and is not an interpretation of an upstream catalog.
 
 The domain/stage map is closed and checked: `contract-resolution` maps to
 `resolution`; `admission` to `admission`; `representation` to
@@ -168,7 +168,7 @@ local refusal paths do not require that catalog and are executable without it.
   the injectivity criterion.
 - [FR-009](./FR-009-lock-external-producer-revisions.md) owns the version-lock
   entry that gates the catalog selection.
-- `ix://agent-ix/quire-specification/FR-047` and FR-270 through FR-274 are
+- `ix://agent-ix/filament-specification/FR-047` and FR-270 through FR-274 are
   informative for source-owner diagnostic contracts; they do not own the local
   Protocol vocabulary or block local envelope execution.
 - Each selected upstream contract owns its stable domain-specific refusal codes.

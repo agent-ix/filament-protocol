@@ -1,4 +1,4 @@
-# quire-protocol
+# filament-protocol
 
 The parser-free **consumer** of compiled protocol artifacts. It reads what a
 producer emits. No parser, no source frontend, no encoder, no formal semantics.

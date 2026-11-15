@@ -7,15 +7,15 @@ mod support {
     pub mod handoff;
 }
 
-use ix_trace_rs::trace;
-use qsl_eval::simulation::protocol::Unsupported;
-use qsl_package::protocol_view::Delivery;
-use qsl_semantics::check::{ChannelOverflow, LossSelector};
-use quire_protocol::disposition::{AssessmentUnsupported, UnsupportedCause};
-use quire_protocol::dynamics::{
+use filament_protocol::disposition::{AssessmentUnsupported, UnsupportedCause};
+use filament_protocol::dynamics::{
     assess_channels, ChannelAssessment, ChannelEvent, ChannelFact, ChannelOutcome, OverflowOutcome,
     PremiseBreach, QueueViolation,
 };
+use fsl_eval::simulation::protocol::Unsupported;
+use fsl_package::protocol_view::Delivery;
+use fsl_semantics::check::{ChannelOverflow, LossSelector};
+use ix_trace_rs::trace;
 use support::dynamic::{at, message, Dynamic};
 
 fn enqueue(name: &str, key: &str) -> ChannelEvent {
@@ -359,7 +359,7 @@ fn an_unordered_channel_has_no_order_violation_and_a_head_or_tail_loss_is_unsupp
 #[test]
 #[trace("TC-052", "FR-054-AC-9")]
 fn a_fact_naming_no_declared_channel_refuses_the_history() {
-    use quire_protocol::dynamics::HistoryRefusal;
+    use filament_protocol::dynamics::HistoryRefusal;
     let dynamic = Dynamic::with("workflow", 3);
     let role = dynamic.named("role", "S");
     let fact = ChannelFact {

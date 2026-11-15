@@ -3,7 +3,7 @@ id: TC-001
 title: "Admit only the selected protocol profile"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: verifies
 ---
 # TC-001: Admit only the selected protocol profile
@@ -15,7 +15,7 @@ one-axis artifact-contract, producer, accepted source-baseline, revision,
 dependency, profile, feature, and numeric-wire mutation.
 
 The executable closure target is the version 2 handoff published inside the
-exact pinned `quire-spec-language` dependency. Its inherited version 1 package
+exact pinned `filament-spec-language` dependency. Its inherited version 1 package
 is used only as the explicit opposite-entry-point control. The legacy generated
 version 1 corpus remains IT-001/Task-009 work and is not required to make TC-001
 run in the default gate.

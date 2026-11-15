@@ -3,7 +3,7 @@ id: TC-153
 title: "End the retired compiler surfaces and the integrity lanes"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-047
+  - target: ix://agent-ix/filament-protocol/FR-047
     type: verifies
 ---
 # TC-153: End the retired compiler surfaces and the integrity lanes

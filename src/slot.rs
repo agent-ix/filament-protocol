@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! FR-045: the outcome of a protocol-slot evaluation over the checked
-//! package, as QSL FR-520's outcome map states it.
+//! package, as FSL FR-520's outcome map states it.
 //!
-//! The evaluation is QSL's: `BarePackage` evaluates the slot from the
-//! package's own nodes (QSL FR-531, FR-533). This module maps the result into
+//! The evaluation is FSL's: `BarePackage` evaluates the slot from the
+//! package's own nodes (FSL FR-531, FR-533). This module maps the result into
 //! [`SlotOutcome`], one variant per row of the map, and carries every owner
 //! value unchanged. No variant is a Boolean for an undefined, refused,
 //! incomplete or unavailable result, and nothing here converts an evaluation
@@ -11,16 +11,16 @@
 
 use std::num::NonZeroU32;
 
-use qsl_eval::value::{
-    BinderCharges, CheckedPackageEvaluation, ProtocolSlot, ProtocolSlotEvaluation, ProtocolSupply,
-};
-use qsl_package::BarePackage;
-use quire_contract_model::{
+use filament_contract_model::{
     CheckedBindingNameKind, CheckedNodeId, CheckedSemanticNodeV2, CheckedTerm, LiteralKind,
 };
-use quire_eval::{CallFailure, FamilyOutcome, FamilyResult};
-use quire_exact::{Incomplete, Meter, NodeKey, Outcome, Refusal, Undefined, Value};
-use quire_semantic_value::catalog::CatalogCode;
+use filament_eval::{CallFailure, FamilyOutcome, FamilyResult};
+use filament_exact::{Incomplete, Meter, NodeKey, Outcome, Refusal, Undefined, Value};
+use filament_semantic_value::catalog::CatalogCode;
+use fsl_eval::value::{
+    BinderCharges, CheckedPackageEvaluation, ProtocolSlot, ProtocolSlotEvaluation, ProtocolSupply,
+};
+use fsl_package::BarePackage;
 
 /// What a slot evaluation produced.
 #[derive(Debug)]
@@ -68,7 +68,7 @@ pub fn outcome_of(outcome: FamilyOutcome<Value>) -> SlotOutcome {
     }
 }
 
-/// A slot's mapped outcome with QSL's per-binder charge log (QSL FR-520-AC-11),
+/// A slot's mapped outcome with FSL's per-binder charge log (FSL FR-520-AC-11),
 /// carried unchanged.
 #[derive(Debug)]
 pub struct SlotEvaluation {
@@ -83,7 +83,7 @@ pub struct SlotEvaluation {
 ///
 /// # Errors
 ///
-/// QSL's [`CallFailure`], unchanged: an admission failure is the owner's
+/// FSL's [`CallFailure`], unchanged: an admission failure is the owner's
 /// record and charges nothing.
 pub fn evaluate(
     package: &BarePackage<'_>,
@@ -109,7 +109,7 @@ pub fn evaluate(
 }
 
 /// The retry bound a compensation node authors: its `attempts` argument's
-/// `maximum`, which counts the initial attempt (QSL FR-520 "tc_003
+/// `maximum`, which counts the initial attempt (FSL FR-520 "tc_003
 /// behaviors"; FR-022).
 ///
 /// # Errors

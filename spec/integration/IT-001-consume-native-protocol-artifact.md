@@ -3,26 +3,26 @@ id: IT-001
 title: "Consume the checked protocol package"
 type: IT
 relationships:
-  - { target: ix://agent-ix/quire-protocol/ADR-002, type: references }
-  - { target: ix://agent-ix/quire-protocol/ADR-003, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-001, type: verifies }
-  - { target: ix://agent-ix/quire-protocol/FR-002, type: verifies }
-  - { target: ix://agent-ix/quire-protocol/FR-043, type: verifies }
-  - { target: ix://agent-ix/quire-protocol/FR-044, type: verifies }
-  - { target: ix://agent-ix/quire-protocol/NFR-002, type: verifies }
+  - { target: ix://agent-ix/filament-protocol/ADR-002, type: references }
+  - { target: ix://agent-ix/filament-protocol/ADR-003, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-001, type: verifies }
+  - { target: ix://agent-ix/filament-protocol/FR-002, type: verifies }
+  - { target: ix://agent-ix/filament-protocol/FR-043, type: verifies }
+  - { target: ix://agent-ix/filament-protocol/FR-044, type: verifies }
+  - { target: ix://agent-ix/filament-protocol/NFR-002, type: verifies }
 ---
 # IT-001: Consume the checked protocol package
 
 ## Objective
 
 Verify that the protocol library admits and links the selected checked package
-from recipe **R** through QSL's published reader and typed read view. The
+from recipe **R** through FSL's published reader and typed read view. The
 consumer does not parse source, reconstruct checked nodes, or derive causal
-edges that QSL owns.
+edges that FSL owns.
 
 ## Target Integration
 
-The producer is `quire_spec_language::checked_handoff`, which emits the three
+The producer is `filament_spec_language::checked_handoff`, which emits the three
 packages and selection used by recipe **R**. The consumer is this library's
 checked-package admission and linking path. The integration uses the producer's
 current public interface and the standard reader and selection mutation cases;
@@ -32,12 +32,12 @@ it does not maintain a second fixture format or a local reader.
 
 | Owner | Supplies | This repository must not |
 | --- | --- | --- |
-| QSL checked-package producer and reader | Recipe R, its package bytes, selection, typed identities, reader outcomes and protocol view | Parse source, reconstruct a package, or reinterpret an identity or refusal |
-| This repository | Admission handoff, protocol-node selection, link result and consumer-owned link refusal | Derive source-level semantics or causal edges owned by QSL |
+| FSL checked-package producer and reader | Recipe R, its package bytes, selection, typed identities, reader outcomes and protocol view | Parse source, reconstruct a package, or reinterpret an identity or refusal |
+| This repository | Admission handoff, protocol-node selection, link result and consumer-owned link refusal | Derive source-level semantics or causal edges owned by FSL |
 
 ## Preconditions
 
-The integration can call the producer's `checked_handoff` API from the QSL
+The integration can call the producer's `checked_handoff` API from the FSL
 dependency selected by this repository. Recipe **R** contains the protocol,
 model and temporal inputs needed by the scenarios below. The handoff's standard
 mutation cases identify the reader and selection defects and their owner-defined
@@ -53,7 +53,7 @@ that value representable.
 
 ## Test Procedure
 
-1. Generate the handoff for **R** through `quire_spec_language::checked_handoff`
+1. Generate the handoff for **R** through `filament_spec_language::checked_handoff`
    and admit its three packages through the public protocol boundary.
    - IT-001-SC-01: each admitted package retains the producer-selected identity
      and bytes; no package or selection is read from a consumer-authored copy.
@@ -63,9 +63,9 @@ that value representable.
      incomplete result before an admitted package or view is exposed; no
      consumer-selected mutation silently admits.
 3. Select the protocol nodes from the admitted package, obtain their
-   `protocol_view` and `causal_relation` from QSL, and link the selected graph.
+   `protocol_view` and `causal_relation` from FSL, and link the selected graph.
    - IT-001-SC-03: the linked node lists and edge set equal the owner's view and
-     relation; every linked causal edge is supplied by QSL.
+     relation; every linked causal edge is supplied by FSL.
 4. Submit the admitted package at exact reader usage and at one unit below each
    nonzero measured limit in turn.
    - IT-001-SC-04: exact usage admits, a one-short limit returns the owner's
@@ -77,7 +77,7 @@ that value representable.
 ## Expected Results
 
 Only the exact checked handoff selected by the caller is admitted. Every reader
-or selection defect retains QSL's typed outcome, and every linked node and edge
+or selection defect retains FSL's typed outcome, and every linked node and edge
 comes from the owner's view. The library does not claim temporal evaluation,
 compensation assessment or complete conformance from admission and linking.
 
@@ -85,12 +85,12 @@ compensation assessment or complete conformance from admission and linking.
 
 - Priority: P0
 - Target Integration: checked native protocol package to protocol library
-- Automation: Automated local fixture lane through the QSL dependency selected by Cargo
+- Automation: Automated local fixture lane through the FSL dependency selected by Cargo
 
 ## Dependencies
 
-QSL publishes `checked_handoff`, the checked-package reader, the independent
-selection and the typed protocol view and causal relation. QSL's accepted
+FSL publishes `checked_handoff`, the checked-package reader, the independent
+selection and the typed protocol view and causal relation. FSL's accepted
 recipe **R** is the input contract. This integration does not select or retain
 the retired compiled-protocol format lanes.
 

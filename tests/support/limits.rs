@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! A meter budget no test reaches.
 
-use quire_exact::ScalarLimits;
+use filament_exact::ScalarLimits;
 
 /// Every counter at its maximum.
 pub const UNLIMITED: ScalarLimits = ScalarLimits {

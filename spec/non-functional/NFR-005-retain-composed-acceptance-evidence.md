@@ -4,21 +4,21 @@ title: "Compose acceptance evidence through each integration handoff"
 type: NFR
 quality_attribute: maintainability
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-005
+  - target: ix://agent-ix/filament-protocol/ADR-005
     type: references
-  - target: ix://agent-ix/quire-protocol/US-004
+  - target: ix://agent-ix/filament-protocol/US-004
     type: derives_from
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: constrains
-  - target: ix://agent-ix/quire-protocol/NFR-001
+  - target: ix://agent-ix/filament-protocol/NFR-001
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-002
+  - target: ix://agent-ix/filament-protocol/NFR-002
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: depends_on
 ---
 # NFR-005: Compose acceptance evidence through each integration handoff
@@ -35,8 +35,8 @@ criterion.
 ## Scope
 
 - Applies to: every scenario of IT-001, IT-002 and IT-003. IT-001's normal
-  version-explicit integration paths resolve QSL capabilities under FR-009; its
-  SC-06a legacy-facade comparison records the selected immutable QSL revision
+  version-explicit integration paths resolve FSL capabilities under FR-009; its
+  SC-06a legacy-facade comparison records the selected immutable FSL revision
   as an explicit compatibility exception rather than minting a capability.
 - Applies to a scenario that refuses *during* resolution as the partial
   resolution state reached plus the entry that caused the refusal — such a

@@ -3,16 +3,16 @@ id: FR-204
 title: "Refuse a refinement result whose assumptions are stronger than the request's"
 type: FR
 relationships:
-  - { target: ix://agent-ix/quire-protocol/US-001, type: implements }
-  - { target: ix://agent-ix/quire-protocol/ADR-010, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-008, type: references }
-  - { target: ix://agent-ix/quire-protocol/FR-029, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-030, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-040, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-202, type: depends_on }
-  - { target: ix://agent-ix/quire-protocol/FR-301, type: depends_on }
-  - { target: ix://agent-ix/quire-specification/FR-177, type: depends_on }
-  - { target: ix://agent-ix/quire-spec-language/FR-148, type: references }
+  - { target: ix://agent-ix/filament-protocol/US-001, type: implements }
+  - { target: ix://agent-ix/filament-protocol/ADR-010, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-008, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-029, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-030, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-040, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-202, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-301, type: depends_on }
+  - { target: ix://agent-ix/filament-specification/FR-177, type: depends_on }
+  - { target: ix://agent-ix/filament-spec-language/FR-148, type: references }
 ---
 # FR-204: Refuse a refinement result whose assumptions are stronger than the request's
 
@@ -39,7 +39,7 @@ The disposition carried under FR-202 when every retained assumption identity is 
 - The library shall not replace the refused result with a fallback backend's (FR-030).
 - When the backend itself reports a strengthened assumption as a non-success finding, the library shall carry that finding unchanged under FR-202 and not refuse it.
 
-The library decides inclusion of identities only. Whether one assumption entails another, and whether an implementation's assumptions are no stronger than the specification's, is the relation `ix://agent-ix/quire-specification/FR-177` defines and QSL's refinement backend decides. This requirement stops a result from being attributed to a request it was not established under.
+The library decides inclusion of identities only. Whether one assumption entails another, and whether an implementation's assumptions are no stronger than the specification's, is the relation `ix://agent-ix/filament-specification/FR-177` defines and FSL's refinement backend decides. This requirement stops a result from being attributed to a request it was not established under.
 
 ## Acceptance Criteria
 
@@ -60,4 +60,4 @@ The library decides inclusion of identities only. Whether one assumption entails
 - [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) supplies the refusal of a disposition whose assumption component is substituted, and the no-fallback rule.
 - [FR-029](./FR-029-return-one-disposition-per-requested-claim.md) and [FR-040](./FR-040-emit-no-success-beside-fatal-refusal.md) supply independence and the no-success-beside-refusal rule.
 - [FR-008](./FR-008-return-typed-refusals.md) supplies the closed cause vocabulary that holds `identity-mismatch`.
-- `ix://agent-ix/quire-specification/FR-177` owns the assumption-weakening relation; QSL FR-148 owns the backend's strengthened-assumption finding.
+- `ix://agent-ix/filament-specification/FR-177` owns the assumption-weakening relation; FSL FR-148 owns the backend's strengthened-assumption finding.

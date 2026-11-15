@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! TC-164: `local-projection` claims dispatched to QSL's real
+//! TC-164: `local-projection` claims dispatched to FSL's real
 //! `protocol-analysis` engine, with no stand-in (FR-150, FR-152, FR-153,
 //! TL-387 AC1, AC2).
 
@@ -9,13 +9,13 @@ mod support {
     pub mod projection;
 }
 
+use filament_protocol::dispatch::{BackendResult, ProtocolOutcome};
+use filament_protocol::disposition::{ClaimSettlement, Disposition};
+use fsl_analyze::protocol_analysis::manifest::BACKEND_ID;
+use fsl_analyze::protocol_analysis::ProtocolAnalysisArtifact;
+use fsl_replay::protocol_analysis::AnalysisOutcome;
+use fsl_replay::{SettlementBasis, Truth};
 use ix_trace_rs::trace;
-use qsl_analyze::protocol_analysis::manifest::BACKEND_ID;
-use qsl_analyze::protocol_analysis::ProtocolAnalysisArtifact;
-use qsl_replay::protocol_analysis::AnalysisOutcome;
-use qsl_replay::{SettlementBasis, Truth};
-use quire_protocol::dispatch::{BackendResult, ProtocolOutcome};
-use quire_protocol::disposition::{ClaimSettlement, Disposition};
 use support::projection::{settle, worked, CANCELLED, PICK};
 
 #[test]

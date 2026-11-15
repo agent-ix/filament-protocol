@@ -4,25 +4,25 @@ title: "Define the local verification gate and its configuration lanes"
 type: NFR
 quality_attribute: maintainability
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-007
+  - target: ix://agent-ix/filament-protocol/US-007
     type: derives_from
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-004
+  - target: ix://agent-ix/filament-protocol/FR-004
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-006
+  - target: ix://agent-ix/filament-protocol/FR-006
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: constrains
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: constrains
 ---
 # NFR-004: Define the local verification gate and its configuration lanes
@@ -63,7 +63,7 @@ the target is explicitly excluded from the supported scope.
 
 A gate whose written rule cannot be executed is worse than no gate. The standing
 directive to check "both the minimal and `--features quire-extraction` lanes" was
-inherited from `agent-ix/quire-spec-language`, where `quire-extraction =
+inherited from `agent-ix/filament-spec-language`, where `quire-extraction =
 ["dep:quire-rs"]` gates roughly forty `cfg` sites: an entire `pub mod
 quire_source`, a `cfg`'d field on a `#[serde(deny_unknown_fields)]` wire struct
 whose acceptance behaviour therefore differs per lane, and a whole test file
@@ -123,7 +123,7 @@ and any future automation of it is Rust under
 | --- | --- | --- |
 | NFR-004-AC-1 | The local gate is exactly four commands: `cargo fmt --all -- --check`, `cargo clippy --locked --all-targets --target-dir target-codex-backends -- -D warnings`, `cargo test --locked --target-dir target-codex-backends`, `env RUSTDOCFLAGS="-D warnings" cargo doc --locked --no-deps --target-dir target-codex-backends`, run in that order over one unchanged worktree state, and every command is executed rather than assumed. | Test (TC-012) |
 | NFR-004-AC-2 | Each enumerated command is recorded with the risk it detects: formatting drift for `fmt`; lint violations and, because `--all-targets` covers tests, fixtures and examples as well as the library, dead code and unused imports outside the library target for `clippy`; behavioural regression against the bound acceptance obligations for `test`; undocumented public API (`missing_docs`) — already caught by `clippy`, since `missing_docs` is a plain rustc lint, not a rustdoc-only one — and broken intra-doc links (`rustdoc::broken_intra_doc_links`) for `doc`, which is rustdoc-only and is the actual reason `doc` belongs in the gate: neither `clippy` nor `cargo check` builds rustdoc output, so neither selects it. A command with no recorded risk is not part of the gate. | Inspection (TC-012) |
-| NFR-004-AC-3 | The gate runs serially with `CARGO_BUILD_JOBS=1` and under `flock /tmp/quire-heavy-check.lock`, so that concurrent sessions on the shared workstation cannot interleave heavy Cargo work. | Test (TC-012) |
+| NFR-004-AC-3 | The gate runs serially with `CARGO_BUILD_JOBS=1` and under `flock /tmp/filament-heavy-check.lock`, so that concurrent sessions on the shared workstation cannot interleave heavy Cargo work. | Test (TC-012) |
 | NFR-004-AC-4 | Warnings are denied on two independent channels — the crate's `[lints.rust]` and `[lints.clippy]` tables and the `-D warnings` command-line argument — and removing either channel alone still causes an introduced warning to fail the gate. | Test (TC-012) |
 | NFR-004-AC-5 | While `Cargo.toml` declares no `[features]` table, no `optional = true` dependency and no tracked `cfg(feature = ...)` condition, the gate requires exactly one Cargo-feature lane, and `--no-default-features`, `--all-features` and the default selection resolve to the identical unit graph. | Test (TC-012) |
 | NFR-004-AC-6 | A `--features <name>` argument naming a feature this crate does not declare is a gate definition defect, not a lane to be satisfied; the gate refuses such an instruction rather than skipping it silently or declaring the named feature. | Test (TC-012) |
@@ -136,9 +136,9 @@ and any future automation of it is Rust under
 
 - **Upstream**: [NFR-003](NFR-003-preserve-rust-assurance-boundary.md) owns the
   Rust-only and shared-assurance boundary that this gate must not duplicate.
-- **Upstream**: `agent-ix/quire-spec-language` owns the `quire-extraction`
+- **Upstream**: `agent-ix/filament-spec-language` owns the `quire-extraction`
   feature and the two-lane gate that feature justifies there. That repository's
-  lane rule is scoped to its own optional Quire consumer and is not inherited
+  lane rule is scoped to its own optional Filament consumer and is not inherited
   here.
 - **Downstream**: [TM-001](../tests.md) records this requirement's coverage
   status.

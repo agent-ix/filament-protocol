@@ -3,15 +3,15 @@ id: FR-001
 title: "Admit one selected protocol profile"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-002
+  - target: ix://agent-ix/filament-protocol/ADR-002
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-006
+  - target: ix://agent-ix/filament-protocol/ADR-006
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-007
+  - target: ix://agent-ix/filament-protocol/ADR-007
     type: references
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-specification/FR-050
+  - target: ix://agent-ix/filament-specification/FR-050
     type: depends_on
 ---
 # FR-001: Admit one selected protocol profile
@@ -21,7 +21,7 @@ relationships:
 When a protocol artifact is submitted, the library SHALL admit it only when its
 artifact-contract version, contract version, source revision, selected rule
 identities/revisions, dependency closure, profile identity, and required feature set exactly
-match one immutable protocol profile frozen by an accepted coherent native Quire
+match one immutable protocol profile frozen by an accepted coherent native Filament
 baseline and its accepted compiled-artifact interface.
 
 ## Inputs
@@ -83,11 +83,11 @@ already-published version's admission behaviour unchanged.
 
 ## Checked-package successor
 
-[FR-043](FR-043-admit-the-checked-package-handoff.md) states the admission contract for the checked-package handoff and replaces this requirement for the retired `quire.compiled-protocol/2` wire once the repoint merges. FR-001-AC-1 to AC-3 and AC-5 are restated as FR-043-AC-1, AC-3, AC-2 and AC-5, and the numeric decoding of AC-4 belongs to the Contract IR reader (FR-043-AC-6). Until the repoint merges, this requirement stays in force for the retired wire.
+[FR-043](FR-043-admit-the-checked-package-handoff.md) states the admission contract for the checked-package handoff and replaces this requirement for the retired `filament.compiled-protocol/2` wire once the repoint merges. FR-001-AC-1 to AC-3 and AC-5 are restated as FR-043-AC-1, AC-3, AC-2 and AC-5, and the numeric decoding of AC-4 belongs to the Contract IR reader (FR-043-AC-6). Until the repoint merges, this requirement stays in force for the retired wire.
 
 ## Dependencies
 
-- `ix://agent-ix/quire-specification/FR-050` through `FR-062` define the source semantics.
+- `ix://agent-ix/filament-specification/FR-050` through `FR-062` define the source semantics.
 - The composed specification must accept one coherent baseline and freeze its exact
   profile, selected-rule, dependency, and source identities before this consumer runs.
   Ordinary prototype edits and Git history do not themselves mint selectable profiles.

@@ -4,13 +4,13 @@ title: "Version-explicit entry points, never version detection"
 type: ADR
 status: accepted
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/IT-001
+  - target: ix://agent-ix/filament-protocol/IT-001
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-013
+  - target: ix://agent-ix/filament-protocol/FR-013
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: depends_on
 ---
 # ADR-002: Version-explicit entry points, never version detection
@@ -26,9 +26,9 @@ comparison remains planned under Task-009.
 ## Context
 
 The A-owned native compiler publishes more than one compiled-protocol artifact
-contract. version 1 carries `WIRE`-level identity `quire.compiled-protocol/1`; version 2
-carries `MEDIA = "application/vnd.quire.compiled-protocol+json;version=2"` and
-`SCHEMA = "quire.compiled-protocol.schema/2"`, verified by B directly in A's
+contract. version 1 carries `WIRE`-level identity `filament.compiled-protocol/1`; version 2
+carries `MEDIA = "application/vnd.filament.compiled-protocol+json;version=2"` and
+`SCHEMA = "filament.compiled-protocol.schema/2"`, verified by B directly in A's
 local worktree at `agent-a/66-v2-impl` `d03e4ca` and recorded in
 [IT-001](../integration/IT-001-consume-native-protocol-artifact.md)'s
 Dependencies.
@@ -39,7 +39,7 @@ decide which contract this is, dispatch. That convenience was rejected.
 The reason is that this repository's entire value is that its selection is
 independent of the offer. [FR-001](../functional/FR-001-admit-selected-protocol-profile.md)
 requires admission only when the submitted artifact's identities "exactly match
-one immutable protocol profile frozen by an accepted coherent native Quire
+one immutable protocol profile frozen by an accepted coherent native Filament
 baseline". A detector inverts that: the offered bytes would choose the contract
 under which they are judged, and therefore choose their own acceptance context.
 That is the same self-authorization shape
@@ -102,7 +102,7 @@ intended answer, and it is inconvenient.
 **Both cross-version refusal directions execute.** IT-001-SC-06 submits version
 1 bytes at `intake::v2::admit` and version 2 bytes at `intake::v1::admit`; each
 returns a distinct typed refusal. The version 2 reader, published handoff and
-entry point are pinned through `quire-spec-language` revision `f1700a9`.
+entry point are pinned through `filament-spec-language` revision `f1700a9`.
 
 **SC-06a remains a two-revision comparison, which no single run can produce.** It
 requires the same fixture at the revision before version 2 and at the revision that

@@ -3,43 +3,43 @@ id: FR-003
 title: "Assess compensation state"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-019
+  - target: ix://agent-ix/filament-protocol/FR-019
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-020
+  - target: ix://agent-ix/filament-protocol/FR-020
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-021
+  - target: ix://agent-ix/filament-protocol/FR-021
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-022
+  - target: ix://agent-ix/filament-protocol/FR-022
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-023
+  - target: ix://agent-ix/filament-protocol/FR-023
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-024
+  - target: ix://agent-ix/filament-protocol/FR-024
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-025
+  - target: ix://agent-ix/filament-protocol/FR-025
     type: contains
-  - target: ix://agent-ix/quire-specification/FR-055
+  - target: ix://agent-ix/filament-specification/FR-055
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-058
+  - target: ix://agent-ix/filament-specification/FR-058
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-230
+  - target: ix://agent-ix/filament-specification/FR-230
     type: references
-  - target: ix://agent-ix/quire-specification/FR-231
+  - target: ix://agent-ix/filament-specification/FR-231
     type: references
-  - target: ix://agent-ix/quire-specification/FR-232
+  - target: ix://agent-ix/filament-specification/FR-232
     type: references
-  - target: ix://agent-ix/quire-specification/FR-233
+  - target: ix://agent-ix/filament-specification/FR-233
     type: references
-  - target: ix://agent-ix/quire-specification/FR-234
+  - target: ix://agent-ix/filament-specification/FR-234
     type: references
-  - target: ix://agent-ix/quire-specification/FR-236
+  - target: ix://agent-ix/filament-specification/FR-236
     type: references
-  - target: ix://agent-ix/quire-specification/FR-239
+  - target: ix://agent-ix/filament-specification/FR-239
     type: references
-  - target: ix://agent-ix/quire-specification/FR-264
+  - target: ix://agent-ix/filament-specification/FR-264
     type: references
 ---
 # FR-003: Assess compensation state
@@ -130,9 +130,9 @@ adopted, not restated.
 
 ### Accepted owner rulings and remaining gap
 
-QSpec #28/#31/#40 fixes the FR-235 attempt key, FR-237 forbidding-commit
+FSpec #28/#31/#40 fixes the FR-235 attempt key, FR-237 forbidding-commit
 selection, FR-238 relation key, FR-233 registration key, distinct FR-287 effect
-identity and FR-231 activation rule. QSpec #57 resolves FR-236 on QSpec main
+identity and FR-231 activation rule. FSpec #57 resolves FR-236 on FSpec main
 `478afa2`: `failed`, `timed-out`, `pending`, and `successful` are admissible
 in both per-attempt and recovery-relation domains, while `duplicate` is
 effect-only. Those value domains are distinct and no attempt outcome implies a
@@ -144,4 +144,4 @@ recovery outcome.
 - [FR-019](./FR-019-derive-obligation-activation-state.md) through
   [FR-025](./FR-025-assess-compensation-without-io.md) are the parts this
   requirement aggregates.
-- `ix://agent-ix/quire-specification/FR-055` through `FR-058`.
+- `ix://agent-ix/filament-specification/FR-055` through `FR-058`.

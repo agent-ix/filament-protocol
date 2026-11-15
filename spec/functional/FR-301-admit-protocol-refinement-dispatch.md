@@ -3,43 +3,43 @@ id: FR-301
 title: "Admit protocol refinement dispatch"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/AD-001
+  - target: ix://agent-ix/filament-protocol/AD-001
     type: references
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-005
+  - target: ix://agent-ix/filament-protocol/FR-005
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-029
+  - target: ix://agent-ix/filament-protocol/FR-029
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-030
+  - target: ix://agent-ix/filament-protocol/FR-030
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-060
+  - target: ix://agent-ix/filament-specification/FR-060
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-176
+  - target: ix://agent-ix/filament-specification/FR-176
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-177
+  - target: ix://agent-ix/filament-specification/FR-177
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-290
+  - target: ix://agent-ix/filament-specification/FR-290
     type: references
-  - target: ix://agent-ix/quire-specification/FR-292
+  - target: ix://agent-ix/filament-specification/FR-292
     type: references
-  - target: ix://agent-ix/quire-specification/AD-007
+  - target: ix://agent-ix/filament-specification/AD-007
     type: references
-  - target: ix://agent-ix/quire-protocol/ADR-010
+  - target: ix://agent-ix/filament-protocol/ADR-010
     type: references
-  - target: ix://agent-ix/quire-protocol/FR-043
+  - target: ix://agent-ix/filament-protocol/FR-043
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-044
+  - target: ix://agent-ix/filament-protocol/FR-044
     type: depends_on
-  - target: ix://agent-ix/quire-spec-language/ADR-020
+  - target: ix://agent-ix/filament-spec-language/ADR-020
     type: depends_on
-  - target: ix://agent-ix/quire-spec-language/FR-142
+  - target: ix://agent-ix/filament-spec-language/FR-142
     type: depends_on
-  - target: ix://agent-ix/quire-spec-language/FR-144
+  - target: ix://agent-ix/filament-spec-language/FR-144
     type: depends_on
-  - target: ix://agent-ix/quire-spec-language/FR-147
+  - target: ix://agent-ix/filament-spec-language/FR-147
     type: depends_on
 ---
 # FR-301: Admit protocol refinement dispatch
@@ -47,9 +47,9 @@ relationships:
 ## Description
 
 When a `refinement` claim is requested and the accepted assume-guarantee and
-refinement contracts (`ix://agent-ix/quire-specification/FR-176`,
-`ix://agent-ix/quire-specification/FR-177`) are admitted, the dispatcher SHALL
-route it to QSL's refinement backend over the FR-002 linked graph's source
+refinement contracts (`ix://agent-ix/filament-specification/FR-176`,
+`ix://agent-ix/filament-specification/FR-177`) are admitted, the dispatcher SHALL
+route it to FSL's refinement backend over the FR-002 linked graph's source
 identities and carry that backend's result, rather than treating it as an
 advanced claim with no accepted backend.
 
@@ -58,7 +58,7 @@ advanced claim with no accepted backend.
 One requested `refinement` claim with its admitted fragment, selected backend,
 assumptions and source identities; the checked-package references (FR-043,
 FR-044) naming the paired implementation and specification protocols, which
-this library hands QSL's refinement backend as that request item's subjects;
+this library hands FSL's refinement backend as that request item's subjects;
 the FR-002 linked graph, used only to bind the returned result to source
 identities; and the admitted FR-176/FR-177 assume-guarantee and refinement
 contracts.
@@ -72,22 +72,22 @@ when no admitted backend can discharge the claim.
 
 ## Behavior
 
-The dispatcher SHALL send an admitted refinement claim to QSL's refinement
+The dispatcher SHALL send an admitted refinement claim to FSL's refinement
 backend, which owns the explicit-state product construction (paired
 correspondence between implementation and specification states, the relation
 FR-177 selects, and assumption discharge under FR-176), and SHALL carry its
 result, counterexample or certificate unchanged
-([ADR-010](../adr/ADR-010-consume-qsl-protocol-analysis-own-assessment-and-dispatch.md)).
+([ADR-010](../adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md)).
 
 A refinement disposition SHALL NOT carry the complete-global-conformance
 premise set as evidence for its own success, exactly as
-`ix://agent-ix/quire-specification/FR-290`-AC-3 requires of every non-global
+`ix://agent-ix/filament-specification/FR-290`-AC-3 requires of every non-global
 claim.
 
 A monitorable protocol whose refinement backend is absent or unaccepted SHALL
 retain its independent global conformance result and return an explicit
 `unsupported` refinement disposition, mirroring the projection-absence pattern
-`ix://agent-ix/quire-specification/FR-060`-AC-1 states for monitorable-but-
+`ix://agent-ix/filament-specification/FR-060`-AC-1 states for monitorable-but-
 unprojectable protocols.
 
 A refinement request without an accepted FR-292 analysis backend settles
@@ -101,31 +101,31 @@ introduces no separate dispatch path, resource guard or fallback backend.
 
 | ID | Criteria | Verification |
 | --- | --- | --- |
-| FR-301-AC-1 | A refinement disposition never carries the complete-global-conformance premise set as evidence for its own success, exactly as `ix://agent-ix/quire-specification/FR-290`-AC-3 requires. | Test (TC-147) |
-| FR-301-AC-2 | A monitorable protocol whose refinement backend is absent or unaccepted retains its independent global conformance result and returns an explicit `unsupported` refinement disposition, exactly as `ix://agent-ix/quire-specification/FR-060`-AC-1's projection-absence pattern requires. | Test (TC-147) |
-| FR-301-AC-3 | Once FR-176 and FR-177 are admitted, a requested refinement claim is dispatched to QSL's refinement backend and its result carried unchanged, bound to the FR-002 linked graph's source identities; this library builds no product construction, separate refinement engine or local relation definition. | Test (TC-147) |
+| FR-301-AC-1 | A refinement disposition never carries the complete-global-conformance premise set as evidence for its own success, exactly as `ix://agent-ix/filament-specification/FR-290`-AC-3 requires. | Test (TC-147) |
+| FR-301-AC-2 | A monitorable protocol whose refinement backend is absent or unaccepted retains its independent global conformance result and returns an explicit `unsupported` refinement disposition, exactly as `ix://agent-ix/filament-specification/FR-060`-AC-1's projection-absence pattern requires. | Test (TC-147) |
+| FR-301-AC-3 | Once FR-176 and FR-177 are admitted, a requested refinement claim is dispatched to FSL's refinement backend and its result carried unchanged, bound to the FR-002 linked graph's source identities; this library builds no product construction, separate refinement engine or local relation definition. | Test (TC-147) |
 | FR-301-AC-4 | A refinement request without an accepted FR-292 analysis backend settles `unsupported` with a warning naming the required capability, and this settlement is never a hold, blocker or refusal error. | Test (TC-147) |
 | FR-301-AC-5 | A refinement disposition retains its exact admitted fragment, backend, assumptions, communication/visibility/environment premises and source/derived-artifact correspondence exactly as [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) requires of every disposition. | Test (TC-147) |
-| FR-301-AC-6 | A refinement result, counterexample or certificate returned by QSL's backend appears in the disposition unchanged. When that backend returns a refusal or `unsupported` cause, the disposition carries the same cause without reinterpretation, and no refinement verdict is computed locally from the FR-002 linked graph. | Test (TC-147) |
+| FR-301-AC-6 | A refinement result, counterexample or certificate returned by FSL's backend appears in the disposition unchanged. When that backend returns a refusal or `unsupported` cause, the disposition carries the same cause without reinterpretation, and no refinement verdict is computed locally from the FR-002 linked graph. | Test (TC-147) |
 
 ## Adopted vocabulary
 
 | Noun | Upstream object | Identity kind |
 | --- | --- | --- |
-| Refinement claim kind | `ix://agent-ix/quire-specification/FR-290` | value |
-| Assume-guarantee composition | `ix://agent-ix/quire-specification/FR-176` | value |
-| Refinement relation | `ix://agent-ix/quire-specification/FR-177` | value |
-| Analysis backend | `ix://agent-ix/quire-specification/FR-292` | authored |
+| Refinement claim kind | `ix://agent-ix/filament-specification/FR-290` | value |
+| Assume-guarantee composition | `ix://agent-ix/filament-specification/FR-176` | value |
+| Refinement relation | `ix://agent-ix/filament-specification/FR-177` | value |
+| Analysis backend | `ix://agent-ix/filament-specification/FR-292` | authored |
 
 ### Accepted owner rulings
 
-`ix://agent-ix/quire-specification/FR-176` and
-`ix://agent-ix/quire-specification/FR-177` are the accepted assume-guarantee and
-refinement owner contracts, landed and owned by `agent-ix/quire-specification`;
-QSL implements them. This requirement consumes those contracts
+`ix://agent-ix/filament-specification/FR-176` and
+`ix://agent-ix/filament-specification/FR-177` are the accepted assume-guarantee and
+refinement owner contracts, landed and owned by `agent-ix/filament-specification`;
+FSL implements them. This requirement consumes those contracts
 directly and defines no local refinement relation, correspondence rule or
 assumption-discharge algorithm; the explicit-state product construction is
-QSL's (ADR-010), and this repository owns only the dispatch and carrying.
+FSL's (ADR-010), and this repository owns only the dispatch and carrying.
 
 ## Dependencies
 
@@ -136,11 +136,11 @@ QSL's (ADR-010), and this repository owns only the dispatch and carrying.
 - [FR-029](./FR-029-return-one-disposition-per-requested-claim.md) and
   [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) supply
   independence and premise binding.
-- `ix://agent-ix/quire-specification/FR-060` states the projection-absence
+- `ix://agent-ix/filament-specification/FR-060` states the projection-absence
   pattern this requirement mirrors for refinement.
-- `ix://agent-ix/quire-specification/FR-176` and
-  `ix://agent-ix/quire-specification/FR-177` supply the assume-guarantee and
+- `ix://agent-ix/filament-specification/FR-176` and
+  `ix://agent-ix/filament-specification/FR-177` supply the assume-guarantee and
   refinement contracts this requirement dispatches
-  to QSL's backend.
-- `ix://agent-ix/quire-specification/FR-292` supplies the analysis backend whose
+  to FSL's backend.
+- `ix://agent-ix/filament-specification/FR-292` supplies the analysis backend whose
   accepted capability selects a refinement check.

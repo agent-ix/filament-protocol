@@ -7,16 +7,16 @@ mod support {
     pub mod handoff;
 }
 
-use ix_trace_rs::trace;
-use qsl_package::OccurrenceKeyError;
-use qsl_semantics::check::CheckedOutstanding;
-use quire_exact::Integer;
-use quire_protocol::declarations::JoinPolicy;
-use quire_protocol::disposition::{AssessmentUnsupported, UnsupportedCause};
-use quire_protocol::dynamics::{
+use filament_exact::Integer;
+use filament_protocol::declarations::JoinPolicy;
+use filament_protocol::disposition::{AssessmentUnsupported, UnsupportedCause};
+use filament_protocol::dynamics::{
     assess_joins, BranchOutcome, HistoryRefusal, JoinAssessment, JoinEvent, JoinFact, JoinOutcome,
     JoinViolation,
 };
+use fsl_package::OccurrenceKeyError;
+use fsl_semantics::check::CheckedOutstanding;
+use ix_trace_rs::trace;
 use support::dynamic::{at, workflow, Dynamic};
 
 fn done(branch: &str) -> JoinEvent {
@@ -298,7 +298,7 @@ fn a_join_inside_a_repeat_is_one_occurrence_for_each_iteration() {
     assert!(assessed[0].violations.is_empty());
     assert_eq!(assessed[1].repeat_ordinals, [Integer::from(1u64)]);
     assert_eq!(assessed[1].violations.len(), 1);
-    // QSL's key refuses an ordinal outside the repeat's maximum and a missing one.
+    // FSL's key refuses an ordinal outside the repeat's maximum and a missing one.
     assert!(matches!(
         outcomes(&dynamic, &settled(&[2], &["a"])),
         Err(HistoryRefusal::Occurrence(
@@ -315,8 +315,8 @@ fn a_join_inside_a_repeat_is_one_occurrence_for_each_iteration() {
 
 #[test]
 #[trace("TC-053", "FR-055-AC-9")]
-fn a_workflow_identity_qsl_cannot_key_refuses_the_history() {
-    use quire_protocol::ids::WorkflowInstanceId;
+fn a_workflow_identity_fsl_cannot_key_refuses_the_history() {
+    use filament_protocol::ids::WorkflowInstanceId;
     let dynamic = Dynamic::with("workflow", 3);
     let refused = |identity: &[u8]| {
         let mut facts = history(&dynamic, "JoinAll", "w1", vec![JoinEvent::Settled]);

@@ -4,17 +4,17 @@ title: "Scenario evidence record"
 type: FR
 object: entity
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-004
+  - target: ix://agent-ix/filament-protocol/US-004
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: specifies
-  - target: ix://agent-ix/quire-protocol/FR-016
+  - target: ix://agent-ix/filament-protocol/FR-016
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-012
+  - target: ix://agent-ix/filament-protocol/FR-012
     type: depends_on
 ---
 # FR-017: Scenario evidence record
@@ -43,7 +43,7 @@ When a scenario cannot retain every one of those components, the library SHALL r
   disqualify exactly the scenarios that demonstrate resolution refusing, which
   are the scenarios that prove resolution works.
   IT-001-SC-06a's frozen legacy `/1` facade has no resolver capability; its
-  present compatibility-selection shape carries the exact selected QSL owner,
+  present compatibility-selection shape carries the exact selected FSL owner,
   contract and immutable revision instead of pretending to hold one.
 - **value_owners** (state) — the owner of each consumed producer value, recorded
   per value rather than per scenario. The owner is the `owner` component of the
@@ -107,7 +107,7 @@ disposition state, and nothing in this repository reads one back.
   those two. The resolution state, the value owners, the typed outcome, the
   budget figures and the trace binding are state, never identity: two runs of one
   scenario under two budgets are one record's subject, not two subjects, and
-  `ix://agent-ix/quire-specification/FR-204` forbids field equality from standing
+  `ix://agent-ix/filament-specification/FR-204` forbids field equality from standing
   in for object identity. A display name, source path, span, message text,
   locale, rendering, wall-clock timestamp or execution position never
   participates.
@@ -169,7 +169,7 @@ disposition state, and nothing in this repository reads one back.
 
 ## Status
 
-Specified. QSL, QObs and Engineering Assurance contracts are pinnable;
+Specified. FSL, FObs and Engineering Assurance contracts are pinnable;
 E02/Quoin retain the exact blockers in FR-009.
 Task-018 implements final composition after the shared outcome and resource
 types exist; consuming integration tasks populate their concrete values.

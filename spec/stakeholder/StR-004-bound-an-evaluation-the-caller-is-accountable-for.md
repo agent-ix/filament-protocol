@@ -3,9 +3,9 @@ id: StR-004
 title: "Bound an evaluation the embedding caller is accountable for"
 type: StR
 relationships:
-  - target: ix://agent-ix/quire-protocol/NFR-002
+  - target: ix://agent-ix/filament-protocol/NFR-002
     type: satisfied_by
-  - target: ix://agent-ix/quire-protocol/FR-016
+  - target: ix://agent-ix/filament-protocol/FR-016
     type: satisfied_by
 ---
 # StR-004: Bound an evaluation the embedding caller is accountable for
@@ -45,7 +45,7 @@ no answer.
 ## Stakeholders
 
 The primary stakeholder is the integrator that embeds this library: the native
-Quire compiler and runtime integrators named as intended users of this
+Filament compiler and runtime integrators named as intended users of this
 specification, who host the evaluation inside their own resource envelope.
 Engineering Assurance is an affected party because it owns whole-process
 containment and external resource enforcement around this library, not inside it.

@@ -3,29 +3,29 @@ id: FR-035
 title: "Map source states to E02 or refuse"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-007
+  - target: ix://agent-ix/filament-protocol/FR-007
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-062
+  - target: ix://agent-ix/filament-specification/FR-062
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-242
+  - target: ix://agent-ix/filament-specification/FR-242
     type: references
-  - target: ix://agent-ix/quire-specification/FR-244
+  - target: ix://agent-ix/filament-specification/FR-244
     type: references
-  - target: ix://agent-ix/quire-specification/FR-245
+  - target: ix://agent-ix/filament-specification/FR-245
     type: references
-  - target: ix://agent-ix/quire-specification/FR-246
+  - target: ix://agent-ix/filament-specification/FR-246
     type: references
-  - target: ix://agent-ix/quire-specification/FR-248
+  - target: ix://agent-ix/filament-specification/FR-248
     type: references
-  - target: ix://agent-ix/quire-specification/FR-280
+  - target: ix://agent-ix/filament-specification/FR-280
     type: references
-  - target: ix://agent-ix/quire-specification/FR-282
+  - target: ix://agent-ix/filament-specification/FR-282
     type: references
-  - target: ix://agent-ix/quire-specification/FR-283
+  - target: ix://agent-ix/filament-specification/FR-283
     type: references
 ---
 # FR-035: Map source states to E02 or refuse
@@ -54,7 +54,7 @@ identity and no `TechniqueResult`.
 Each row of FR-062's mapping table is applied as stated; this requirement
 restates neither the source nor the target member lists. FR-062 requires the
 adapter to "preserve every independent execution, activation, observation,
-participation, assumption and logical finding required by quire-verification
+participation, assumption and logical finding required by filament-verification
 FR-007", and states that a source state implying several such gaps "SHALL
 produce all of them after E02 assessment, regardless of the E02 compatibility
 summary status".
@@ -101,20 +101,20 @@ reclassified as a malformed source. No `TechniqueResult` accompanies a refusal.
 | Dependence relation | `FR-282-dependence-relation` | value |
 | Projection refusal code | `FR-283-projection-refusal-code` | value |
 
-The E02 target vocabularies are `quire-verification`'s, carried into this
+The E02 target vocabularies are `filament-verification`'s, carried into this
 repository only through FR-062's mapping table. This requirement spells no E02
 member of its own and defines no E02 finding axis.
 
 ### Accepted source and target boundaries
 
-Quire Specification's accepted FS02 ruling makes the mapping total for the
+Filament Specification's accepted FS02 ruling makes the mapping total for the
 selected source and target revisions: FR-284 closes the four progress/closure
 axes, FR-285 closes source participation, and FR-283 assigns strict source
 validation failure to `invalid-source-result`. A valid source
 reaching target-context or derived-identity mismatch yields
 `identity-mismatch`.
 
-qverify issue #32 accepted the `quire-verification/e02-draft-2` strict reader,
+qverify issue #32 accepted the `filament-verification/e02-draft-2` strict reader,
 generated types, finding vocabulary and JCS implementation at revision
 `d2fc0d8`. Issue #44 preserved that contract at exact compatible consumer
 revision `293e342c6f5e2c69738956ff5165f75761b0364a`. Protocol pins and imports that
@@ -128,6 +128,6 @@ interface and does not reproduce its finding enum.
   identity and the retained source reference these findings are emitted with.
 - [FR-008](./FR-008-return-typed-refusals.md) supplies the typed-refusal
   discipline the refusal codes are emitted under.
-- `ix://agent-ix/quire-specification/FR-062` states the mapping table, the
+- `ix://agent-ix/filament-specification/FR-062` states the mapping table, the
   retention boundary and the closed refusal set.
-- `ix://agent-ix/quire-verification/FR-007` owns the portable finding contract.
+- `ix://agent-ix/filament-verification/FR-007` owns the portable finding contract.

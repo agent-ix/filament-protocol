@@ -3,35 +3,35 @@ id: FR-004
 title: "Assess finite global conformance"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-002
+  - target: ix://agent-ix/filament-protocol/FR-002
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-003
+  - target: ix://agent-ix/filament-protocol/FR-003
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-026
+  - target: ix://agent-ix/filament-protocol/FR-026
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-027
+  - target: ix://agent-ix/filament-protocol/FR-027
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-028
+  - target: ix://agent-ix/filament-protocol/FR-028
     type: contains
-  - target: ix://agent-ix/quire-protocol/FR-041
+  - target: ix://agent-ix/filament-protocol/FR-041
     type: contains
-  - target: ix://agent-ix/quire-specification/FR-059
+  - target: ix://agent-ix/filament-specification/FR-059
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-220
+  - target: ix://agent-ix/filament-specification/FR-220
     type: references
-  - target: ix://agent-ix/quire-specification/FR-230
+  - target: ix://agent-ix/filament-specification/FR-230
     type: references
-  - target: ix://agent-ix/quire-specification/FR-240
+  - target: ix://agent-ix/filament-specification/FR-240
     type: references
-  - target: ix://agent-ix/quire-specification/FR-241
+  - target: ix://agent-ix/filament-specification/FR-241
     type: references
-  - target: ix://agent-ix/quire-specification/FR-247
+  - target: ix://agent-ix/filament-specification/FR-247
     type: references
-  - target: ix://agent-ix/quire-specification/FR-260
+  - target: ix://agent-ix/filament-specification/FR-260
     type: references
-  - target: ix://agent-ix/quire-specification/FR-479
+  - target: ix://agent-ix/filament-specification/FR-479
     type: depends_on
 ---
 # FR-004: Assess finite global conformance
@@ -44,8 +44,8 @@ When any one of FR-026, FR-027, FR-028 and FR-041 is unsatisfied, the evaluator 
 ## Inputs
 
 A constructor-private version-2 linked protocol, the compensation snapshot
-derived from it, QSL strict version-two temporal request/result facts, bound
-QObs observation/authority views, the constructor-private FR-479 activation
+derived from it, FSL strict version-two temporal request/result facts, bound
+FObs observation/authority views, the constructor-private FR-479 activation
 bindings Protocol validates from those owner facts and its linked controls, the
 exact assessment request, independent decision-scope and
 surrounding-execution progress/closure facts, the Protocol-owned complete-global-
@@ -95,8 +95,8 @@ authorize no work.
 The kernel SHALL derive each event-triggered FR-230 obligation only from a
 validated FR-479 binding whose qualified definition and declaration-local
 control belong to its linked graph. The Protocol activation boundary SHALL
-construct that binding only from the linked control plus QSL's strict v2
-request/result facts and QObs's authority-qualified subject. It SHALL retain
+construct that binding only from the linked control plus FSL's strict v2
+request/result facts and FObs's authority-qualified subject. It SHALL retain
 the binding's exact clause subject and semantic trigger identity as the
 obligation key and SHALL refuse missing, foreign, cross-control, cross-subject,
 cross-trigger or contradictory bindings. Neither frontend accepts a caller-built
@@ -135,7 +135,7 @@ closure axis and the `not-required` rule. The parts carry the rest.
 
 ### Accepted owner rulings
 
-QSpec #28/#29/#31/#40 fixes the complete FR-220 graph key, five-component
+FSpec #28/#29/#31/#40 fixes the complete FR-220 graph key, five-component
 FR-216 channel premise, FR-287 runtime identities, FR-296 admitted-observation
 identity, FR-284 progress/closure states, FR-243 settlement membership,
 FR-286 result identity and FR-289 temporal boundary map. The parts below consume
@@ -143,16 +143,16 @@ those exact values; none retains the superseded gaps. FR-027 distinguishes a
 replayed delivery, a distinct delivery and a duplicate business effect through
 their accepted typed identities rather than through arrival position.
 
-QSpec adds FR-479, which fixes the previously missing mapping
+FSpec adds FR-479, which fixes the previously missing mapping
 from selected linked control and admitted trigger to a dynamic FR-230 instance.
 Protocol consumes that complete binding rather than deriving a runtime identity
-from a QSL table coordinate or an observation field.
+from a FSL table coordinate or an observation field.
 
 ## Dependencies
 
 - [FR-002](./FR-002-link-finite-protocol-representation.md).
 - [FR-003](./FR-003-assess-compensation-state.md).
-- `ix://agent-ix/quire-specification/FR-059`.
+- `ix://agent-ix/filament-specification/FR-059`.
 - Parts: [FR-026](./FR-026-admit-every-permitted-observation-order.md),
   [FR-027](./FR-027-report-adverse-observations-without-repair.md),
   [FR-028](./FR-028-keep-progress-and-closure-axes-independent.md),

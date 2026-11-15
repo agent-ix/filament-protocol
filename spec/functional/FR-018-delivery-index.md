@@ -4,19 +4,19 @@ title: "Delivery index"
 type: FR
 object: entity
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-003
+  - target: ix://agent-ix/filament-protocol/US-003
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-009
+  - target: ix://agent-ix/filament-protocol/FR-009
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-012
+  - target: ix://agent-ix/filament-protocol/FR-012
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-224
+  - target: ix://agent-ix/filament-specification/FR-224
     type: references
-  - target: ix://agent-ix/quire-specification/FR-252
+  - target: ix://agent-ix/filament-specification/FR-252
     type: references
 ---
 # FR-018: Delivery index
@@ -31,13 +31,13 @@ A delivery index is evidence this repository reads about what was delivered.
 about what was delivered, and it can neither supply nor repair a version-lock
 entry."
 
-## This is not `ix://agent-ix/quire-specification/FR-224`
+## This is not `ix://agent-ix/filament-specification/FR-224`
 
 Upstream publishes an entity also called **Delivery**
-(`ix://agent-ix/quire-specification/FR-224`). It is a completely different noun
+(`ix://agent-ix/filament-specification/FR-224`). It is a completely different noun
 and the two must not be conflated.
 
-| | `ix://agent-ix/quire-specification/FR-224` | This artifact |
+| | `ix://agent-ix/filament-specification/FR-224` | This artifact |
 | --- | --- | --- |
 | What it is | A *transport observation*: one delivery of one message on one channel, counted against that send's delivery cardinality. | A *consumer record*: this repository's index of the files one producer shipped at one pinned revision. |
 | Whose subject | The producer's protocol subject. | The consumer's relationship to a producer's shipment. |
@@ -68,7 +68,7 @@ emitted by the producer.
 - **temporal** (state) — the indexed temporal profile path and the indexed
   binding records this repository retains, each carrying an owner, a
   `declaration` and a path. The temporal semantics themselves are
-  `ix://agent-ix/quire-specification`'s and are referenced, never restated here.
+  `ix://agent-ix/filament-specification`'s and are referenced, never restated here.
 - **limits** (state) — one entry per resource limit the exactly-sufficient probe
   of [FR-016](./FR-016-resource-budget-dimension.md) is to be run at, carrying
   an exact typed dimension and bound. The dimension is either
@@ -117,7 +117,7 @@ nothing here.
 
 ### Upstream settles none of it
 
-`ix://agent-ix/quire-specification/FR-252` gives a clock binding a **value**
+`ix://agent-ix/filament-specification/FR-252` gives a clock binding a **value**
 identity whose key is "the selected profile identity together with the clock
 identity, unit, epoch, period, sequence authority, admitted order and
 completeness premise components admitted by that profile." No declaration
@@ -183,7 +183,7 @@ or names the owner that has not:
 | ID | Criteria | Verification |
 | --- | --- | --- |
 | FR-018-AC-1 | A delivery index supplies, selects or repairs no version-lock entry, and removing or editing an index changes no resolution outcome. | Test (TC-017) |
-| FR-018-AC-2 | A delivery index reference does not satisfy a comparison expecting `ix://agent-ix/quire-specification/FR-224`, and no member of an index is a transport observation. | Inspection |
+| FR-018-AC-2 | A delivery index reference does not satisfy a comparison expecting `ix://agent-ix/filament-specification/FR-224`, and no member of an index is a transport observation. | Inspection |
 | FR-018-AC-3 | Two indexed bindings naming one `declaration` are reported, and an indexed binding whose `declaration` is lower than its predecessor's is reported, each naming the offending declaration. | Test (TC-017) |
 | FR-018-AC-4 | The binding cardinality, uniqueness and order this repository enforces are exactly the producer's quoted wire rule, and no stronger declared key or declared total order is asserted over the producer's bindings. | Inspection |
 | FR-018-AC-5 | A selected delivery root that is missing, an absent index, a missing indexed member, an unreadable index, an ambiguous mutation, a repeated declaration and unsorted bindings are each reported as a distinct absence, and none is treated as a passing lane. | Test (TC-017) |
@@ -205,10 +205,10 @@ or names the owner that has not:
   bounds as the exact values its probe is run at.
 - [FR-001](./FR-001-admit-selected-protocol-profile.md) admits the offered bytes
   this index points at.
-- `ix://agent-ix/quire-specification/FR-224` is the upstream transport-observation
+- `ix://agent-ix/filament-specification/FR-224` is the upstream transport-observation
   entity this artifact is explicitly not; its accepted FR-287 key remains
   producer authority and is not reused by this consumer index.
-- `ix://agent-ix/quire-specification/FR-252` types the upstream clock binding
+- `ix://agent-ix/filament-specification/FR-252` types the upstream clock binding
   whose key carries no declaration component.
 
 ## Status

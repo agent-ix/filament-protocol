@@ -12,7 +12,7 @@ Accepted.
 
 ## Context
 
-`agent-ix/quire-specification` reorganized `spec/functional/` into owner-aligned
+`agent-ix/filament-specification` reorganized `spec/functional/` into owner-aligned
 subsystem directories (`foundation/`, `protocol/`, `temporal/`, `observation/`)
 on `origin/main` at `bd387dd`. This repository was asked whether to mirror that
 layout.

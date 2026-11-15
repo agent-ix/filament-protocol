@@ -3,37 +3,37 @@ id: FR-002
 title: "Link the finite protocol representation"
 type: FR
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-001
+  - target: ix://agent-ix/filament-protocol/US-001
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-050
+  - target: ix://agent-ix/filament-specification/FR-050
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-054
+  - target: ix://agent-ix/filament-specification/FR-054
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-210
+  - target: ix://agent-ix/filament-specification/FR-210
     type: references
-  - target: ix://agent-ix/quire-specification/FR-216
+  - target: ix://agent-ix/filament-specification/FR-216
     type: references
-  - target: ix://agent-ix/quire-specification/FR-217
+  - target: ix://agent-ix/filament-specification/FR-217
     type: references
-  - target: ix://agent-ix/quire-specification/FR-220
+  - target: ix://agent-ix/filament-specification/FR-220
     type: references
-  - target: ix://agent-ix/quire-specification/FR-221
+  - target: ix://agent-ix/filament-specification/FR-221
     type: references
-  - target: ix://agent-ix/quire-specification/FR-227
+  - target: ix://agent-ix/filament-specification/FR-227
     type: references
-  - target: ix://agent-ix/quire-specification/FR-228
+  - target: ix://agent-ix/filament-specification/FR-228
     type: references
-  - target: ix://agent-ix/quire-specification/FR-252
+  - target: ix://agent-ix/filament-specification/FR-252
     type: references
-  - target: ix://agent-ix/quire-specification/FR-255
+  - target: ix://agent-ix/filament-specification/FR-255
     type: references
-  - target: ix://agent-ix/quire-specification/FR-262
+  - target: ix://agent-ix/filament-specification/FR-262
     type: references
-  - target: ix://agent-ix/quire-specification/FR-287
+  - target: ix://agent-ix/filament-specification/FR-287
     type: references
-  - target: ix://agent-ix/quire-specification/FR-288
+  - target: ix://agent-ix/filament-specification/FR-288
     type: references
 ---
 # FR-002: Link the finite protocol representation
@@ -46,7 +46,7 @@ return located refusals for every invalid binding that prevents construction.
 
 ## Inputs
 
-An admitted `quire.compiled-protocol/2` artifact with typed role,
+An admitted `filament.compiled-protocol/2` artifact with typed role,
 role-instance, workflow-instance, component, endpoint, channel, message, send,
 receive, delivery, attempt, effect, choice, control, join, iteration,
 termination, and visibility declarations; one accepted version-1 static
@@ -87,17 +87,17 @@ foreign, incompatible or slot-derived runtime binding without choosing a
 default.
 
 The accepted static binding definition SHALL identify its contract as
-`quire.protocol.binding-definition/1`, retain its independently selected
+`filament.protocol.binding-definition/1`, retain its independently selected
 artifact identity/revision, and target exactly one admitted protocol
 declaration. The runtime binding set SHALL identify its contract as
-`quire.protocol.runtime-binding/1` and target that exact accepted static
+`filament.protocol.runtime-binding/1` and target that exact accepted static
 definition. If either binding contract version is absent, unknown or older, the
 library SHALL return an unsupported-contract outcome without reading it as
 version 1. The linker SHALL compare each producer-local subject kind only
 through the accepted slot compatibility fact; it SHALL NOT infer a universal
-producer spelling from the QSL `BindingKind` label.
+producer spelling from the FSL `BindingKind` label.
 If an admitted compiled artifact has a version other than
-`quire.compiled-protocol/2`, the versioned linker SHALL return an
+`filament.compiled-protocol/2`, the versioned linker SHALL return an
 unsupported-artifact outcome without inferring internality or runtime subjects.
 
 The linker SHALL construct the FR-288 definition identity componentwise from
@@ -152,7 +152,7 @@ naming the offending binding axis and emitting no linked representation.
 
 | ID | Criteria | Verification |
 | --- | --- | --- |
-| FR-002-AC-1 | Concurrent workflow instances, static roles, role instances, participants, components, endpoints, channels, messages, sends, receives, duplicate deliveries, attempts, and business effects retain distinct exact identities from FR-288 or FR-287 as applicable; no static slot identifies a runtime subject and no QSL binding-kind label is treated as a universal producer subject-kind spelling. | Test (TC-002) |
+| FR-002-AC-1 | Concurrent workflow instances, static roles, role instances, participants, components, endpoints, channels, messages, sends, receives, duplicate deliveries, attempts, and business effects retain distinct exact identities from FR-288 or FR-287 as applicable; no static slot identifies a runtime subject and no FSL binding-kind label is treated as a universal producer subject-kind spelling. | Test (TC-002) |
 | FR-002-AC-2 | Every permitted interleaving of bounded parallel branches preserves authored causal edges and satisfies its declared join. | Test (TC-002) |
 | FR-002-AC-3 | Each consumer-owned duplicate authority, missing/surplus/duplicate/wrong-kind/foreign/incompatible/slot-derived runtime binding, invalid internality, zero-progress iteration, FR-288 content contradiction and FR-262 conflicting/ambiguous relationship is refused with no linked representation and names its exact static handle or runtime-entry ordinal plus any originating source locus; compiler-owned unresolved references, invalid joins, cycles, unreachable termination, channel omissions and invalid choices remain refusals of the admitted compiler boundary. | Test (TC-002) |
 | FR-002-AC-4 | Reordering equal-time input, replaying one exact relationship, changing a concrete runtime value or changing external presentation metadata cannot add a causal edge or independently change FR-288, while changing an authored branch, join, iteration maximum, five-component channel premise, FIFO expression definition, accepted role internality, slot compatibility fact or complete typed semantic content requires another FR-288 and changes the linked protocol identity. | Test (TC-002) |
@@ -181,12 +181,12 @@ establish them:
 
 ### Accepted owner boundary
 
-The former identity and premise gaps are closed by Quire Specification PRs #41
+The former identity and premise gaps are closed by Filament Specification PRs #41
 and #42. FR-287 supplies every concrete runtime-subject key, FR-288 supplies the
 static definition key, FR-216 supplies exactly five channel premises and derives
 duplication permission from delivery cardinality, FR-217 supplies the exact
 closed internality vocabulary, and FR-262 supplies runtime relationships.
-Quire Observation PR #20 publishes the accepted FR-287 and FR-262 Rust values.
+Filament Observation PR #20 publishes the accepted FR-287 and FR-262 Rust values.
 This repository imports those values and implements the linker-owned binding;
 it does not redeclare their wire records or infer their missing members.
 
@@ -197,5 +197,5 @@ it does not redeclare their wire records or infer their missing members.
 ## Dependencies
 
 - [FR-001](./FR-001-admit-selected-protocol-profile.md).
-- `ix://agent-ix/quire-specification/FR-050` through `FR-054` define the source
+- `ix://agent-ix/filament-specification/FR-050` through `FR-054` define the source
   semantics; `FR-210` through `FR-228`, `FR-252` and `FR-255` type the subjects.

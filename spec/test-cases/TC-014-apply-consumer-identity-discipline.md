@@ -3,7 +3,7 @@ id: TC-014
 title: "Apply the consumer identity discipline"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: verifies
 ---
 # TC-014: Apply the consumer identity discipline
@@ -30,7 +30,7 @@ Object instances differing only in display name, source path, span, message
 text, locale or rendering; producer-authored identities with absent and with
 malformed components; consumer-authored identities offered as producer
 references and as producer selectors; identical byte sequences carried in each
-digest domain published by QSpec FR-201; and keys with an absent component
+digest domain published by FSpec FR-201; and keys with an absent component
 alongside keys with a defaulted, empty and present component in the same
 position.
 

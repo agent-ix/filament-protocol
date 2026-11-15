@@ -4,22 +4,22 @@ title: "Consumer identity discipline"
 type: FR
 object: value_object
 relationships:
-  - target: ix://agent-ix/quire-protocol/US-005
+  - target: ix://agent-ix/filament-protocol/US-005
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: part_of
-  - target: ix://agent-ix/quire-specification/FR-200
+  - target: ix://agent-ix/filament-specification/FR-200
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-201
+  - target: ix://agent-ix/filament-specification/FR-201
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-204
+  - target: ix://agent-ix/filament-specification/FR-204
     type: depends_on
 ---
 # FR-011: Consumer identity discipline
 
 ## Description
 
-When this repository specifies an object of its own, that object SHALL declare its identity under the same three kinds `FR-200-quire-assessment-domain` establishes.
+When this repository specifies an object of its own, that object SHALL declare its identity under the same three kinds `FR-200-filament-assessment-domain` establishes.
 Each such object SHALL declare separately which side authored that identity.
 
 ## Properties
@@ -127,9 +127,9 @@ outcome; inventing a key would author another party's semantics.
 
 ## Dependencies
 
-- `ix://agent-ix/quire-specification/FR-200` establishes the three kinds.
-- `ix://agent-ix/quire-specification/FR-201` selects digest domains.
-- `ix://agent-ix/quire-specification/FR-204` establishes that equal field values
+- `ix://agent-ix/filament-specification/FR-200` establishes the three kinds.
+- `ix://agent-ix/filament-specification/FR-201` selects digest domains.
+- `ix://agent-ix/filament-specification/FR-204` establishes that equal field values
   do not imply equal objects, and that structural record equality never replaces
   object identity.
 - [FR-008](./FR-008-return-typed-refusals.md) owns the refusal returned when an

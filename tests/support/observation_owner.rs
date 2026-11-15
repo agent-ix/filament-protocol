@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! Shared strict QObs owner fixtures for protocol integration tests.
+//! Shared strict FObs owner fixtures for protocol integration tests.
 
-use quire_observation::authority::{
+use filament_observation::authority::{
     self, AuthoritySelection, Context, History, Limits as ObservationLimits, OpenClosed,
     SubjectSelection, TemporalBoundary,
 };
-use quire_observation::StaticProducerBundle;
-use quire_observation::{
+use filament_observation::StaticProducerBundle;
+use filament_observation::{
     admit, AdmissionOutcome, AdmissionRequest, AdmittedRecord, Anchor, ClockRange, Digest,
     Identity, Member, ObservationBinding, PackageSelection, QualifiedObservation, QualifiedSubject,
     ResourceLimits, ScopeKind, ScopeSelection, SubjectIdentity, SubjectKind, ValueState,
@@ -39,7 +39,7 @@ pub struct OrderingViews {
     pub completeness_incomplete: authority::completeness::View,
 }
 
-/// Return the exact QObs progress watermark in QSL's signed carrier.
+/// Return the exact FObs progress watermark in FSL's signed carrier.
 pub fn progress_watermark(view: &authority::progress::View) -> i64 {
     let value = match view.payload().boundary() {
         authority::BoundaryRef::EventPosition { watermark, .. }
@@ -59,17 +59,17 @@ fn digest(value: u8) -> Digest {
     Digest::new([value; 32])
 }
 
-fn producer() -> quire_observation::AdmittedStaticBundle {
-    StaticProducerBundle::admit_json(quire_observation::test_support::FCD_STATIC_BUNDLE_1_2)
+fn producer() -> filament_observation::AdmittedStaticBundle {
+    StaticProducerBundle::admit_json(filament_observation::test_support::FCD_STATIC_BUNDLE_1_2)
         .expect("shared FCD static bundle is admitted")
 }
 
 /// Admit the exact static Producer bundle shared by integration fixtures.
-pub fn admitted_producer() -> quire_observation::AdmittedStaticBundle {
+pub fn admitted_producer() -> filament_observation::AdmittedStaticBundle {
     producer()
 }
 
-fn subject(producer: &quire_observation::AdmittedStaticBundle, tag: &str) -> QualifiedSubject {
+fn subject(producer: &filament_observation::AdmittedStaticBundle, tag: &str) -> QualifiedSubject {
     QualifiedSubject::new(
         producer,
         SubjectKind::new(ORDER_KIND.as_bytes().to_vec()).expect("non-empty order kind"),
@@ -78,9 +78,9 @@ fn subject(producer: &quire_observation::AdmittedStaticBundle, tag: &str) -> Qua
     )
 }
 
-/// Construct one complete authority-qualified QObs runtime subject.
+/// Construct one complete authority-qualified FObs runtime subject.
 pub fn qualified_subject(
-    producer: &quire_observation::AdmittedStaticBundle,
+    producer: &filament_observation::AdmittedStaticBundle,
     tag: &str,
 ) -> QualifiedSubject {
     subject(producer, tag)

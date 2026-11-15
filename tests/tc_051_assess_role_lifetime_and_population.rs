@@ -11,13 +11,13 @@ mod support {
     pub mod handoff;
 }
 
-use ix_trace_rs::trace;
-use qsl_package::protocol_view::{CausalEdge, PortRef};
-use quire_contract_model::CheckedNodeId;
-use quire_protocol::dynamics::{
+use filament_contract_model::CheckedNodeId;
+use filament_protocol::dynamics::{
     assess_roles, HistoryRefusal, LifetimeViolation, PopulationViolation, RoleAssessment,
     RoleEvent, RoleFact,
 };
+use fsl_package::protocol_view::{CausalEdge, PortRef};
+use ix_trace_rs::trace;
 use support::dynamic::{at, instance, workflow, Dynamic};
 
 const UNTIL: &str = "until(input = input and R = R)";
@@ -152,7 +152,7 @@ fn a_static_role_has_no_bound_and_its_activity_is_never_a_lifetime_violation() {
 #[trace("TC-051", "FR-053-AC-10")]
 fn a_spawn_retire_or_end_fact_for_a_static_role_refuses_the_history() {
     let dynamic = Dynamic::with("workflow", 3);
-    // QSL never spawns a static role: a lifecycle fact for one is not a history.
+    // FSL never spawns a static role: a lifecycle fact for one is not a history.
     let spawn = fact(1, "s1", RoleEvent::Spawn, &dynamic, "S");
     assert_eq!(
         assess_roles(dynamic.linked().declarations(), &[spawn]),
@@ -341,7 +341,7 @@ fn each_lifetime_kind_ends_at_its_own_observation() {
 fn a_compensation_attempt_before_the_scope_ends_is_not_a_violation() {
     let dynamic = Dynamic::with("scope", 2);
     // Step 2 is the last branch step; the compensation attempt at 4 still
-    // runs under the open registration; QSL's RR-4 step ends the scope at 5.
+    // runs under the open registration; FSL's RR-4 step ends the scope at 5.
     let facts = [
         r(1, "i1", RoleEvent::Spawn, &dynamic),
         r(2, "i1", RoleEvent::Act, &dynamic),

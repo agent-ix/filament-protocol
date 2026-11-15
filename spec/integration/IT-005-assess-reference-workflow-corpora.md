@@ -3,46 +3,46 @@ id: IT-005
 title: "Assess the reference workflow corpora over the Protocol-owned cells"
 type: IT
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-019
+  - target: ix://agent-ix/filament-protocol/FR-019
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-021
+  - target: ix://agent-ix/filament-protocol/FR-021
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-022
+  - target: ix://agent-ix/filament-protocol/FR-022
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-023
+  - target: ix://agent-ix/filament-protocol/FR-023
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-050
+  - target: ix://agent-ix/filament-protocol/FR-050
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-051
+  - target: ix://agent-ix/filament-protocol/FR-051
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-052
+  - target: ix://agent-ix/filament-protocol/FR-052
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-053
+  - target: ix://agent-ix/filament-protocol/FR-053
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-054
+  - target: ix://agent-ix/filament-protocol/FR-054
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-055
+  - target: ix://agent-ix/filament-protocol/FR-055
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-056
+  - target: ix://agent-ix/filament-protocol/FR-056
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-100
+  - target: ix://agent-ix/filament-protocol/FR-100
     type: verifies
-  - target: ix://agent-ix/quire-protocol/FR-020
+  - target: ix://agent-ix/filament-protocol/FR-020
     type: verifies
 ---
 # IT-005: Assess the reference workflow corpora over the Protocol-owned cells
 
 ## Objective
 
-Show, for each corpus the Protocol-owned V1 cells name, which living tests run it and what each asserts, so every cell has attributed evidence or a stated gap. This library assesses an observed history; QSL owns the exploration engines (ADR-010).
+Show, for each corpus the Protocol-owned V1 cells name, which living tests run it and what each asserts, so every cell has attributed evidence or a stated gap. This library assesses an observed history; FSL owns the exploration engines (ADR-010).
 
 ## Target Integration
 
-QSL compiles the choreographies and owns the exploration engines; this library admits, links and assesses an observed history against the authored declarations (ADR-010). It adds no engine.
+FSL compiles the choreographies and owns the exploration engines; this library admits, links and assesses an observed history against the authored declarations (ADR-010). It adds no engine.
 
 ## Preconditions
 
-QSL's writer and Contract IR's reader are available in process. QSL's linked engines serve `local-projection` and `realizability` only; `composition` and `refinement` have none.
+FSL's writer and Contract IR's reader are available in process. FSL's linked engines serve `local-projection` and `realizability` only; `composition` and `refinement` have none.
 
 ## Inputs
 
@@ -62,9 +62,9 @@ Run each living test named in the table. Each corpus row names the cells it back
 | Retry | V1-PROT-021, V1-PROT-023 | TC-003 (FR-022, FR-023) | The initial attempt counts, the authored retry bound admits exactly and one over refuses; attempts, effects and outcomes stay distinct. |
 | Compensation | V1-PROT-020, V1-PROT-022, V1-PROT-024 | TC-003 (FR-019..FR-021); TC-169 | Registration needs its matching effect and is replay-idempotent; commit and recovery orderings follow only the authored causal order. |
 | Dynamic roles | V1-PROT-012, V1-PROT-013 | TC-051, TC-052, TC-167 | Lifetime and population bound of a replicated role; queue capacity and overflow; a faulty run is judged on each axis separately. |
-| Projection | V1-PROT-027 | TC-164, TC-165 (IT-004) | QSL's linked engine decides it. |
-| Realizability | V1-PROT-028 | TC-166 | QSL's linked engine decides it over a subject built from QSL's public front end; the witness carrier is batch D (FR-302). |
-| Composition, refinement | V1-PROT-029, V1-PROT-030 | TC-200..TC-204 | Dispatch and carriage against a stand-in; no linked QSL engine serves either kind. |
+| Projection | V1-PROT-027 | TC-164, TC-165 (IT-004) | FSL's linked engine decides it. |
+| Realizability | V1-PROT-028 | TC-166 | FSL's linked engine decides it over a subject built from FSL's public front end; the witness carrier is batch D (FR-302). |
+| Composition, refinement | V1-PROT-029, V1-PROT-030 | TC-200..TC-204 | Dispatch and carriage against a stand-in; no linked FSL engine serves either kind. |
 
 ## Expected Results
 
@@ -72,4 +72,4 @@ Every corpus row passes. A cell with no row is a stated gap in the V1-PROT inven
 
 ## Dependencies
 
-The result-publication cells (V1-RUN-005, V1-RUN-006 as published) are blocked: Quoin #519 is closed, but the canonical result and scenario record it takes are retired here (FR-006, FR-007, FR-017). Global conformance (V1-PROT-026) is blocked the same way (FR-004). Composition and refinement wait on a QSL engine. The `v1-draft.2` witness carrier (FR-302) is batch D.
+The result-publication cells (V1-RUN-005, V1-RUN-006 as published) are blocked: Quoin #519 is closed, but the canonical result and scenario record it takes are retired here (FR-006, FR-007, FR-017). Global conformance (V1-PROT-026) is blocked the same way (FR-004). Composition and refinement wait on a FSL engine. The `v1-draft.2` witness carrier (FR-302) is batch D.

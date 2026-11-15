@@ -4,15 +4,15 @@ title: "Consume compiled artifacts; author no parser and no second profile"
 type: ADR
 status: accepted
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-001
+  - target: ix://agent-ix/filament-protocol/FR-001
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: relates_to
-  - target: ix://agent-ix/quire-protocol/NFR-003
+  - target: ix://agent-ix/filament-protocol/NFR-003
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/AD-001
+  - target: ix://agent-ix/filament-protocol/AD-001
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-050
+  - target: ix://agent-ix/filament-specification/FR-050
     type: depends_on
 ---
 # ADR-007: Consume compiled artifacts; author no parser and no second profile
@@ -26,7 +26,7 @@ Consequences).
 ## Context
 
 This repository evaluates protocols whose semantics are defined in
-`agent-ix/quire-specification` and whose source is written in the native Quire
+`agent-ix/filament-specification` and whose source is written in the native Filament
 language, which A's compiler parses. The apparently direct route is to parse
 that source here: it removes a dependency, removes a handoff, and removes the
 wait for A to publish a compiled-artifact contract — which, at the time of
@@ -69,7 +69,7 @@ This repository consumes compiled artifacts and parses no source.
   path. No second parser, alternate formal frontend, or foreign runtime appears
   in it.
 - Semantic vocabulary is adopted by reference to
-  `ix://agent-ix/quire-specification`, never restated. Where upstream records an
+  `ix://agent-ix/filament-specification`, never restated. Where upstream records an
   open gap — an unenumerated axis, a contested membership, an unstated key — the
   gap is cited and no local member list is supplied.
 - The boundary is enforced mechanically, not by intent.
@@ -85,10 +85,10 @@ assessment and human disposition all remain outside.
 
 ## Consequences
 
-**The compiled boundary is delivered.** QSL `/1`, `/2` and native-temporal
+**The compiled boundary is delivered.** FSL `/1`, `/2` and native-temporal
 contracts are pinned at `f1700a9`; the default `/2` handoff executes its owner
 reader and mutation corpus. Task-009 still owes the complete `/1` regression
-comparison, but no QSL contract publication blocker remains. Parsing source
+comparison, but no FSL contract publication blocker remains. Parsing source
 would still create a second semantic authority and is still forbidden.
 
 **The positive proof is harder than the prohibition and is not yet delivered.**
@@ -100,17 +100,17 @@ obligation, not an absence-of-known bad-dependencies claim." An inventory that
 finds no known-bad dependency is not the same statement, and IT-001 refuses to
 let it stand in.
 
-**A real upstream gap becomes an explicit unsupported or blocked case.** QSpec
+**A real upstream gap becomes an explicit unsupported or blocked case.** FSpec
 #28/#29/#31/#40 has since closed the progress, participation, identity, channel,
 relationship, activation, completeness and temporal-boundary gaps this
-repository previously listed. QSpec #57 accepted FR-236's per-attempt,
+repository previously listed. FSpec #57 accepted FR-236's per-attempt,
 effect-only, and recovery-relation outcome partition at `478afa2`. Protocol
 consumes that ruling as distinct domains and does not invent another partition.
 
 **One local vocabulary was minted anyway, and had to be withdrawn.** An earlier
 FR-015 declared a closed four-member digest-domain set. The prior FR-201 also
 published a digest-domain vocabulary; two local members re-spelled upstream
-members, so their labels disagreed over identical bytes. QSpec #520 withdrew
+members, so their labels disagreed over identical bytes. FSpec #520 withdrew
 the identity-domain vocabulary, and result identity now uses the structural key
 specified by FR-286. The prohibition is not self-enforcing at the vocabulary
 level, and a review caught this one rather than a checker.

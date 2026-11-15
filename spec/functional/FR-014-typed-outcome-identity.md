@@ -4,27 +4,27 @@ title: "Typed outcome identity"
 type: FR
 object: value_object
 relationships:
-  - target: ix://agent-ix/quire-protocol/ADR-008
+  - target: ix://agent-ix/filament-protocol/ADR-008
     type: references
-  - target: ix://agent-ix/quire-protocol/US-004
+  - target: ix://agent-ix/filament-protocol/US-004
     type: implements
-  - target: ix://agent-ix/quire-protocol/FR-010
+  - target: ix://agent-ix/filament-protocol/FR-010
     type: part_of
-  - target: ix://agent-ix/quire-protocol/FR-011
+  - target: ix://agent-ix/filament-protocol/FR-011
     type: depends_on
-  - target: ix://agent-ix/quire-protocol/FR-008
+  - target: ix://agent-ix/filament-protocol/FR-008
     type: specifies
-  - target: ix://agent-ix/quire-protocol/NFR-005
+  - target: ix://agent-ix/filament-protocol/NFR-005
     type: depends_on
-  - target: ix://agent-ix/quire-specification/FR-270
+  - target: ix://agent-ix/filament-specification/FR-270
     type: references
-  - target: ix://agent-ix/quire-specification/FR-271
+  - target: ix://agent-ix/filament-specification/FR-271
     type: references
-  - target: ix://agent-ix/quire-specification/FR-272
+  - target: ix://agent-ix/filament-specification/FR-272
     type: references
-  - target: ix://agent-ix/quire-specification/FR-273
+  - target: ix://agent-ix/filament-specification/FR-273
     type: references
-  - target: ix://agent-ix/quire-specification/FR-274
+  - target: ix://agent-ix/filament-specification/FR-274
     type: references
 ---
 # FR-014: Typed outcome identity
@@ -65,7 +65,7 @@ The library SHALL derive a typed outcome identity from no display text, locale o
   this is. The distinction below records which of them this repository returns;
   it establishes no vocabulary. Where an outcome reports whether a requested
   evaluator ran, the vocabulary is
-  `ix://agent-ix/quire-specification/FR-241`'s five members — `completed`,
+  `ix://agent-ix/filament-specification/FR-241`'s five members — `completed`,
   `refused`, `unsupported`, `resource-incomplete`, `failed` — and that is the
   spelling used.
 - **envelope interior** — FR-008's local stage/cause vocabulary or an exact
@@ -188,7 +188,7 @@ did not complete rather than an empty finding set that reads as clean.
   canonical result whose finding set may be legitimately empty.
 - [FR-011](./FR-011-consumer-identity-discipline.md) supplies the kind and
   authority axes.
-- `ix://agent-ix/quire-specification/FR-270` through `FR-274` are informative
+- `ix://agent-ix/filament-specification/FR-270` through `FR-274` are informative
   source-catalog objects. They neither own nor block Protocol's local envelope;
   an adapter consumes a source interior only under its exact selected contract.
 

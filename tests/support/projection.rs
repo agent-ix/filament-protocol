@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! A three-role protocol over the recipe model, QSL's real `protocol-analysis`
+//! A three-role protocol over the recipe model, FSL's real `protocol-analysis`
 //! engine registered as the provider, and the claim that projects it.
 
 // Each test binary uses a different part of these helpers.
@@ -7,21 +7,21 @@
 
 use std::convert::Infallible;
 
-use qsl_analyze::protocol_analysis::ProjectionRequest;
-use qsl_foundation::witness::ObservationIdentity;
-use qsl_replay::protocol_analysis::{AssessedRootDraft, ProjectionBoundsDraft, RunBudget};
-use qsl_route::ProviderOrigin;
-use quire_contract_model::CheckedNodeId;
-use quire_exact::{
+use filament_contract_model::CheckedNodeId;
+use filament_exact::{
     EffectiveId, NodeKey, ObjectId, ObjectReference, OriginalDeclarationKey, PathSegment,
     UniverseId,
 };
-use quire_protocol::dispatch::{
+use filament_protocol::dispatch::{
     dispatch, Answer, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
     ProtocolOutcome, ProtocolRequest, ProviderBoundary,
 };
-use quire_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, QslEngine};
-use quire_protocol::link::LinkedProtocol;
+use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, FslEngine};
+use filament_protocol::link::LinkedProtocol;
+use fsl_analyze::protocol_analysis::ProjectionRequest;
+use fsl_foundation::witness::ObservationIdentity;
+use fsl_replay::protocol_analysis::{AssessedRootDraft, ProjectionBoundsDraft, RunBudget};
+use fsl_route::ProviderOrigin;
 
 use super::dynamic::Dynamic;
 
@@ -48,7 +48,7 @@ pub const CANCELLED: &str = "send Cn via Cancelled as (c: CancelMsg) { true };\n
 pub fn worked(ship: &str, cancel: &str) -> Dynamic {
     Dynamic::from_source(&format!(
         "language \"ix:native\" edition \"1-draft\";\n\
-         profile pp = \"quire.protocol.finite-global/v1\";\n\
+         profile pp = \"filament.protocol.finite-global/v1\";\n\
          model M = \"agent-ix/checked-handoff\";\n\
          {RECORDS}protocol Flow using pp over (input: M::Workflow) on origin {{\n{MEMBERS}\n\
          run sequence Main {{\n\
@@ -133,7 +133,7 @@ pub fn claim_of(
     }
 }
 
-/// QSL's engine registered as the provider, asked to project onto `role`
+/// FSL's engine registered as the provider, asked to project onto `role`
 /// with `profile`.
 pub fn boundary<'p>(
     dynamic: &'p Dynamic,
@@ -141,7 +141,7 @@ pub fn boundary<'p>(
     profile: &'static str,
 ) -> Boundary<'p> {
     let mut boundary = Boundary::new();
-    let engine = QslEngine::new(dynamic.package(), move |_: &Binding<(), (), ()>| {
+    let engine = FslEngine::new(dynamic.package(), move |_: &Binding<(), (), ()>| {
         EngineRequest::Projection(Box::new(ProjectionRequest {
             protocol: dynamic.clause().clone(),
             definition_key: Some("ix://test/Flow".to_owned()),
@@ -154,10 +154,10 @@ pub fn boundary<'p>(
             budget: RunBudget::default(),
         }))
     })
-    .expect("QSL's linked engines register");
+    .expect("FSL's linked engines register");
     boundary
         .register(
-            engine_descriptor(ProviderOrigin::Linked).expect("QSL's own descriptor"),
+            engine_descriptor(ProviderOrigin::Linked).expect("FSL's own descriptor"),
             engine,
         )
         .expect("the registration is accepted");

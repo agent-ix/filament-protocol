@@ -3,14 +3,14 @@ id: TC-163
 title: "Settle projection and realizability claims unsupported while no backend serves the kind"
 type: TC
 relationships:
-  - target: ix://agent-ix/quire-protocol/FR-153
+  - target: ix://agent-ix/filament-protocol/FR-153
     type: verifies
 ---
 # TC-163: Settle projection and realizability claims unsupported while no backend serves the kind
 
 ## Description
 
-Verify that, with no candidate serving a kind, the claim settles `unsupported` with QSL's cause, truth and basis `unavailable`, a warning and no error, while global conformance is preserved, and that registering a serving backend changes the result of a byte-identical request.
+Verify that, with no candidate serving a kind, the claim settles `unsupported` with FSL's cause, truth and basis `unavailable`, a warning and no error, while global conformance is preserved, and that registering a serving backend changes the result of a byte-identical request.
 
 ## Test Procedure
 
