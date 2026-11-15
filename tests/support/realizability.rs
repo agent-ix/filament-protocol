@@ -176,7 +176,7 @@ fn checked(text: &str, document: &[u8]) -> CheckedPackage {
 
 const ROLES: [&str; 3] = ["Buyer", "Seller", "Warehouse"];
 
-fn channel(name: &str, from: &str, to: &str, carries: &str) -> String {
+pub fn channel(name: &str, from: &str, to: &str, carries: &str) -> String {
     format!(
         "channel {name} from {from} to {to} carries {carries} ordering unordered delivery \
          exactly-once-premise capacity 4 overflow reject;\n"
@@ -198,9 +198,15 @@ pub struct Realizability {
 impl Realizability {
     /// `Buyer` places an order; `Seller` reads it and owns `ship | cancel`.
     pub fn worked(ship: &str, cancel: &str) -> Self {
+        Self::worked_with("", ship, cancel)
+    }
+
+    /// `worked`, with `extra` member declarations (channels) added.
+    pub fn worked_with(extra: &str, ship: &str, cancel: &str) -> Self {
         let members = [
             "role Buyer on M::Cell;\nrole Seller on M::Shop;\nrole Warehouse on M::Depot;\n"
                 .to_owned(),
+            extra.to_owned(),
             channel("Order", "Buyer", "Seller", "Ack"),
             channel("Pick", "Seller", "Warehouse", "PickMsg"),
             channel("Cancelled", "Seller", "Warehouse", "CancelMsg"),
