@@ -14,7 +14,7 @@ Verify that a `realizability` claim is decided by FSL's real `protocol-analysis`
 
 ## Test Procedure
 
-Build a three-role protocol and a one-object model with FSL's public front end (`fsl_cst::parse`, `fsl_forms::build_unit`, `admit_unit`, `PackageDeclarations::assemble`, `CheckedPackage::link`), emit and admit it through Contract IR's reader, and register FSL's engine under FSL's descriptor. Dispatch a `realizability` claim for a protocol whose roles can tell every branch apart and for one with a hidden choice. Tag each test with the exact acceptance criterion it verifies.
+Write a handoff directory for a three-role protocol over the recipe model with FSL's writer, compile it back with FSL's `compile`, build the subject with `protocol_subject`, and register FSL's engine under FSL's descriptor. Dispatch a `realizability` claim for a protocol whose roles can tell every branch apart and for one with a hidden choice. Tag each test with the exact acceptance criterion it verifies.
 
 ## Expected Results
 

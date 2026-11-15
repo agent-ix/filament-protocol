@@ -63,7 +63,7 @@ Run each living test named in the table. Each corpus row names the cells it back
 | Compensation | V1-PROT-020, V1-PROT-022, V1-PROT-024 | TC-003 (FR-019..FR-021); TC-169 | Registration needs its matching effect and is replay-idempotent; commit and recovery orderings follow only the authored causal order. |
 | Dynamic roles | V1-PROT-012, V1-PROT-013 | TC-051, TC-052, TC-167 | Lifetime and population bound of a replicated role; queue capacity and overflow; a faulty run is judged on each axis separately. |
 | Projection | V1-PROT-027 | TC-164, TC-165 (IT-004) | FSL's linked engine decides it. |
-| Realizability | V1-PROT-028 | TC-166 | FSL's linked engine decides it over a subject built from FSL's public front end; the witness carrier is batch D (FR-302). |
+| Realizability | V1-PROT-028 | TC-166, TC-172 | FSL's linked engine decides it over a subject built from a checked-handoff directory by FSL's `protocol_subject`; the witness carrier is batch D (FR-302). |
 | Composition, refinement | V1-PROT-029, V1-PROT-030 | TC-200..TC-204 | Composition and refinement are decided in `src/composition.rs` and `src/refinement.rs` (TC-200..TC-204, TC-147), the refinement over caller-supplied transition systems until FSL's compile and link call (S2) derives them. |
 
 ## Expected Results

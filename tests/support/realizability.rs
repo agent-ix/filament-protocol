@@ -1,30 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! A realizability fixture built from FSL's public front end: a three-role
-//! protocol over a one-object model, both package forms (FSL's in-process
-//! `CheckedPackage` the subject needs, and the admitted `CheckedPackageV2` the
-//! request names), the model's snapshot, and the request FSL's engine decides.
+//! A realizability fixture whose every package comes from a handoff directory
+//! written by FSL's writer and compiled back by `compile` (FSL FR-517, FR-571):
+//! a three-role protocol over the recipe model, the admitted package the
+//! request names, the snapshot built from the handoff's domain documents, and
+//! the subject FSL's `protocol_subject` builds. No front end is driven here.
 
 // Each test binary uses a different part of these helpers.
 #![allow(dead_code)]
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 
 use filament_checked::key::DeclarationKey;
 use filament_contract_model::{
     CheckedNodeId, CheckedPackageDispatchResult, CheckedPackageReadLimits, CheckedPackageV2,
 };
 use filament_exact::ScalarLimits;
-use filament_semantic_value::checking::{CheckMode, CheckingLimits};
-use fsl_analyze::protocol_analysis::RealizabilityRequest;
-use fsl_eval::model_subject::{ModelInstance, ModelSubject, ProtocolSubject, RoleBinding};
-use fsl_eval::simulation::model::{ExpansionLimits, ModelSimulationRequest, PopulationUniverse};
-use fsl_eval::simulation::protocol::ResolvedMemory;
-use fsl_foundation::SourceIdentity;
-use fsl_package::{CheckedPackage, EmitLimits};
+use filament_spec_language::checked_handoff::{compile, CompiledHandoff, Corpus};
+use fsl_analyze::protocol_analysis::{
+    protocol_subject, RealizabilityRequest, SubjectBindings, SubjectPackage,
+};
+use fsl_eval::model_subject::{ModelInstance, ProtocolSubject, RoleBinding};
+use fsl_eval::simulation::model::{ExpansionLimits, PopulationUniverse};
 use fsl_replay::protocol_analysis::{BoundsDraft, RunBudget};
-use fsl_semantics::check::PackageDeclarations;
 use fsl_semantics::model::accounting::ModelNormalizationLimits;
-use fsl_semantics::model::intake::{admit_unit, meaning, package_input, PackageInput};
 use fsl_semantics::model::observation::{
     document_reference, DocumentProvision, DocumentRef, ObservationLimits,
 };
@@ -32,91 +30,10 @@ use serde_json::{json, Value as Json};
 
 use filament_protocol::link::{link, LinkedProtocol};
 
-use super::projection::{assessed_root, RECORDS};
+use super::handoff::{request, written_request, Handoff};
+use super::projection::{assessed_root, MEMBERS, RECORDS};
 
-const PACKAGE: &str = "test/realizability";
-
-fn ident(suffix: &str) -> String {
-    format!("ix://{PACKAGE}/{suffix}")
-}
-
-fn origin(identity: &str) -> Json {
-    json!({"generated": {"generatorIdentity": identity, "generatorVersion": "1.0.0",
-        "inputIdentities": [identity]}})
-}
-
-/// The domain package: one object type `Cell` of one integer field `v`, and
-/// its closed population `cells`.
-fn document() -> Vec<u8> {
-    let constructs: Vec<Json> = [
-        ("object_type", meaning::OBJECT_TYPE),
-        ("population", meaning::POPULATION),
-        ("value_type", meaning::VALUE_TYPE),
-    ]
-    .into_iter()
-    .map(|(name, meaning)| {
-        json!({"kind": {"module": PACKAGE, "name": name}, "moduleVersion": "1.0.0",
-            "construct": {"identity": "none", "shape": "record", "members": {},
-                "meaning": meaning}})
-    })
-    .collect();
-    let node = |identity: &str, kind: &str, extra: Json| {
-        let mut node = json!({
-            "identity": identity, "displayName": identity,
-            "kind": {"module": PACKAGE, "name": kind}, "roles": [],
-            "origin": origin(identity), "constraints": [], "extensions": [],
-            "unknownPolicy": "reject",
-        });
-        for (name, value) in extra.as_object().expect("members") {
-            node[name] = value.clone();
-        }
-        node
-    };
-    let field = |name: &str, type_ref: &str| {
-        let identity = ident(&format!("Cell/{name}"));
-        json!({"identity": identity, "name": name, "typeRef": type_ref,
-            "presence": "required", "nullable": false, "defaultKind": "none",
-            "multiplicity": {"lower": 1, "upper": 1, "ordered": false, "unique": true},
-            "origin": origin(&identity)})
-    };
-    let constraint = |keyword: &str, value: &str| {
-        json!({"identity": ident(&format!("Level/constraints/{keyword}")), "keyword": keyword,
-            "operands": {"value": value}, "appliesTo": "ix://filament/native/Integer",
-            "diagnosticCode": format!("bound.{keyword}"), "origin": origin(&ident("Level"))})
-    };
-    let population_node = |name: &str, member: &str| {
-        let identity = ident(name);
-        json!({"identity": identity, "displayName": identity,
-            "kind": {"module": PACKAGE, "name": "population"},
-            "members": [ident(member)], "extent": "closed", "origin": origin(&identity)})
-    };
-    json!({
-        "contractVersion": "2.0.0",
-        "canonicalization": {"algorithm": "rfc8785-v1"},
-        "source": {"identity": ident("spec"), "version": "1.0.0", "dialect": "spec-bundle"},
-        "package": {"identity": PACKAGE, "version": "1.0.0",
-            "mappingVersions": [], "profileVersions": []},
-        "occurrences": [], "extensions": [],
-        "constructs": constructs,
-        "types": [
-            node(&ident("Level"), "value_type", json!({"scalar": "integer",
-                "constraints": [constraint("min", "0"), constraint("max", "3")]})),
-            node(&ident("Cell"), "object_type", json!({
-                "supertypes": [], "fields": [field("v", &ident("Level"))],
-                "operations": [], "relationships": []})),
-            // A type for each role: the link refuses two roles on one
-            // authority.
-            node(&ident("Shop"), "object_type", json!({
-                "supertypes": [], "fields": [], "operations": [], "relationships": []})),
-            node(&ident("Depot"), "object_type", json!({
-                "supertypes": [], "fields": [], "operations": [], "relationships": []})),
-        ],
-        "populations": [population_node("cells", "Cell"),
-            population_node("shops", "Shop"), population_node("depots", "Depot")],
-    })
-    .to_string()
-    .into_bytes()
-}
+const PACKAGE: &str = "agent-ix/checked-handoff";
 
 const UNLIMITED: ScalarLimits = ScalarLimits {
     integer_bits: 1 << 20,
@@ -131,6 +48,10 @@ const UNLIMITED: ScalarLimits = ScalarLimits {
     result_units: 1 << 30,
 };
 
+fn ident(suffix: &str) -> String {
+    format!("ix://{PACKAGE}/{suffix}")
+}
+
 fn key(suffix: &str) -> DeclarationKey {
     DeclarationKey {
         package: PACKAGE.to_owned(),
@@ -138,43 +59,98 @@ fn key(suffix: &str) -> DeclarationKey {
     }
 }
 
-/// The checked package of the FSL unit `text`, by FSL's public front end.
-fn checked(text: &str, document: &[u8]) -> CheckedPackage {
-    let packages = package_input([document]).expect("the model package reads");
-    let parsed = fsl_cst::parse(
-        SourceIdentity::new("agent-ix", "realizability"),
-        "unit.native",
-        text.as_bytes(),
-        fsl_cst::Limits::default(),
-    )
-    .expect("the unit parses");
-    assert!(parsed.is_admissible(), "{:?}", parsed.diagnostics());
-    let built = fsl_forms::build_unit(&parsed).expect("the unit builds");
-    let models = admit_unit(
-        &built.selections().models,
-        &packages,
-        ModelNormalizationLimits::default(),
-    )
-    .expect("the model selection admits")
-    .with_parsed_operation_clauses(|text| {
-        fsl_forms::parse_clause_text(text, fsl_cst::Limits::default())
-    })
-    .expect("the operation clauses parse");
-    let declarations = PackageDeclarations::assemble(
-        parsed.source().reference().clone(),
-        "package".to_owned(),
-        built,
-        models,
-        Vec::new(),
-    )
-    .expect("the unit assembles");
-    let graph = declarations
-        .check(CheckMode::Linked, CheckingLimits::default())
-        .unwrap_or_else(|refusals| panic!("the unit checks: {refusals:?}"));
-    CheckedPackage::link(graph)
+/// The recipe model with the closed populations the subject simulates: one
+/// per role's object type.
+fn model() -> Vec<u8> {
+    let mut model: Json = serde_json::from_slice(&super::dynamic::model()).expect("model JSON");
+    let populations = model["populations"].as_array_mut().expect("populations");
+    for (name, member) in [("workflows", "Workflow"), ("depots", "Depot")] {
+        populations.push(json!({
+            "identity": ident(name), "displayName": ident(name),
+            "kind": {"module": PACKAGE, "name": "population"},
+            "members": [ident(member)], "extent": "closed",
+            "origin": {"generated": {"generatorIdentity": ident(name),
+                "generatorVersion": "1.0.0", "inputIdentities": [ident(name)]}},
+        }));
+    }
+    serde_json::to_vec(&model).expect("model bytes")
 }
 
-const ROLES: [&str; 3] = ["Buyer", "Seller", "Warehouse"];
+/// The value of `field` in an initial object keyed `object`, read from the
+/// model package `document`: the type's own lower bound, so it is admissible
+/// whatever bounds the model declares.
+fn initial_value(document: &Json, field: &Json, object: &str) -> Json {
+    let type_ref = field["typeRef"].as_str().expect("a type reference");
+    let scalar = document["types"]
+        .as_array()
+        .expect("types")
+        .iter()
+        .find(|found| found["identity"] == type_ref);
+    let one = match scalar.and_then(|found| found["scalar"].as_str()) {
+        None => json!({"boolean": false}),
+        Some("integer") => {
+            let minimum = scalar.expect("a type")["constraints"]
+                .as_array()
+                .and_then(|all| all.iter().find(|found| found["keyword"] == "min"))
+                .map_or("0", |found| {
+                    found["operands"]["value"].as_str().expect("a bound")
+                });
+            json!({"integer": minimum})
+        }
+        Some("string") => json!({"kind": "text", "text": object}),
+        Some(other) => panic!("no initial value for scalar {other}"),
+    };
+    if field["multiplicity"]["upper"].as_u64() == Some(1) {
+        one
+    } else {
+        json!({"sequence": []})
+    }
+}
+
+/// The initialization snapshot of the model package `document`: one object
+/// keyed `w` in `workflows`, and every other population empty.
+fn snapshot(document: &Json) -> Vec<u8> {
+    let populations: Vec<Json> = document["populations"]
+        .as_array()
+        .expect("populations")
+        .iter()
+        .map(|population| {
+            let objects: Vec<Json> = if population["identity"] == ident("workflows") {
+                let member = population["members"][0].as_str().expect("one member type");
+                let object_type = document["types"]
+                    .as_array()
+                    .expect("types")
+                    .iter()
+                    .find(|found| found["identity"] == member)
+                    .expect("the member type");
+                let fields: serde_json::Map<String, Json> = object_type["fields"]
+                    .as_array()
+                    .expect("fields")
+                    .iter()
+                    .map(|field| {
+                        (
+                            field["name"].as_str().expect("a field name").to_owned(),
+                            initial_value(document, field, "w"),
+                        )
+                    })
+                    .collect();
+                vec![json!({"key": "w", "type": member, "fields": fields})]
+            } else {
+                Vec::new()
+            };
+            json!({"population": population["identity"], "complete": true, "objects": objects})
+        })
+        .collect();
+    json!({
+        "format": "filament.state.snapshot/v1",
+        "identity": {"authority": "test", "identity": "s0"},
+        "observation": "current", "model": {"identity": PACKAGE},
+        "anchor": {"kind": "initialization", "name": "start"},
+        "populations": populations,
+    })
+    .to_string()
+    .into_bytes()
+}
 
 pub fn channel(name: &str, from: &str, to: &str, carries: &str) -> String {
     format!(
@@ -183,12 +159,12 @@ pub fn channel(name: &str, from: &str, to: &str, carries: &str) -> String {
     )
 }
 
-/// One fixture: both package forms and the model's documents.
+/// One fixture: the handoff FSL's writer wrote, compiled back in process, and
+/// the snapshot built from its domain package documents. The subject comes
+/// from nothing else.
 pub struct Realizability {
-    document: Vec<u8>,
-    checked: CheckedPackage,
-    admitted: Box<CheckedPackageV2>,
-    packages: PackageInput,
+    handoff: Handoff,
+    compiled: CompiledHandoff,
     snapshots: DocumentProvision,
     initial: Vec<DocumentRef>,
     clause: CheckedNodeId,
@@ -203,22 +179,11 @@ impl Realizability {
 
     /// `worked`, with `extra` member declarations (channels) added.
     pub fn worked_with(extra: &str, ship: &str, cancel: &str) -> Self {
-        let members = [
-            "role Buyer on M::Cell;\nrole Seller on M::Shop;\nrole Warehouse on M::Depot;\n"
-                .to_owned(),
-            extra.to_owned(),
-            channel("Order", "Buyer", "Seller", "Ack"),
-            channel("Pick", "Seller", "Warehouse", "PickMsg"),
-            channel("Cancelled", "Seller", "Warehouse", "CancelMsg"),
-        ]
-        .concat();
         let text = format!(
             "language \"ix:native\" edition \"1-draft\";\n\
-             profile v = \"filament.value.complete/v1\";\n\
-             profile t0 = \"filament.temporal.infinite-trace/v1\";\n\
              profile pp = \"filament.protocol.finite-global/v1\";\n\
              model M = \"{PACKAGE}\";\n\
-             {RECORDS}protocol Flow using pp over (k: M::Cell) on origin {{\n{members}\n\
+             {RECORDS}protocol Flow using pp over (k: M::Workflow) on origin {{\n{MEMBERS}{extra}\n\
              run sequence Main {{\n\
              send Placed via Order as (placed: Ack) {{ true }};\n\
              receive Got via Order of Placed as (got: Ack) {{ true }};\n\
@@ -228,41 +193,30 @@ impl Realizability {
              }} }}\n\
              finish Done as (zz: Boolean) {{ true }};\n}}\n"
         );
-        let document = document();
-        let checked = checked(&text, &document);
-        let emission = fsl_package::emit_checked(&checked, EmitLimits::new(1 << 32))
-            .expect("the protocol package emits");
-        let mut evidence = emission.evidence().clone();
-        evidence
-            .insert_domain_package_document(PACKAGE, document.as_slice())
-            .expect("fresh domain evidence");
-        let admitted = match filament_contract_model::read_checked_package(
-            emission.package().bytes(),
-            CheckedPackageReadLimits::bounded(),
-            &evidence,
-        ) {
-            CheckedPackageDispatchResult::AdmittedV2(admitted) => admitted,
-            other => panic!("the package is admitted: {other:?}"),
-        };
-        let snapshot = json!({
-            "format": "filament.state.snapshot/v1",
-            "identity": {"authority": "test", "identity": "s0"},
-            "observation": "current", "model": {"identity": PACKAGE},
-            "anchor": {"kind": "initialization", "name": "start"},
-            "populations": [{"population": ident("cells"), "complete": true,
-                "objects": [{"key": "c", "type": ident("Cell"),
-                    "fields": {"v": {"integer": "0"}}}]},
-                {"population": ident("shops"), "complete": true, "objects": []},
-                {"population": ident("depots"), "complete": true, "objects": []}],
-        })
-        .to_string()
-        .into_bytes();
-        let mut snapshots = BTreeMap::new();
+        let inputs = tempfile::tempdir().expect("temporary directory");
+        let model_path = inputs.path().join("model.semantic-ir.json");
+        std::fs::write(&model_path, model()).expect("model file");
+        let source_path = inputs.path().join("unit.native");
+        std::fs::write(&source_path, text).expect("source file");
+        let mut asked = request("event_position", Corpus::None);
+        asked.emit.source = source_path;
+        asked.emit.models = vec![model_path];
+        asked.emit.temporal_selections = Vec::new();
+        let handoff = written_request(asked);
+        let compiled = compile(&handoff.root).expect("the handoff compiles back");
+        let (_, document) = compiled
+            .packages()
+            .iter()
+            .find(|(identity, _)| identity.as_str() == PACKAGE)
+            .expect("the model package");
+        let snapshot = snapshot(&serde_json::from_slice(document).expect("model JSON"));
+        let mut snapshots = DocumentProvision::new();
         snapshots.insert(
             document_reference(&snapshot).expect("a document names itself"),
             snapshot,
         );
-        let clause = admitted
+        let clause = compiled
+            .admitted()
             .resolved_graph()
             .nodes
             .iter()
@@ -270,49 +224,41 @@ impl Realizability {
             .expect("one protocol clause")
             .node_id
             .clone();
-        let linked = link(&admitted, &clause).expect("the protocol links");
+        let linked = link(compiled.admitted(), &clause).expect("the protocol links");
         Self {
-            document: document.clone(),
-            clause,
-            linked,
-            checked,
-            admitted,
-            packages: package_input([document.as_slice()]).expect("the model package reads"),
+            handoff,
+            compiled,
             snapshots,
             initial: vec![DocumentRef {
                 authority: "test".to_owned(),
                 identity: "s0".to_owned(),
             }],
+            clause,
+            linked,
         }
     }
 
-    /// The package emitted again with `mutate` applied to its wire JSON, read
-    /// by Contract IR's reader.
+    /// `checked-package.json` of the handoff with `mutate` applied to its
+    /// wire JSON, read by Contract IR's reader with the writer's evidence.
     pub fn read_mutated(&self, mutate: impl FnOnce(&mut Json)) -> CheckedPackageDispatchResult {
-        let emission = fsl_package::emit_checked(&self.checked, EmitLimits::new(1 << 32))
-            .expect("the protocol package emits");
-        let mut evidence = emission.evidence().clone();
-        evidence
-            .insert_domain_package_document(PACKAGE, self.document.as_slice())
-            .expect("fresh domain evidence");
-        let mut wire: Json =
-            serde_json::from_slice(emission.package().bytes()).expect("the package is JSON");
+        let mut wire: Json = serde_json::from_slice(&self.handoff.files["checked-package.json"])
+            .expect("the package is JSON");
         mutate(&mut wire);
         filament_contract_model::read_checked_package(
             &serde_json::to_vec(&wire).expect("JSON bytes"),
             CheckedPackageReadLimits::bounded(),
-            &evidence,
+            &self.handoff.evidence,
         )
     }
 
     /// The admitted package, the request's own form.
     pub fn package(&self) -> &CheckedPackageV2 {
-        &self.admitted
+        self.compiled.admitted()
     }
 
     /// The node of form `form` whose declared name ends in `last`.
     pub fn named(&self, form: &str, last: &str) -> CheckedNodeId {
-        self.admitted
+        self.package()
             .resolved_graph()
             .nodes
             .iter()
@@ -337,54 +283,50 @@ impl Realizability {
         &self.linked
     }
 
+    /// The protocol subject FSL builds from the compiled handoff alone.
     fn subject(&self) -> ProtocolSubject<'_> {
-        ProtocolSubject {
-            model: ModelSubject {
-                simulation: ModelSimulationRequest {
-                    emit: EmitLimits::new(1 << 32),
-                    package: &self.checked,
-                    packages: &self.packages,
-                    normalization: ModelNormalizationLimits::default(),
-                    snapshots: &self.snapshots,
-                    initial: self.initial.clone(),
-                    universes: [
-                        ("cells", vec!["c".to_owned()]),
-                        ("shops", Vec::new()),
-                        ("depots", Vec::new()),
-                    ]
+        protocol_subject(
+            SubjectPackage {
+                package: self.compiled.checked(),
+                packages: self.compiled.packages(),
+                snapshots: &self.snapshots,
+            },
+            SubjectBindings {
+                protocol: "Flow".to_owned(),
+                over: ModelInstance {
+                    population: key("workflows"),
+                    key: "w".to_owned(),
+                },
+                roles: ["Buyer", "Seller", "Warehouse"]
                     .into_iter()
-                    .map(|(name, keys)| PopulationUniverse {
-                        population: key(name),
-                        keys,
+                    .map(|role| RoleBinding {
+                        role: role.to_owned(),
+                        model: PACKAGE.to_owned(),
                     })
                     .collect(),
-                    observation: ObservationLimits::default(),
-                    expansion: ExpansionLimits {
-                        max_candidates: 1_000_000,
-                    },
-                    meter: UNLIMITED,
-                },
-                proof_bounds: Vec::new(),
-            },
-            protocol: "Flow".to_owned(),
-            over: ModelInstance {
-                population: key("cells"),
-                key: "c".to_owned(),
-            },
-            roles: ROLES
-                .iter()
-                .map(|role| RoleBinding {
-                    role: (*role).to_owned(),
-                    model: PACKAGE.to_owned(),
+                memory: Vec::new(),
+                initial: self.initial.clone(),
+                universes: [
+                    ("workflows", vec!["w".to_owned()]),
+                    ("workers", Vec::new()),
+                    ("depots", Vec::new()),
+                ]
+                .into_iter()
+                .map(|(name, keys)| PopulationUniverse {
+                    population: key(name),
+                    keys,
                 })
                 .collect(),
-            memory: self
-                .checked
-                .graph()
-                .protocol("Flow")
-                .map(|found| ResolvedMemory::resolve(found, &[]).expect("no selection resolves"))
-                .expect("the protocol Flow"),
-        }
+                normalization: ModelNormalizationLimits::default(),
+                observation: ObservationLimits::default(),
+                expansion: ExpansionLimits {
+                    max_candidates: 1_000_000,
+                },
+                meter: UNLIMITED,
+                emit: self.compiled.emit_limits(),
+            },
+        )
+        .expect("the protocol subject is built")
     }
 
     /// The realizability request over the protocol, bounded at depth 64.

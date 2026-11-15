@@ -81,7 +81,7 @@ protocol Flow using p over (input: M::Workflow) on origin {{
 }
 
 /// The recipe model with the population `workers` of `Provider`.
-fn model() -> Vec<u8> {
+pub fn model() -> Vec<u8> {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/tests/fixtures/checked-handoff/model.semantic-ir.json"
