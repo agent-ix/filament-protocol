@@ -8,23 +8,21 @@ mod support {
     pub mod standin;
 }
 
-use filament_protocol::declarations::Ordering;
-use filament_protocol::dispatch::{
-    dispatch, dispatch_claims, ChannelPremise, ClaimDisposition, ClaimRequest, DispositionRefusal,
-    ProtocolClaimKind, ProtocolOutcome,
-};
-use filament_protocol::disposition::{ClaimSettlement, Disposition, FslReport};
+use ix_trace_rs::trace;
 use fsl_eval::simulation::RequiresBound;
 use fsl_foundation::bound::{DomainKey, DomainKind};
 use fsl_package::protocol_view::Delivery;
 use fsl_replay::{InconclusiveCause, SettlementBasis, Truth};
 use fsl_semantics::check::Capability;
 use fsl_semantics::family::ClaimExtent;
-use ix_trace_rs::trace;
+use filament_protocol::declarations::Ordering;
+use filament_protocol::dispatch::{
+    dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal,
+    ProtocolClaimKind, ProtocolOutcome,
+};
+use filament_protocol::disposition::{ClaimSettlement, Disposition, QslReport};
 use support::dynamic::Dynamic;
-use support::standin::{always, request, rest, serve, Boundary, Rest, Sentinel};
-
-type Change = Box<dyn Fn(ChannelPremise<Rest>) -> ChannelPremise<Rest>>;
+use support::standin::{always, request, serve, Boundary, Sentinel};
 
 const KIND: ProtocolClaimKind = ProtocolClaimKind::Realizability;
 
@@ -80,71 +78,26 @@ fn the_backend_receives_and_the_disposition_retains_the_premises_as_authored() {
 fn requests_differing_in_one_premise_component_differ_in_identity_and_provenance() {
     let dynamic = Dynamic::with("workflow", 3);
     let base = request(&dynamic, KIND, &["Head"]);
-    let head = dynamic.named("channel", "Head");
-    let declared = dynamic
-        .linked()
-        .declarations()
-        .channel(&head)
-        .expect("Head")
-        .clone();
-    let other_delivery = if declared.delivery == Delivery::AtMostOnce {
-        Delivery::AtLeastOnce
-    } else {
-        Delivery::AtMostOnce
-    };
-    let components: [Change; 5] = [
-        Box::new(|c| ChannelPremise {
-            unread: Rest {
-                sender: "other",
-                ..c.unread
-            },
-            ..c
-        }),
-        Box::new(|c| ChannelPremise {
-            unread: Rest {
-                receiver: "other",
-                ..c.unread
-            },
-            ..c
-        }),
-        Box::new(|c| ChannelPremise {
-            unread: Rest {
-                message_type: "other",
-                ..c.unread
-            },
-            ..c
-        }),
-        Box::new(|c| ChannelPremise {
-            ordering: Ordering::Unordered,
-            ..c
-        }),
-        Box::new(move |c| ChannelPremise {
-            delivery: other_delivery,
-            ..c
-        }),
-    ];
     let (mut boundary, _) = serving();
     let base_binding = match dispatch(&mut boundary, dynamic.linked().declarations(), &base) {
         ProtocolOutcome::Settled(ClaimSettlement::Result { premises, .. }) => premises,
         other => panic!("{other:?}"),
     };
     let mut retained = vec![base_binding];
-    for (index, change) in components.iter().enumerate() {
+    // The requester states a role's internality; the channel's components all
+    // come from the linked declaration.
+    for role in base.fragment.roles.clone() {
         let mut other = base.clone();
-        let premise = other.premises.channels.get_mut(&head).expect("premise");
-        *premise = change(premise.clone());
-        assert_ne!(base, other, "component {index}");
-        // Only the components the read view does not publish can differ from
-        // the package and still be bound (FR-151-AC-8 refuses the others).
-        if index < 3 {
-            let (mut boundary, _) = serving();
-            let settled = dispatch(&mut boundary, dynamic.linked().declarations(), &other);
-            let ProtocolOutcome::Settled(ClaimSettlement::Result { premises, .. }) = settled else {
-                panic!("{settled:?}");
-            };
-            assert_eq!(premises.request, other);
-            retained.push(premises);
-        }
+        let stated = other.premises.roles.get_mut(&role).expect("premise");
+        *stated = "another internality";
+        assert_ne!(base, other);
+        let (mut boundary, _) = serving();
+        let settled = dispatch(&mut boundary, dynamic.linked().declarations(), &other);
+        let ProtocolOutcome::Settled(ClaimSettlement::Result { premises, .. }) = settled else {
+            panic!("{settled:?}");
+        };
+        assert_eq!(premises.request, other);
+        retained.push(premises);
     }
     for (left, first) in retained.iter().enumerate() {
         for second in &retained[left + 1..] {
@@ -258,7 +211,7 @@ fn inconclusive_and_requires_bound_are_carried_and_hold_no_decided_truth() {
         &mut boundary,
         "backend",
         &[Capability::Realizability],
-        Box::new(move |_| FslReport::RequiresBound {
+        Box::new(move |_| QslReport::RequiresBound {
             outcome: reported.clone(),
             construct: None,
         }),
@@ -299,13 +252,7 @@ fn a_refused_disposition_holds_no_decided_truth_and_the_restored_premise_is_sent
     assert_eq!(calls.len(), 0);
 
     let mut restored = omitted;
-    let value = ChannelPremise {
-        unread: Rest {
-            sender: "restored-sender",
-            ..rest()
-        },
-        ..complete.premises.channels[&head].clone()
-    };
+    let value = complete.premises.channels[&head].clone();
     restored
         .premises
         .channels

@@ -34,8 +34,10 @@ carry one trace-position witness record — deciding element identity, index,
 value path and trace position, each component present exactly as
 `ix://agent-ix/filament-specification/FR-351` states for the protocol family —
 imported byte-exactly from the accepted family-neutral separating-witness record
-carried on `native-run-result/2`, minted by `agent-ix/filament-specification#114`,
-under the `filament.protocol.result/v1-draft.2` contract version.
+carried on the protocol-analysis record of `native-run-result/2`
+(`ix://agent-ix/filament-specification/FR-352` "Protocol-analysis result") that
+FSL's `protocol-analysis` engine writes, under the
+`quire.protocol.result/v1-draft.2` contract version.
 
 ## Inputs
 
@@ -70,23 +72,28 @@ recomputing, reordering, substituting a default for an absent component, or
 supplying a display index refuses the result rather than repairing it, exactly
 as `ix://agent-ix/filament-specification/FR-351`-AC-5 requires of a strict reader.
 
-A settlement whose analysis backend cannot produce a `native-run-result/2`
-record settles `unsupported` with a warning naming the required capability.
+A settlement whose analysis backend returns no `native-run-result/2`
+protocol-analysis record for a decisive result settles `unsupported` with a
+warning naming the required capability, and carries no substitute witness. FSL's
+own engine writes that record for every `proved`, `refuted`, `inconclusive` and
+`unsupported` result, so its decisive results always carry their witness
+(FR-150-AC-17); this case is a backend that serves the kind without writing the
+record, such as a `refinement` backend, which FR-352 gives no protocol-analysis
+record.
 
-The carrying contract version is `filament.protocol.result/v1-draft.2`. A producer
+The carrying contract version is `quire.protocol.result/v1-draft.2`. A producer
 selects that identifier explicitly at production time and fixes it in the
 produced artifact; a consumer that requires the witness record selects and
 regenerates against `v1-draft.2`. This repository states the identifier under
 `ix://agent-ix/filament-specification/FR-352`'s cross-repo note, which assigns the
-`filament.protocol.result` draft-revision bump to `agent-ix/filament-protocol#96`;
+`quire.protocol.result` draft-revision bump to `agent-ix/filament-protocol#96`;
 the shape it carries stays `ix://agent-ix/filament-specification/FR-351`'s, and the
 `ix://agent-ix/filament-specification/FR-240` members it carries are otherwise
 unchanged.
 
-The physical schema and the reader and producer code that emit `v1-draft.2` land
-under `agent-ix/filament-protocol#80` once
-`ix://agent-ix/filament-specification/FR-351` is accepted. This requirement states
-target design only.
+FSL writes and reads the record (`ix://agent-ix/filament-specification/FR-352`); this
+repository carries the witness from it, byte-exactly, and states the contract
+version the carried result is produced under.
 
 ## Acceptance Criteria
 
@@ -95,8 +102,8 @@ target design only.
 | FR-302-AC-1 | Every `realizability` or `refinement` claim settled `decisive-witness` or `decisive-counterexample` carries exactly one trace-position witness whose deciding-element identity, value path and trace position byte-match the admitted separating-witness record, and whose index byte-matches that record where it assigns one. | Test (TC-148) |
 | FR-302-AC-2 | A settlement basis outside `decisive-witness`/`decisive-counterexample` carries no witness, and a decisive basis missing its witness refuses the result. | Test (TC-148) |
 | FR-302-AC-3 | Each carried component is copied byte-exactly from the admitted record and an absent component is carried as absence; normalizing, recomputing, reordering, substituting a default for absence, or supplying a display index refuses the result, exactly as `ix://agent-ix/filament-specification/FR-351`-AC-5 requires. | Test (TC-148) |
-| FR-302-AC-4 | A settlement whose analysis backend cannot produce a `native-run-result/2` record settles `unsupported` with a warning naming the required capability. | Test (TC-148) |
-| FR-302-AC-5 | The witness-bearing result carries contract version `filament.protocol.result/v1-draft.2`, selected explicitly at production and fixed in the artifact, and a consumer requiring the witness regenerates against that version. | Test (TC-148) |
+| FR-302-AC-4 | A decisive settlement whose analysis backend returns no `native-run-result/2` protocol-analysis record settles `unsupported` with a warning naming the required capability and carries no witness, while FSL's own engine, which writes the record, settles its decisive `realizability` result with the witness (FR-150-AC-17). | Test (TC-148) |
+| FR-302-AC-5 | The witness-bearing result carries contract version `quire.protocol.result/v1-draft.2`, selected explicitly at production and fixed in the artifact, and a consumer requiring the witness regenerates against that version. | Test (TC-148) |
 
 ## Adopted vocabulary
 
@@ -111,11 +118,11 @@ target design only.
 
 `agent-ix/filament-specification#114` mints `ix://agent-ix/filament-specification/FR-351`
 as the family-neutral separating-witness record shared by codegen,
-filament-verification and filament-protocol consumers, and
+quire-verification and filament-protocol consumers, and
 `ix://agent-ix/filament-specification/FR-352` as the `native-run-result/2` wire that
 carries it; exhausted and cancelled settlements carry no witness, and an
 `unsupported` settlement emits no substitute witness. FR-352's cross-repo note
-assigns this repository's own `filament.protocol.result` draft-revision bump to
+assigns this repository's own `quire.protocol.result` draft-revision bump to
 `agent-ix/filament-protocol#96`, the ticket this requirement lands under. This
 requirement defines this repository's carrier for that record and mints no
 shape of its own; `agent-ix/filament-protocol#80` lands the physical schema and the

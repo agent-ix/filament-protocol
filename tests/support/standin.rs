@@ -10,38 +10,31 @@ use std::cell::RefCell;
 use std::convert::Infallible;
 use std::rc::Rc;
 
-use filament_protocol::dispatch::{
-    Answer, BackendResult, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
-    ProtocolRequest, ProviderBoundary,
-};
-use filament_protocol::disposition::{FslBoundary, FslReport};
 use fsl_foundation::source::provenance::OccurrenceKey;
 use fsl_foundation::witness::{
     ObservationIdentity, RuntimeValuePath, ValuePathStep, ValuePathSubject,
 };
 use fsl_foundation::BackendId;
+use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
     InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TracePosition, Truth,
 };
 use fsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
 use fsl_semantics::check::Capability;
+use filament_protocol::dispatch::{
+    Answer, BackendResult, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
+    ProtocolRequest, ProviderBoundary,
+};
+use filament_protocol::disposition::{QslBoundary, QslReport};
 
 use super::dynamic::Dynamic;
 
-/// The channel components FSL's read view does not publish yet.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Rest {
-    pub sender: &'static str,
-    pub receiver: &'static str,
-    pub message_type: &'static str,
-}
-
 pub type Assumptions = &'static str;
-pub type Req = ProtocolRequest<Assumptions, Rest, &'static str>;
-pub type Bind = Binding<Assumptions, Rest, &'static str>;
+pub type Req = ProtocolRequest<Assumptions, &'static str>;
+pub type Bind = Binding<Assumptions, &'static str>;
 /// The unified claim a provider is asked about; these tests ask no
 /// composition or refinement, whose entries are therefore `()`.
-pub type Asked = Claim<Assumptions, Rest, &'static str, ()>;
+pub type Asked = Claim<Assumptions, &'static str, ()>;
 pub type Boundary = ProviderBoundary<'static, Asked, Answer<Sentinel, Infallible>>;
 
 /// The result a stand-in returns, with the parts the dispatcher reads.
@@ -51,6 +44,7 @@ pub struct Sentinel {
     pub truth: Truth,
     pub basis: SettlementBasis,
     pub witness: Option<SeparatingWitnessRecord>,
+    pub record: Option<ProtocolAnalysisRecord>,
     pub inconclusive: Option<InconclusiveCause>,
     pub artifact: Option<&'static str>,
 }
@@ -62,6 +56,7 @@ impl Sentinel {
             truth,
             basis,
             witness: None,
+            record: None,
             inconclusive: None,
             artifact: None,
         }
@@ -78,12 +73,15 @@ impl BackendResult for Sentinel {
     fn witness(&self) -> Option<&SeparatingWitnessRecord> {
         self.witness.as_ref()
     }
+    fn run_record(&self) -> Option<&ProtocolAnalysisRecord> {
+        self.record.as_ref()
+    }
     fn inconclusive(&self) -> Option<&InconclusiveCause> {
         self.inconclusive.as_ref()
     }
 }
 
-pub type Reply = Box<dyn Fn(&Bind) -> FslReport<Sentinel>>;
+pub type Reply = Box<dyn Fn(&Bind) -> QslReport<Sentinel>>;
 
 /// The calls a stand-in received.
 #[derive(Clone, Default)]
@@ -109,10 +107,10 @@ impl Standin {
     }
 }
 
-impl FslBoundary<Asked, Answer<Sentinel, Infallible>> for Standin {
-    fn report(&mut self, claim: &Asked) -> FslReport<Answer<Sentinel, Infallible>> {
+impl QslBoundary<Asked, Answer<Sentinel, Infallible>> for Standin {
+    fn report(&mut self, claim: &Asked) -> QslReport<Answer<Sentinel, Infallible>> {
         let Claim::Protocol(bound) = claim else {
-            return FslReport::Failed(None);
+            return QslReport::Failed(None);
         };
         self.calls.0.borrow_mut().push(bound.clone());
         (self.answer)(bound).map(Answer::Protocol)
@@ -153,15 +151,7 @@ pub fn serve(boundary: &mut Boundary, name: &str, kinds: &[Capability], answer: 
 
 /// An answer that returns `result` for every call.
 pub fn always(result: Sentinel) -> Reply {
-    Box::new(move |_| FslReport::Result(result.clone()))
-}
-
-pub fn rest() -> Rest {
-    Rest {
-        sender: "S",
-        receiver: "R",
-        message_type: "Notice",
-    }
+    Box::new(move |_| QslReport::Result(result.clone()))
 }
 
 /// A request over the fragment of the channels `channels` and roles `S`, `R`,
@@ -192,7 +182,6 @@ pub fn request(dynamic: &Dynamic, kind: ProtocolClaimKind, channels: &[&str]) ->
                     let premise = ChannelPremise {
                         ordering: declared.ordering.clone(),
                         delivery: declared.delivery,
-                        unread: rest(),
                     };
                     (node, premise)
                 })

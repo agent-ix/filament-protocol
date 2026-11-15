@@ -9,52 +9,13 @@ mod support {
     pub mod realizability;
 }
 
-use std::convert::Infallible;
-
-use filament_protocol::dispatch::{
-    dispatch, Answer, BackendResult, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
-};
-use filament_protocol::disposition::ClaimSettlement;
-use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, FslEngine};
-use fsl_analyze::protocol_analysis::manifest::BACKEND_ID;
+use ix_trace_rs::trace;
 use fsl_analyze::protocol_analysis::ProtocolAnalysisArtifact;
 use fsl_replay::protocol_analysis::{AnalysisOutcome, RealizabilityCounterexample};
 use fsl_replay::{SettlementBasis, Truth};
-use fsl_route::ProviderOrigin;
-use ix_trace_rs::trace;
-use support::projection::{claim_of, Asked, CANCELLED, PICK};
-use support::realizability::Realizability;
-
-fn settle(fixture: &Realizability) -> EngineResult {
-    let mut boundary: ProviderBoundary<'_, Asked, Answer<EngineResult, Infallible>> =
-        ProviderBoundary::new();
-    let engine = FslEngine::new(fixture.package(), |_: &Binding<(), (), ()>| {
-        EngineRequest::Realizability(Box::new(fixture.request()))
-    })
-    .expect("FSL's linked engines register");
-    boundary
-        .register(
-            engine_descriptor(ProviderOrigin::Linked).expect("FSL's own descriptor"),
-            engine,
-        )
-        .expect("the registration is accepted");
-    let asked = claim_of(
-        ProtocolClaimKind::Realizability,
-        fixture.linked(),
-        fixture.clause(),
-        |form, name| fixture.named(form, name),
-    );
-    match dispatch(&mut boundary, fixture.linked().declarations(), &asked) {
-        ProtocolOutcome::Settled(ClaimSettlement::Result { result, premises }) => {
-            assert_eq!(
-                premises.selected.as_ref().map(|id| id.as_str()),
-                Some(BACKEND_ID)
-            );
-            result
-        }
-        other => panic!("the engine decides the claim: {other:?}"),
-    }
-}
+use filament_protocol::dispatch::BackendResult;
+use support::projection::{CANCELLED, PICK};
+use support::realizability::{settle, Realizability};
 
 #[test]
 #[trace("TC-166", "FR-150-AC-16")]
