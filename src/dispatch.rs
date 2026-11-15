@@ -17,14 +17,14 @@
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 
+use filament_contract_model::CheckedNodeId;
+use filament_semantic_value::catalog::CatalogCode;
 use fsl_foundation::BackendId;
 use fsl_package::protocol_view::Delivery;
 use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{InconclusiveCause, ItemLabel, SeparatingWitnessRecord, SettlementBasis, Truth};
 use fsl_route::{BackendDescriptor, Candidate, CandidateOutcome, RegistrationRefusal, Registry};
 use fsl_semantics::check::Capability;
-use filament_contract_model::CheckedNodeId;
-use filament_semantic_value::catalog::CatalogCode;
 
 use crate::assume_guarantee::{
     AssumeGuaranteeBinding, AssumeGuaranteeRequest, AssumeGuaranteeResult, IdentityMismatch,
@@ -32,7 +32,7 @@ use crate::assume_guarantee::{
 };
 use crate::declarations::{ChannelDeclaration, Declarations, Ordering, RoleDeclaration};
 use crate::disposition::{
-    settle_claim, ClaimSettlement, Disposition, QslBoundary, UnsupportedCause,
+    settle_claim, ClaimSettlement, Disposition, FslBoundary, UnsupportedCause,
     UnsupportedDisposition, Warning,
 };
 use crate::refusal::ProtocolCauseKind;
@@ -328,7 +328,7 @@ pub enum RegistrationError {
 }
 
 /// The call into one registered backend.
-type Provider<'p, K, R> = Box<dyn QslBoundary<K, R> + 'p>;
+type Provider<'p, K, R> = Box<dyn FslBoundary<K, R> + 'p>;
 
 /// The provider boundary: FSL's registry, and the call into each backend
 /// registered in it. A caller supplies no callback per request. `K` is the
@@ -374,7 +374,7 @@ impl<'p, K, R> ProviderBoundary<'p, K, R> {
     pub fn register(
         &mut self,
         descriptor: BackendDescriptor,
-        provider: impl QslBoundary<K, R> + 'p,
+        provider: impl FslBoundary<K, R> + 'p,
     ) -> Result<(), RegistrationError> {
         let id = descriptor.id().clone();
         match self.registry.register(descriptor) {
@@ -486,7 +486,7 @@ pub fn bind<A: Clone, I: Clone>(
 /// The contract version a result that carries a witness is produced under
 /// (FR-302-AC-5). A producer selects it explicitly; it is never inferred from
 /// the record.
-pub const WITNESS_RESULT_CONTRACT: &str = "quire.protocol.result/v1-draft.2";
+pub const WITNESS_RESULT_CONTRACT: &str = "filament.protocol.result/v1-draft.2";
 
 /// The contract version `result` is produced under: the witness-bearing
 /// version when it has a `native-run-result/2` record, and none otherwise.

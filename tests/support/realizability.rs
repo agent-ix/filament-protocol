@@ -427,13 +427,13 @@ pub fn refuted_record() -> (
 pub fn settle(fixture: &Realizability) -> filament_protocol::engine::EngineResult {
     use std::convert::Infallible;
 
-    use fsl_analyze::protocol_analysis::manifest::BACKEND_ID;
-    use fsl_route::ProviderOrigin;
     use filament_protocol::dispatch::{
         dispatch, Answer, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
     };
     use filament_protocol::disposition::ClaimSettlement;
-    use filament_protocol::engine::{engine_descriptor, EngineRequest, QslEngine};
+    use filament_protocol::engine::{engine_descriptor, EngineRequest, FslEngine};
+    use fsl_analyze::protocol_analysis::manifest::BACKEND_ID;
+    use fsl_route::ProviderOrigin;
 
     use super::projection::{claim_of, Asked};
 
@@ -442,7 +442,7 @@ pub fn settle(fixture: &Realizability) -> filament_protocol::engine::EngineResul
         Asked,
         Answer<filament_protocol::engine::EngineResult, Infallible>,
     > = ProviderBoundary::new();
-    let engine = QslEngine::new(fixture.package(), |_: &Binding<(), ()>| {
+    let engine = FslEngine::new(fixture.package(), |_: &Binding<(), ()>| {
         EngineRequest::Realizability(Box::new(fixture.request()))
     })
     .expect("FSL's linked engines register");

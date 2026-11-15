@@ -10,6 +10,11 @@ use std::cell::RefCell;
 use std::convert::Infallible;
 use std::rc::Rc;
 
+use filament_protocol::dispatch::{
+    Answer, BackendResult, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
+    ProtocolRequest, ProviderBoundary,
+};
+use filament_protocol::disposition::{FslBoundary, FslReport};
 use fsl_foundation::source::provenance::OccurrenceKey;
 use fsl_foundation::witness::{
     ObservationIdentity, RuntimeValuePath, ValuePathStep, ValuePathSubject,
@@ -21,11 +26,6 @@ use fsl_replay::{
 };
 use fsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
 use fsl_semantics::check::Capability;
-use filament_protocol::dispatch::{
-    Answer, BackendResult, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
-    ProtocolRequest, ProviderBoundary,
-};
-use filament_protocol::disposition::{QslBoundary, QslReport};
 
 use super::dynamic::Dynamic;
 
@@ -81,7 +81,7 @@ impl BackendResult for Sentinel {
     }
 }
 
-pub type Reply = Box<dyn Fn(&Bind) -> QslReport<Sentinel>>;
+pub type Reply = Box<dyn Fn(&Bind) -> FslReport<Sentinel>>;
 
 /// The calls a stand-in received.
 #[derive(Clone, Default)]
@@ -107,10 +107,10 @@ impl Standin {
     }
 }
 
-impl QslBoundary<Asked, Answer<Sentinel, Infallible>> for Standin {
-    fn report(&mut self, claim: &Asked) -> QslReport<Answer<Sentinel, Infallible>> {
+impl FslBoundary<Asked, Answer<Sentinel, Infallible>> for Standin {
+    fn report(&mut self, claim: &Asked) -> FslReport<Answer<Sentinel, Infallible>> {
         let Claim::Protocol(bound) = claim else {
-            return QslReport::Failed(None);
+            return FslReport::Failed(None);
         };
         self.calls.0.borrow_mut().push(bound.clone());
         (self.answer)(bound).map(Answer::Protocol)
@@ -151,7 +151,7 @@ pub fn serve(boundary: &mut Boundary, name: &str, kinds: &[Capability], answer: 
 
 /// An answer that returns `result` for every call.
 pub fn always(result: Sentinel) -> Reply {
-    Box::new(move |_| QslReport::Result(result.clone()))
+    Box::new(move |_| FslReport::Result(result.clone()))
 }
 
 /// A request over the fragment of the channels `channels` and roles `S`, `R`,

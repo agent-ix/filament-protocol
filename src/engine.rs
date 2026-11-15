@@ -9,6 +9,8 @@
 //! engine wrote it. A report FSL gives no result for stays the typed
 //! `unsupported` path of FR-153.
 
+use filament_contract_model::CheckedPackageV2;
+use filament_exact::Cancel;
 use fsl_analyze::analyze::{
     analyze_items, AnalyzeRecord, Disposed, DispositionKind, Engines, Settlement,
 };
@@ -26,11 +28,9 @@ use fsl_replay::{
     InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TerminalValue, Truth,
 };
 use fsl_route::{BackendDescriptor, ProviderOrigin, RegistrationRefusal};
-use filament_contract_model::CheckedPackageV2;
-use filament_exact::Cancel;
 
 use crate::dispatch::{Answer, BackendResult, Binding, Claim, ProtocolClaimKind};
-use crate::disposition::{QslBoundary, QslReport, UnsupportedCause};
+use crate::disposition::{FslBoundary, FslReport, UnsupportedCause};
 
 /// The request the caller states for one claim, in the engine's own request
 /// type. The key members and the run budget are the caller's to state; FSL
@@ -44,7 +44,7 @@ pub enum EngineRequest<'p> {
 
 /// FSL's engine descriptor, to register at the
 /// [`ProviderBoundary`](crate::dispatch::ProviderBoundary) beside
-/// [`QslEngine`].
+/// [`FslEngine`].
 ///
 /// # Errors
 ///
@@ -146,14 +146,14 @@ impl BackendResult for EngineResult {
 
 /// FSL's protocol analysis engine as a provider. `supply` states the engine's
 /// request for each bound claim; the engine decides it.
-pub struct QslEngine<'p, S> {
+pub struct FslEngine<'p, S> {
     engines: Engines,
     cancel: Cancel,
     package: &'p CheckedPackageV2,
     supply: S,
 }
 
-impl<'p, S> QslEngine<'p, S> {
+impl<'p, S> FslEngine<'p, S> {
     /// The provider over `package`, running FSL's linked engines.
     ///
     /// # Errors
@@ -161,7 +161,7 @@ impl<'p, S> QslEngine<'p, S> {
     /// FSL's registry refusal of an engine's own manifest.
     pub fn new(package: &'p CheckedPackageV2, supply: S) -> Result<Self, RegistrationRefusal> {
         Ok(Self {
-            engines: Engines::qsl()?,
+            engines: Engines::fsl()?,
             cancel: Cancel::new(),
             package,
             supply,
@@ -170,13 +170,13 @@ impl<'p, S> QslEngine<'p, S> {
 }
 
 /// A report FSL gives no result for, with FSL's own diagnostic carried.
-fn without_result<R>(record: &AnalyzeRecord) -> QslReport<R> {
+fn without_result<R>(record: &AnalyzeRecord) -> FslReport<R> {
     match &record.settlement {
         Settlement::Disposed(Disposed {
             kind: DispositionKind::Unsupported,
             diagnostic,
             ..
-        }) => QslReport::Unsupported {
+        }) => FslReport::Unsupported {
             cause: diagnostic
                 .as_ref()
                 .map_or_else(UnsupportedCause::requested_capability, |found| {
@@ -190,30 +190,30 @@ fn without_result<R>(record: &AnalyzeRecord) -> QslReport<R> {
             kind: DispositionKind::InvalidRequest,
             diagnostic: Some(found),
             ..
-        }) => QslReport::Refusal(found.code),
+        }) => FslReport::Refusal(found.code),
         // A `Disposed` record holds no domain, so a requires-bound outcome
         // cannot be rebuilt from it: it is reported as FSL's own diagnostic
         // on a failure, never as a result.
         Settlement::Disposed(Disposed { diagnostic, .. }) => {
-            QslReport::Failed(diagnostic.as_ref().map(|found| found.code))
+            FslReport::Failed(diagnostic.as_ref().map(|found| found.code))
         }
         Settlement::Terminal(terminal) => match terminal.value() {
             TerminalValue::Declined { .. } => terminal
                 .diagnostic()
-                .map_or(QslReport::Failed(None), QslReport::Refusal),
-            _ => QslReport::Failed(terminal.diagnostic()),
+                .map_or(FslReport::Failed(None), FslReport::Refusal),
+            _ => FslReport::Failed(terminal.diagnostic()),
         },
     }
 }
 
-impl<'p, A, I, T, Q, S> QslBoundary<Claim<A, I, T>, Answer<EngineResult, Q>> for QslEngine<'p, S>
+impl<'p, A, I, T, Q, S> FslBoundary<Claim<A, I, T>, Answer<EngineResult, Q>> for FslEngine<'p, S>
 where
     S: FnMut(&Binding<A, I>) -> EngineRequest<'p>,
 {
-    fn report(&mut self, claim: &Claim<A, I, T>) -> QslReport<Answer<EngineResult, Q>> {
+    fn report(&mut self, claim: &Claim<A, I, T>) -> FslReport<Answer<EngineResult, Q>> {
         let Claim::Protocol(binding) = claim else {
             // Composition and refinement are not this engine's kinds.
-            return QslReport::Unsupported {
+            return FslReport::Unsupported {
                 cause: UnsupportedCause::requested_capability(),
                 construct: None,
             };
@@ -227,17 +227,17 @@ where
             (EngineRequest::Realizability(request), ProtocolClaimKind::Realizability) => {
                 realizability_item(index, self.package, *request)
             }
-            _ => return QslReport::Failed(None),
+            _ => return FslReport::Failed(None),
         };
         let mut records = analyze_items(&self.engines, vec![item], &self.cancel);
         let Some(record) = records.pop() else {
-            return QslReport::Failed(None);
+            return FslReport::Failed(None);
         };
         if record.protocol_analysis.is_none() {
             return without_result(&record);
         }
-        EngineResult::of(record).map_or(QslReport::Failed(None), |result| {
-            QslReport::Result(Answer::Protocol(result))
+        EngineResult::of(record).map_or(FslReport::Failed(None), |result| {
+            FslReport::Result(Answer::Protocol(result))
         })
     }
 }

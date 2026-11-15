@@ -9,11 +9,11 @@ mod support {
     pub mod realizability;
 }
 
-use ix_trace_rs::trace;
+use filament_protocol::dispatch::BackendResult;
 use fsl_analyze::protocol_analysis::ProtocolAnalysisArtifact;
 use fsl_replay::protocol_analysis::{AnalysisOutcome, RealizabilityCounterexample};
 use fsl_replay::{SettlementBasis, Truth};
-use filament_protocol::dispatch::BackendResult;
+use ix_trace_rs::trace;
 use support::projection::{CANCELLED, PICK};
 use support::realizability::{settle, Realizability};
 

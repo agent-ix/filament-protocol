@@ -8,19 +8,19 @@ mod support {
     pub mod standin;
 }
 
-use ix_trace_rs::trace;
+use filament_protocol::declarations::Ordering;
+use filament_protocol::dispatch::{
+    dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal,
+    ProtocolClaimKind, ProtocolOutcome,
+};
+use filament_protocol::disposition::{ClaimSettlement, Disposition, FslReport};
 use fsl_eval::simulation::RequiresBound;
 use fsl_foundation::bound::{DomainKey, DomainKind};
 use fsl_package::protocol_view::Delivery;
 use fsl_replay::{InconclusiveCause, SettlementBasis, Truth};
 use fsl_semantics::check::Capability;
 use fsl_semantics::family::ClaimExtent;
-use filament_protocol::declarations::Ordering;
-use filament_protocol::dispatch::{
-    dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal,
-    ProtocolClaimKind, ProtocolOutcome,
-};
-use filament_protocol::disposition::{ClaimSettlement, Disposition, QslReport};
+use ix_trace_rs::trace;
 use support::dynamic::Dynamic;
 use support::standin::{always, request, serve, Boundary, Sentinel};
 
@@ -211,7 +211,7 @@ fn inconclusive_and_requires_bound_are_carried_and_hold_no_decided_truth() {
         &mut boundary,
         "backend",
         &[Capability::Realizability],
-        Box::new(move |_| QslReport::RequiresBound {
+        Box::new(move |_| FslReport::RequiresBound {
             outcome: reported.clone(),
             construct: None,
         }),

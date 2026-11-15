@@ -7,10 +7,6 @@
 
 use std::convert::Infallible;
 
-use fsl_analyze::protocol_analysis::ProjectionRequest;
-use fsl_foundation::witness::ObservationIdentity;
-use fsl_replay::protocol_analysis::{AssessedRootDraft, ProjectionBoundsDraft, RunBudget};
-use fsl_route::ProviderOrigin;
 use filament_contract_model::CheckedNodeId;
 use filament_exact::{
     EffectiveId, NodeKey, ObjectId, ObjectReference, OriginalDeclarationKey, PathSegment,
@@ -20,8 +16,12 @@ use filament_protocol::dispatch::{
     dispatch, Answer, Binding, ChannelPremise, Claim, Fragment, Premises, ProtocolClaimKind,
     ProtocolOutcome, ProtocolRequest, ProviderBoundary,
 };
-use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, QslEngine};
+use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, FslEngine};
 use filament_protocol::link::LinkedProtocol;
+use fsl_analyze::protocol_analysis::ProjectionRequest;
+use fsl_foundation::witness::ObservationIdentity;
+use fsl_replay::protocol_analysis::{AssessedRootDraft, ProjectionBoundsDraft, RunBudget};
+use fsl_route::ProviderOrigin;
 
 use super::dynamic::Dynamic;
 
@@ -48,7 +48,7 @@ pub const CANCELLED: &str = "send Cn via Cancelled as (c: CancelMsg) { true };\n
 pub fn worked(ship: &str, cancel: &str) -> Dynamic {
     Dynamic::from_source(&format!(
         "language \"ix:native\" edition \"1-draft\";\n\
-         profile pp = \"quire.protocol.finite-global/v1\";\n\
+         profile pp = \"filament.protocol.finite-global/v1\";\n\
          model M = \"agent-ix/checked-handoff\";\n\
          {RECORDS}protocol Flow using pp over (input: M::Workflow) on origin {{\n{MEMBERS}\n\
          run sequence Main {{\n\
@@ -140,7 +140,7 @@ pub fn boundary<'p>(
     profile: &'static str,
 ) -> Boundary<'p> {
     let mut boundary = Boundary::new();
-    let engine = QslEngine::new(dynamic.package(), move |_: &Binding<(), ()>| {
+    let engine = FslEngine::new(dynamic.package(), move |_: &Binding<(), ()>| {
         EngineRequest::Projection(Box::new(ProjectionRequest {
             protocol: dynamic.clause().clone(),
             definition_key: Some("ix://test/Flow".to_owned()),

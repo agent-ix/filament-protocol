@@ -12,15 +12,15 @@ mod support {
     pub mod standin;
 }
 
-use ix_trace_rs::trace;
-use fsl_replay::{DecidingElement, SettlementBasis, Truth};
-use fsl_semantics::check::Capability;
 use filament_exact::{Integer, Value};
 use filament_protocol::dispatch::{
     dispatch, result_contract, BackendResult, DispositionRefusal, ProtocolClaimKind,
     ProtocolOutcome, WITNESS_RESULT_CONTRACT,
 };
 use filament_protocol::disposition::{ClaimSettlement, Disposition, Warning};
+use fsl_replay::{DecidingElement, SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
+use ix_trace_rs::trace;
 use support::dynamic::Dynamic;
 use support::projection::{CANCELLED, PICK};
 use support::realizability::{refuted_record, settle, Realizability};
@@ -182,7 +182,7 @@ fn a_backend_that_writes_no_record_settles_unsupported_with_a_warning() {
 #[test]
 #[trace("TC-148", "FR-302-AC-5")]
 fn a_witness_bearing_result_is_produced_under_the_draft_two_contract() {
-    assert_eq!(WITNESS_RESULT_CONTRACT, "quire.protocol.result/v1-draft.2");
+    assert_eq!(WITNESS_RESULT_CONTRACT, "filament.protocol.result/v1-draft.2");
     let fixture = Realizability::worked(PICK, "");
     let result = settle(&fixture);
     assert_eq!(result_contract(&result), Some(WITNESS_RESULT_CONTRACT));

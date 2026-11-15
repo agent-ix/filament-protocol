@@ -11,8 +11,8 @@ mod support {
     pub mod realizability;
 }
 
-use ix_trace_rs::trace;
 use filament_contract_model::{CheckedPackageDispatchResult, CheckedPackageRefusalCode};
+use ix_trace_rs::trace;
 use serde_json::Value;
 use support::projection::{CANCELLED, PICK};
 use support::realizability::Realizability;
