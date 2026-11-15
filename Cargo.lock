@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "agent-ix-extraction-frontend"
 version = "0.2.1"
-source = "git+https://github.com/agent-ix/filament-core-data?branch=main#dd3485073737e6a892b96042123fe2ad4acfe1e9"
+source = "git+https://github.com/agent-ix/filament-core-data?branch=main#d7a9b7b60527b9640001acfb6fc8fdb5a9875a8f"
 dependencies = [
  "agent-ix-semantic-ir",
  "clap",
@@ -17,12 +17,12 @@ dependencies = [
 [[package]]
 name = "agent-ix-semantic-ir"
 version = "0.1.1"
-source = "git+https://github.com/agent-ix/filament-core-data?branch=main#dd3485073737e6a892b96042123fe2ad4acfe1e9"
+source = "git+https://github.com/agent-ix/filament-core-data?branch=main#d7a9b7b60527b9640001acfb6fc8fdb5a9875a8f"
 
 [[package]]
 name = "agent-ix-semantic-schema"
 version = "0.3.0"
-source = "git+https://github.com/agent-ix/filament-core-data?branch=main#dd3485073737e6a892b96042123fe2ad4acfe1e9"
+source = "git+https://github.com/agent-ix/filament-core-data?branch=main#d7a9b7b60527b9640001acfb6fc8fdb5a9875a8f"
 
 [[package]]
 name = "ahash"
@@ -488,7 +488,7 @@ dependencies = [
 [[package]]
 name = "filament-exact"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-exact?branch=main#8b7b1efb477f716486e66df3e2a4f2b96e115528"
+source = "git+https://github.com/agent-ix/filament-exact?branch=main#9308a3b5c3bc96c260b26e46828c8589cf8861b2"
 dependencies = [
  "allocator-api2",
  "arrayvec",
@@ -505,7 +505,7 @@ dependencies = [
 [[package]]
 name = "filament-observation"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-observation?branch=fsl-rename#ac896dc316cf8c9790cc9ee4f6417a422954214a"
+source = "git+https://github.com/agent-ix/filament-observation?branch=main#0b4543ace1250739960939a993792d7d5a967a4d"
 dependencies = [
  "filament-exact",
  "fsl-foundation",
@@ -559,7 +559,7 @@ dependencies = [
 [[package]]
 name = "filament-spec-language"
 version = "0.2.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "filament-checked",
  "filament-contract-model",
@@ -666,7 +666,7 @@ dependencies = [
 [[package]]
 name = "fsl-analyze"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "filament-checked",
  "filament-contract-model",
@@ -691,7 +691,7 @@ dependencies = [
 [[package]]
 name = "fsl-cst"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "filament-exact",
  "fsl-foundation",
@@ -703,7 +703,7 @@ dependencies = [
 [[package]]
 name = "fsl-eval"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "filament-checked",
  "filament-eval",
@@ -722,7 +722,7 @@ dependencies = [
 [[package]]
 name = "fsl-forms"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "filament-exact",
  "filament-semantic-value",
@@ -735,7 +735,7 @@ dependencies = [
 [[package]]
 name = "fsl-foundation"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "filament-exact",
  "filament-semantic-value",
@@ -750,7 +750,7 @@ dependencies = [
 [[package]]
 name = "fsl-package"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "filament-checked",
  "filament-contract-model",
@@ -768,7 +768,7 @@ dependencies = [
 [[package]]
 name = "fsl-replay"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "base64 0.22.1",
  "filament-checked",
@@ -795,7 +795,7 @@ dependencies = [
 [[package]]
 name = "fsl-route"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "filament-checked",
  "filament-exact",
@@ -809,7 +809,7 @@ dependencies = [
 [[package]]
 name = "fsl-semantics"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-spec-language?branch=fsl-rename#726510670658adcd163980eb467ee4ff71bcf20d"
+source = "git+https://github.com/agent-ix/filament-spec-language?branch=main#c51fbdc3bdeb18464f2255ab053ff037d35b5108"
 dependencies = [
  "agent-ix-extraction-frontend",
  "agent-ix-semantic-ir",
