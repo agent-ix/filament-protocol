@@ -372,7 +372,7 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-025 finite replay | TC-167; TC-008 | Partial: a rebuilt history gives the same dynamic-axis result; no test replays a serialized trace, and the whole-result replay is retired with FR-006 |
 | V1-PROT-026 global conformance | passthrough only (TC-165 AC-15) | Blocked: FR-004 composes FR-026, FR-027, FR-028 and FR-041, all retired with the evaluator (FSL-1549) and with no successor requirement, so nothing here produces a global-conformance result to test |
 | V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on FSL's engine |
-| V1-PROT-028 realizability | FR-150 (TC-166, TC-172, TC-173) | Backed on FSL's engine; witness carrier FR-302 is batch D |
+| V1-PROT-028 realizability | FR-150 (TC-166, TC-172, TC-173) | Backed on FSL's engine; the witness is carried unchanged (FR-302) |
 | V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204, TC-173) | Decided in `src/composition.rs`; no backend. TC-173 runs the corpus over three separately compiled protocols, guarantee labels taken from FSL's realizability results; the stronger-assumption refinement criteria (FR-204 AC-4..AC-7) wait on FSL |
 | V1-PROT-030 refinement | FR-202, FR-204; FR-301 (TC-147, TC-173) | Decided in `src/refinement.rs` over systems built from FSL's protocol step view (FSL FR-578) |
 | V1-PROT-031 no external effects | FR-025 (TC-003, TC-009) | Backed |
