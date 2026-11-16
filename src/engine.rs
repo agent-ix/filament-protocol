@@ -206,11 +206,11 @@ fn without_result<R>(record: &AnalyzeRecord) -> FslReport<R> {
     }
 }
 
-impl<'p, A, I, S> FslBoundary<Binding<A, I>, EngineResult> for FslEngine<'p, S>
+impl<'p, A, S> FslBoundary<Binding<A>, EngineResult> for FslEngine<'p, S>
 where
-    S: FnMut(&Binding<A, I>) -> EngineRequest<'p>,
+    S: FnMut(&Binding<A>) -> EngineRequest<'p>,
 {
-    fn report(&mut self, binding: &Binding<A, I>) -> FslReport<EngineResult> {
+    fn report(&mut self, binding: &Binding<A>) -> FslReport<EngineResult> {
         let index = RequestIndex::new(0);
         // The request the caller supplies must be the claim's own kind.
         let item = match ((self.supply)(binding), binding.request.kind) {

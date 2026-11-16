@@ -120,7 +120,7 @@ fn an_omitted_premise_refuses_only_that_disposition_and_calls_no_backend() {
     no_role.premises.roles.remove(&role);
     let (mut boundary, calls) = serving();
     let declarations = dynamic.linked().declarations();
-    let settled = dispatch_claims::<_, _, _, CheckedNodeId, _>(
+    let settled = dispatch_claims::<_, _, CheckedNodeId, _>(
         &mut boundary,
         declarations,
         &[],
@@ -300,7 +300,7 @@ fn a_requester_premise_that_disagrees_with_the_package_is_refused_alone() {
         Delivery::AtMostOnce
     };
     let (mut boundary, calls) = serving();
-    let settled = dispatch_claims::<_, _, _, CheckedNodeId, _>(
+    let settled = dispatch_claims::<_, _, CheckedNodeId, _>(
         &mut boundary,
         dynamic.linked().declarations(),
         &[],
@@ -327,7 +327,7 @@ fn a_requester_premise_that_disagrees_with_the_package_is_refused_alone() {
 
 #[test]
 #[trace("TC-161", "FR-151-AC-9")]
-fn each_role_internality_reaches_the_backend_as_the_binding_states_it() {
+fn each_role_internality_is_the_bindings_own_and_an_omitted_one_is_refused() {
     let dynamic = Dynamic::with("workflow", 3);
     let mut asked = request(&dynamic, KIND, &["Head"]);
     let sender = dynamic.named("role", "S");
@@ -346,15 +346,14 @@ fn each_role_internality_reaches_the_backend_as_the_binding_states_it() {
     let [call] = received.as_slice() else {
         panic!("one call");
     };
-    // The checked role declarations carry no internality: what the backend
-    // holds per role is exactly the binding's own, mixed, value.
     assert_eq!(call.request.premises.roles[&sender], Internality::Internal);
     assert_eq!(
         call.request.premises.roles[&receiver],
         Internality::External
     );
-    assert_ne!(Internality::Internal, Internality::External);
-    // A binding that omits it is refused; none is read from the package.
+    // The checked role declarations carry no internality: it is read only
+    // from the binding, so a role the binding omits is refused with no
+    // backend call, never defaulted from the package.
     asked.premises.roles.remove(&receiver);
     let (mut boundary, calls) = serving();
     let outcome = dispatch(&mut boundary, dynamic.linked().declarations(), &asked);

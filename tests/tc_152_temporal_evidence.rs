@@ -415,11 +415,13 @@ fn instance_valuations_cross_the_retained_surface_to_fsls_call() {
     }
 }
 
-/// FR-046-AC-7: the clause of the `instance_bound` kind reads an atom of the
-/// trigger's binder, so FSL's evidence call reads that atom from
-/// `Position.instance_valuations[trigger][atom]` and nowhere else: a true
-/// entry, a false entry and an absent entry give three different records, and
-/// the absent one is a missing valuation naming the instance.
+/// FR-046-AC-7: the clause of the `instance_bound` kind is `on each`, so its
+/// atom (which reads the `over` binder `view`, not the capture or the `on each`
+/// binder) is instance-bound and FSL's evidence call reads it from
+/// `Position.instance_valuations[trigger][atom]`: a true entry, a false entry
+/// and an absent entry give three different records, the absent one is a
+/// missing valuation naming the instance, and a shared valuation for the same
+/// atom is ignored.
 #[test]
 #[trace("FR-046-AC-7", "TC-152")]
 fn the_evaluation_reads_the_instance_valuation_of_the_trigger() {
@@ -460,6 +462,16 @@ fn the_evaluation_reads_the_instance_valuation_of_the_trigger() {
     let held = record(Some(Valuation::True));
     let broken = record(Some(Valuation::False));
     let absent = record(None);
+    // A shared valuation for the atom is not read: the instance entry decides.
+    let mut shared_true = asked(Some(Valuation::False));
+    for position in &mut shared_true.positions {
+        position.valuations = BTreeMap::from([(0, Valuation::True)]);
+    }
+    assert_eq!(
+        assess(&evidence, clause, &shared_true, &mut unlimited()).expect("record"),
+        broken,
+        "a shared valuation does not stand in for the instance's"
+    );
     assert_eq!(held.activation, ActivationState::Active);
     assert_eq!(held.truth, Some(fsl_eval::temporal::evidence::Truth::True));
     assert_eq!(

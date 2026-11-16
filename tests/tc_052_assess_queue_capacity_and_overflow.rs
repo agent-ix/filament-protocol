@@ -382,7 +382,7 @@ fn a_fact_naming_no_declared_channel_refuses_the_history() {
 }
 
 #[test]
-#[trace("TC-052", "FR-054-AC-5")]
+#[trace("TC-052", "FR-054-AC-10")]
 fn a_symbolic_capacity_is_carried_unchanged_through_link_and_dispatch_not_stepped() {
     let dynamic = Dynamic::with("workflow", 3);
     let declarations = dynamic.linked().declarations();

@@ -9,8 +9,10 @@ use filament_protocol::compensation::algebra::{
     Registry,
 };
 use filament_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
-use filament_protocol::compensation::recovery::{Limits as RecoveryLimits, PopulationRequirement};
-use filament_protocol::ids::{AttemptId, DefinitionId, EffectId};
+use filament_protocol::compensation::recovery::{
+    InvalidInput, Limits as RecoveryLimits, PopulationRequirement, Refusal, RelationSelection,
+};
+use filament_protocol::ids::{AttemptId, DefinitionId, EffectId, RecoveryId};
 use ix_trace_rs::trace;
 
 struct Pure;
@@ -57,7 +59,17 @@ fn ledger(effects: &[Option<&str>], members: &[&str]) -> AttemptLedger {
             RecoveryLimits::owner_max(),
         )
         .expect("declared population");
-        ledger = ledger.with_population(population);
+        let relation = RelationSelection::new(
+            RecoveryId::new(b"recovery:refund", "recovery"),
+            registration.identity.clone(),
+            b"target:refund".as_slice(),
+            b"relation:refund-parts".as_slice(),
+            b"authored".as_slice(),
+            Some(population),
+            RecoveryLimits::owner_max(),
+        )
+        .expect("selected relation");
+        ledger = ledger.with_population(&relation);
     }
     for (number, established) in effects.iter().enumerate() {
         ledger.admit(
@@ -113,7 +125,7 @@ fn a_member_named_twice_is_replay_and_retained_once() {
 
 #[test]
 #[trace("TC-176", "FR-023-AC-7")]
-fn effects_outside_the_population_still_collide_as_duplicates() {
+fn effects_outside_the_population_are_recorded_as_outside_never_as_members() {
     let facts = ledger(
         &[
             Some("refund-1"),
@@ -127,16 +139,28 @@ fn effects_outside_the_population_still_collide_as_duplicates() {
     let dispositions: Vec<_> = facts.iter().map(|fact| fact.disposition).collect();
     assert_eq!(
         dispositions,
-        [None, None, None, Some(EffectDisposition::Duplicate)],
-        "members are related effects; the first stray claims the singleton, the second collides"
+        [
+            None,
+            Some(EffectDisposition::OutsidePopulation),
+            None,
+            Some(EffectDisposition::OutsidePopulation)
+        ],
+        "membership is unknown for a stray: it is never a member and never a duplicate"
     );
-    assert_eq!(facts[3].effect, effect("stray-2"));
+    assert_eq!(facts[1].effect, effect("stray-1"));
 }
 
 #[test]
 #[trace("TC-176", "FR-023-AC-7")]
 fn a_population_with_no_member_or_a_repeated_member_is_refused() {
-    for members in [vec![], vec![effect("refund-1"), effect("refund-1")]] {
+    let cases = [
+        (vec![], InvalidInput::EmptyValue),
+        (
+            vec![effect("refund-1"), effect("refund-1")],
+            InvalidInput::DuplicatePopulationMember,
+        ),
+    ];
+    for (members, cause) in cases {
         let refused = PopulationRequirement::new(
             "population:partial-refunds",
             "membership-rule:refund-parts",
@@ -144,8 +168,9 @@ fn a_population_with_no_member_or_a_repeated_member_is_refused() {
             members,
             RecoveryLimits::owner_max(),
         );
-        assert!(
-            refused.is_err(),
+        assert_eq!(
+            refused.err(),
+            Some(Refusal::Invalid(cause)),
             "an unknown membership is not a population"
         );
     }

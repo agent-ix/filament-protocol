@@ -249,7 +249,7 @@ fn each_backend_cause_is_carried_in_the_backends_vocabulary_and_no_other_is_call
 #[trace("TC-160", "FR-150-AC-6")]
 fn a_failed_backend_fails_exactly_its_claim_and_no_other_backend_is_called() {
     let dynamic = Dynamic::with("workflow", 3);
-    let claims = |dynamic: &Dynamic| -> Vec<ClaimRequest<&'static str, _, _, _>> {
+    let claims = |dynamic: &Dynamic| -> Vec<ClaimRequest<&'static str, _, _>> {
         [&["Head"][..], &["Reject"][..], &["Tail"][..]]
             .into_iter()
             .map(|channels| {
@@ -280,7 +280,7 @@ fn a_failed_backend_fails_exactly_its_claim_and_no_other_backend_is_called() {
             &[Capability::Realizability],
             always(sentinel("never")),
         );
-        let settled = dispatch_claims::<_, _, _, CheckedNodeId, _>(
+        let settled = dispatch_claims::<_, _, CheckedNodeId, _>(
             &mut boundary,
             dynamic.linked().declarations(),
             &[],
@@ -314,7 +314,7 @@ fn global_conformance_is_the_same_whether_or_not_the_advanced_claims_are_request
     );
     let declarations = dynamic.linked().declarations();
     let global = || ClaimRequest::GlobalConformance("conformant");
-    let together = dispatch_claims::<_, _, _, CheckedNodeId, _>(
+    let together = dispatch_claims::<_, _, CheckedNodeId, _>(
         &mut boundary,
         declarations,
         &[],
@@ -325,7 +325,7 @@ fn global_conformance_is_the_same_whether_or_not_the_advanced_claims_are_request
         ],
     );
     let alone =
-        dispatch_claims::<_, _, _, CheckedNodeId, _>(&mut boundary, declarations, &[], &[global()]);
+        dispatch_claims::<_, _, CheckedNodeId, _>(&mut boundary, declarations, &[], &[global()]);
     assert_eq!(together.len(), 3);
     assert_eq!(together[2], alone[0]);
     assert_eq!(alone[0], ClaimDisposition::GlobalConformance("conformant"));

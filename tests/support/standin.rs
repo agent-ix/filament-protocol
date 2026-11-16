@@ -29,11 +29,11 @@ use fsl_semantics::check::Capability;
 use super::dynamic::Dynamic;
 
 pub type Assumptions = &'static str;
-pub type Req = ProtocolRequest<Assumptions, Internality>;
-pub type Bind = Binding<Assumptions, Internality>;
+pub type Req = ProtocolRequest<Assumptions>;
+pub type Bind = Binding<Assumptions>;
 /// The unified claim a provider is asked about; these tests ask no
 /// composition or refinement, whose entries are therefore `()`.
-pub type Asked = Binding<Assumptions, Internality>;
+pub type Asked = Binding<Assumptions>;
 pub type Boundary = ProviderBoundary<'static, Asked, Sentinel>;
 
 /// The result a stand-in returns, with the parts the dispatcher reads.

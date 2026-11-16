@@ -176,7 +176,7 @@ in Domain Object Coverage instead.
 | FR-020 | FR-020-AC-1..AC-5 | TC-003 (AC-1..AC-5) | ✅ Implemented — registration retains the complete FR-288/compensation-handle/FR-287 key and exact replay adds nothing. |
 | FR-021 | FR-021-AC-1..AC-4 | TC-003 (AC-1..AC-4) | ✅ Implemented — strict QObs observation and position-ledger views preserve all three commit-ordering violations distinctly. |
 | FR-022 | FR-022-AC-1..AC-5 | TC-003 (AC-1..AC-5) | ✅ Implemented — the initial attempt counts, the authored finite bound admits exactly, and one-over refuses transactionally. |
-| FR-023 | FR-023-AC-1..AC-7 | TC-003 (AC-1..AC-5); TC-169 (AC-6); TC-176 (AC-7); TC-174 (AC-3, AC-4) | ✅ Implemented — AC-6 decides a duplicate business effect from effect identity, not delivery; AC-7 declares a finite population of related effects (the recovery relation's `PopulationRequirement`) whose distinct members are not duplicates of one another, while an effect outside it still collides; attempts, independently established related effects and their closed outcome domains remain separately typed and retained; TC-174 keeps the send, receive, message, delivery and attempt identities distinct from each other and from the effect, and registers nothing from them. |
+| FR-023 | FR-023-AC-1..AC-7 | TC-003 (AC-1..AC-5); TC-169 (AC-6); TC-176 (AC-7); TC-174 (AC-3, AC-4) | ✅ Implemented — AC-6 decides a duplicate business effect from effect identity, not delivery; AC-7 declares a finite population of related effects (taken from the selected recovery relation's `PopulationRequirement`) whose distinct members are not duplicates of one another, while an effect outside it is recorded as outside the population; attempts, independently established related effects and their closed outcome domains remain separately typed and retained; TC-174 keeps the send, receive, message, delivery and attempt identities distinct from each other and from the effect, and registers nothing from them. |
 | FR-024 | FR-024-AC-1..AC-6 | no living test for AC-1..AC-6 | ⛔ Retired — every test of this row's 6 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised (successor: FR-045). |
 | FR-025 | FR-025-AC-1..AC-3 | TC-003 (AC-1..AC-3); TC-009 (AC-1..AC-3) | ✅ Implemented — capability mutations refuse before assessment and action-capable doubles remain at zero calls. |
 | FR-026 | FR-026-AC-1..AC-3 | no living test for AC-1..AC-3 | ⛔ Retired — every test of this row's 3 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised. |
@@ -207,7 +207,7 @@ in Domain Object Coverage instead.
 | FR-051 | FR-051-AC-1..AC-7 | TC-050 (AC-1..AC-3); TC-168 (AC-4); TC-171 (AC-5); TC-175 (AC-6, AC-7) | ✅ Implemented — AC-4 carries each channel's sender, receiver and message type; AC-6 binds each end to a declared role and has the reader refuse an end repointed at a non-role; AC-7 gives each send and receive payload binder the channel's type; all 3 other criteria have living traced tests: delivery and capacity equal FSL's accessors, a symbolic capacity stays its name, every channel carries an authored overflow policy. |
 | FR-052 | FR-052-AC-1..AC-6 | TC-050 (AC-1..AC-3); TC-168 (AC-4); TC-171 (AC-5); TC-175 (AC-6) | ✅ Implemented — AC-4 carries a choice's owner and visible set; AC-6 reads one declared branch per authored label; the 3 other criteria have living traced tests: each join policy, a predicate join and unruled joins, and a loop's invariant and variant by node. |
 | FR-053 | FR-053-AC-1..AC-11 | TC-051 (AC-1..AC-11) | ✅ Implemented — all 11 criteria have living traced tests over the library's `RoleFact` input. |
-| FR-054 | FR-054-AC-1..AC-9 | TC-052 (AC-1..AC-9) | ✅ Implemented — all 9 criteria have living traced tests over the library's `ChannelFact` input; a loss is judged against the queue. |
+| FR-054 | FR-054-AC-1..AC-10 | TC-052 (AC-1..AC-10) | ✅ Implemented — all 10 criteria have living traced tests over the library's `ChannelFact` input; a loss is judged against the queue; AC-10 carries a symbolic capacity unchanged through link and dispatch. |
 | FR-055 | FR-055-AC-1..AC-10 | TC-053 (AC-1..AC-10) | ✅ Implemented — all 10 criteria have living traced tests over the library's `JoinFact` input, one occurrence per workflow and repeat ordinals. |
 | FR-056 | FR-056-AC-1..AC-7 | TC-054 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests over the library's `LoopFact` input. |
 | FR-057 | FR-057-AC-1..AC-4 | TC-055 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests; the cause is FSL's typed `Unsupported`, or its catalog code, or unrecognised bytes retained. |
@@ -360,7 +360,7 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-010 parallel and join | FR-052, FR-055 (TC-050, TC-053, TC-167) | Backed |
 | V1-PROT-011 bounded iteration | FR-056 (TC-054, TC-167) | Backed |
 | V1-PROT-012 dynamic roles | FR-053 (TC-051, TC-167) | Backed |
-| V1-PROT-013 queues | FR-054 (TC-052, TC-167) | Backed: finite capacity is assessed; a symbolic capacity is carried through link and dispatch and settles as the typed `SymbolicCapacity` unsupported disposition (TC-052, TC-055), never stepped (undecidable for all N; FSL FR-530) |
+| V1-PROT-013 queues | FR-054 (TC-052, TC-167) | Backed: finite capacity is assessed; a symbolic capacity is carried through link and dispatch (FR-054-AC-10) and settles as the typed `SymbolicCapacity` unsupported disposition (TC-052, TC-055), never stepped (undecidable for all N; FSL FR-530) |
 | V1-PROT-014 invariants and termination | FR-058, FR-059 (TC-054, TC-055) | Partial: undischarged and requires-bound carried; FSL owns the proof |
 | V1-PROT-015 causal edges | FR-044 (TC-150); FR-021 (TC-003) | Backed |
 | V1-PROT-016 choice visibility | FR-052-AC-4 (TC-168); FR-019-AC-2 (TC-003); FR-151 (TC-161) | Partial: the visible set is carried, not enforced per affected role; role internality is the binding's exact `internal`/`external` (FR-151-AC-9, TC-161) |
@@ -371,7 +371,7 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-021 effect, attempt, retry identities | FR-022, FR-023 (TC-003) | Backed |
 | V1-PROT-022 commit and recovery | FR-021 (TC-003) | Backed |
 | V1-PROT-023 outcome distinctions | FR-023 (TC-003) | Backed |
-| V1-PROT-024 duplicate business effects | FR-023-AC-6 (TC-169); FR-023-AC-7 (TC-176) | Backed: a singleton effect, and a declared population of related effects whose distinct members are not duplicates |
+| V1-PROT-024 duplicate business effects | FR-023-AC-6 (TC-169); FR-023-AC-7 (TC-176) | Backed: a singleton effect, and a declared population of related effects whose distinct members are not duplicates and whose non-members are recorded as outside the population |
 | V1-PROT-025 finite replay | TC-167; TC-008 | Partial: a rebuilt history gives the same dynamic-axis result; no test replays a serialized trace, and the whole-result replay is retired with FR-006 |
 | V1-PROT-026 global conformance | passthrough only (TC-165 AC-15) | Blocked: FR-004 composes FR-026, FR-027, FR-028 and FR-041, all retired with the evaluator (FSL-1549) and with no successor requirement, so nothing here produces a global-conformance result to test |
 | V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on FSL's engine |
@@ -395,15 +395,15 @@ does not measure binding.
 
 | Category | Total | Passed | Failed | Blocked | Planned | Retired |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Functional requirement rows | 61 | 30 | 0 | 0 | 12 | 19 |
+| Functional requirement rows | 61 | 32 | 0 | 0 | 10 | 19 |
 | Domain object requirement rows | 9 | 3 | 0 | 0 | 3 | 3 |
 | Non-functional requirement rows | 8 | 3 | 0 | 0 | 4 | 1 |
-| Integration rows | 4 | 0 | 0 | 1 | 0 | 3 |
-| Test case rows | 52 | 37 | 0 | 0 | 7 | 8 |
-| Overall | 134 | 73 | 0 | 1 | 26 | 34 |
+| Integration rows | 6 | 2 | 0 | 1 | 0 | 3 |
+| Test case rows | 53 | 40 | 0 | 0 | 5 | 8 |
+| Overall | 137 | 80 | 0 | 1 | 22 | 34 |
 
-The Integration count is four because IT-001 carries a separate version 1 and version 2
-row; the two contracts may not substitute for each other, so one row cannot
+The Integration count is six because IT-001 carries a separate version 1 and version 2
+row and IT-004 and IT-005 are implemented; the two contracts may not substitute for each other, so one row cannot
 report both. Both IT-001 rows and IT-002 are retired with their procedures (FR-047-AC-3 owns the replacement); IT-003 remains
 unexecutable.
 
@@ -416,7 +416,7 @@ criterion is a zero inside it rather than a row removed from it.
 
 | Category | Total | Passed | Failed | Blocked |
 | --- | ---: | ---: | ---: | ---: |
-| Overall owed criteria | 514 | 325 | 0 | 0 |
+| Overall owed criteria | 526 | 328 | 0 | 0 |
 
 Passed means the criterion carries a living traced test in the current tree
-(327 of 515, the criteria `quire matrix` computes as tagged, recounted with quire 0.38.3 after FR-023-AC-7, FR-046-AC-7 and FR-151-AC-9 gained living tests; the tree before this change counted 324 tagged). Blocked is none: FSL delivered the evaluation entries that FR-045 and FR-046 wait on. The criteria not counted as passed include those that verify by Inspection or Analysis only and FR-014-AC-6, which waits on IT-003's Quoin scenario-record handoff; `quire matrix` computes no planned or retired split, so none is stated here.
+(328 of 526, the criteria `quire matrix` lists (473 functional, 53 non-functional) and computes as tagged, recounted with quire 0.38.3 after FR-023-AC-7, FR-046-AC-7, FR-054-AC-10 and FR-151-AC-9 gained living tests). Blocked is none: FSL delivered the evaluation entries that FR-045 and FR-046 wait on. The criteria not counted as passed include those that verify by Inspection or Analysis only and FR-014-AC-6, which waits on IT-003's Quoin scenario-record handoff; `quire matrix` computes no planned or retired split, so none is stated here.

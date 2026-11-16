@@ -12,7 +12,7 @@ use crate::ids::{
 use crate::ByteDigest;
 
 use super::purity::PureAssessment;
-use super::recovery::PopulationRequirement;
+use super::recovery::{PopulationRequirement, RelationSelection};
 
 const REGISTRATION_IDENTITY_DOMAIN: &[u8] = b"filament.protocol.compensation-registration/v1";
 
@@ -704,6 +704,11 @@ impl AttemptOutcome {
 pub enum EffectDisposition {
     /// A second concrete business effect claimed one singleton occurrence.
     Duplicate,
+    /// The registration's attempt ledger declares a finite population of
+    /// related effects and this effect is not a member of it. Membership is
+    /// unknown, so the effect is neither a recovered member nor decided a
+    /// duplicate (FSpec FR-058-AC-4).
+    OutsidePopulation,
 }
 
 impl EffectDisposition {
@@ -712,6 +717,7 @@ impl EffectDisposition {
     pub const fn label(self) -> &'static str {
         match self {
             Self::Duplicate => "duplicate",
+            Self::OutsidePopulation => "outside-population",
         }
     }
 }
@@ -842,12 +848,14 @@ impl AttemptLedger {
     }
 
     /// Declare the finite population of related effects this registration
-    /// establishes (FSpec FR-058). The selection is the one the recovery
-    /// relation authors, so its identity, membership rule and members are not
-    /// restated here; only its exact members are read.
+    /// establishes (FSpec FR-058) from the population `relation`, the
+    /// recovery relation selected for this registration, requires. A relation
+    /// that requires no population leaves the ledger without one. The
+    /// population's identity, membership rule and members are read from the
+    /// relation, not restated.
     #[must_use]
-    pub fn with_population(mut self, population: PopulationRequirement) -> Self {
-        self.population = Some(population);
+    pub fn with_population(mut self, relation: &RelationSelection) -> Self {
+        self.population = relation.population().cloned();
         self
     }
 
@@ -931,10 +939,11 @@ impl AttemptLedger {
     /// singleton occurrence: the effect the first establishing attempt names
     /// is retained as established and a *distinct* effect a later attempt
     /// names claims the same occurrence and is retained as
-    /// [`EffectDisposition::Duplicate`]. With a declared population, distinct
-    /// effects that are members of it are related effects, never duplicates of
-    /// one another; an effect outside the population still claims the one
-    /// singleton occurrence and a second distinct such effect is a duplicate.
+    /// [`EffectDisposition::Duplicate`]. With a declared population there is
+    /// no singleton: distinct effects that are members of it are related
+    /// effects, never duplicates of one another, and an effect that is not a
+    /// member is retained as [`EffectDisposition::OutsidePopulation`], so it
+    /// is never mistaken for a member (FSpec FR-058-AC-4).
     /// An effect an attempt names again, as a redelivered observation does, is
     /// retained once: re-observing one effect key is replay, not a duplicate
     /// business effect (FSpec FR-058, FR-226). The result holds at most one
@@ -946,6 +955,7 @@ impl AttemptLedger {
             .iter()
             .flat_map(|population| population.required_members())
             .collect();
+        let declared = self.population.is_some();
         let mut seen = BTreeSet::new();
         let mut singleton_claimed = false;
         let mut retained = Vec::new();
@@ -957,18 +967,17 @@ impl AttemptLedger {
             if !seen.insert(effect) {
                 continue;
             }
-            let duplicate = if members.contains(effect) {
-                false
+            let disposition = if declared {
+                (!members.contains(effect)).then_some(EffectDisposition::OutsidePopulation)
             } else {
-                // The first effect outside the population claims the singleton.
                 let claimed = singleton_claimed;
                 singleton_claimed = true;
-                claimed
+                claimed.then_some(EffectDisposition::Duplicate)
             };
             retained.push(CompensationEffectFact {
                 effect: effect.clone(),
                 registration: self.registration.identity.clone(),
-                disposition: duplicate.then_some(EffectDisposition::Duplicate),
+                disposition,
             });
         }
         retained

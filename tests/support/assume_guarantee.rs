@@ -21,9 +21,9 @@ use super::dynamic::Dynamic;
 pub type Entry = CheckedNodeId;
 pub type Req = AssumeGuaranteeRequest<Entry>;
 /// A boundary that serves no backend: composition and refinement ask none.
-pub type Boundary = ProviderBoundary<'static, Binding<(), ()>, Infallible>;
-pub type Claims = ClaimRequest<&'static str, (), (), Entry>;
-pub type Settled = ClaimDisposition<&'static str, (), (), Entry, Infallible>;
+pub type Boundary = ProviderBoundary<'static, Binding<()>, Infallible>;
+pub type Claims = ClaimRequest<&'static str, (), Entry>;
+pub type Settled = ClaimDisposition<&'static str, (), Entry, Infallible>;
 
 /// A request over the roles `S` and `R` as component subjects, with the
 /// channels `Head` and `Tail` as assumption identities and a distinct entry in

@@ -55,8 +55,11 @@ requires the "exact declared population scope, membership and completeness
 authorities"; population identity and membership are D-owned and completeness
 is F-owned. The ledger reads only the exact members of that declared selection
 and decides no completeness. A member is a related effect, not an occurrence
-claimed twice; `FR-226-AC-3` still makes a second distinct key on the same
-singleton occurrence the duplicate and re-observing one complete key replay.
+claimed twice. `FR-226-AC-3` makes a second distinct key on a singleton
+occurrence the duplicate and re-observing one complete key replay; a declared
+population is not a singleton, so an effect outside it is recorded as outside
+the population, never as a member and never as a duplicate, because unknown
+membership cannot yield recovery success (`FR-058-AC-4`).
 
 An attempt identity never compares equal to an effect identity. `FR-235-AC-2`
 states that rule, and `FR-235-AC-3` refuses "A transport trace identifier,
@@ -77,7 +80,7 @@ under [FR-024](./FR-024-decide-recovery-only-by-authored-relation.md).
 | FR-023-AC-4 | A successful send, receive, delivery, attempt or compensating-operation invocation establishes no compensation effect. | Test (TC-003) |
 | FR-023-AC-5 | An attempt whose outcome is unestablished carries an absent outcome and receives no default member, and every reported outcome matches an exact `FR-236` label with no alias spelling accepted. | Test (TC-003) |
 | FR-023-AC-6 | Given a registration's attempt ledger with no declared population, the effect the first establishing attempt names is retained as established and each further distinct effect identity an attempt names as a duplicate business effect (the registration's effect being one singleton occurrence), while an effect an attempt names again is retained once, so a duplicate delivery never creates a duplicate effect and the facts are bounded by the admitted attempts. | Test (TC-169) |
-| FR-023-AC-7 | Given a registration's attempt ledger that declares a finite population of related effects (the `PopulationRequirement` the recovery relation authors), distinct effects that are members of the population are retained as established and none is a duplicate of another, an effect a member names again is retained once, and an effect outside the population still claims the registration's one singleton occurrence so that a second distinct such effect is a duplicate business effect; a population with no member or a repeated member is refused. | Test (TC-176) |
+| FR-023-AC-7 | Given a registration's attempt ledger that declares a finite population of related effects (taken from the `PopulationRequirement` of the recovery relation selected for the registration), distinct effects that are members of the population are retained as established with no disposition and none is a duplicate of another, an effect a member names again is retained once, and an effect that is not a member is retained with the disposition `outside-population`, never as a member and never as a duplicate; a population with no member (`EmptyValue`) or a repeated member (`DuplicatePopulationMember`) is refused with that cause. | Test (TC-176) |
 
 ## Adopted vocabulary
 
