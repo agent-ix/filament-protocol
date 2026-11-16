@@ -33,6 +33,15 @@ fn recipe(kind: &str) -> (&'static str, Vec<(&'static str, ClockConfiguration)>)
                 })
                 .collect(),
         ),
+        "instance_bound" => (
+            "unit-instance-bound.native",
+            vec![(
+                "Settle",
+                ClockConfiguration::EventPosition {
+                    sequence_authority: "events-authority".into(),
+                },
+            )],
+        ),
         "fixed_sample" => (
             "unit-fixed-sample.native",
             vec![(

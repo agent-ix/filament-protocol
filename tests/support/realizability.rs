@@ -469,7 +469,7 @@ pub fn settle(fixture: &Realizability) -> filament_protocol::engine::EngineResul
 
     let mut boundary: ProviderBoundary<'_, Asked, filament_protocol::engine::EngineResult> =
         ProviderBoundary::new();
-    let engine = FslEngine::new(fixture.package(), |_: &Binding<(), ()>| {
+    let engine = FslEngine::new(fixture.package(), |_: &Binding<()>| {
         EngineRequest::Realizability(Box::new(fixture.request()))
     })
     .expect("FSL's linked engines register");

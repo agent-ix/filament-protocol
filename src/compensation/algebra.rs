@@ -12,6 +12,7 @@ use crate::ids::{
 use crate::ByteDigest;
 
 use super::purity::PureAssessment;
+use super::recovery::{PopulationRequirement, RelationSelection};
 
 const REGISTRATION_IDENTITY_DOMAIN: &[u8] = b"filament.protocol.compensation-registration/v1";
 
@@ -703,6 +704,11 @@ impl AttemptOutcome {
 pub enum EffectDisposition {
     /// A second concrete business effect claimed one singleton occurrence.
     Duplicate,
+    /// The registration's attempt ledger declares a finite population of
+    /// related effects and this effect is not a member of it. Membership is
+    /// unknown, so the effect is neither a recovered member nor decided a
+    /// duplicate (FSpec FR-058-AC-4).
+    OutsidePopulation,
 }
 
 impl EffectDisposition {
@@ -711,6 +717,7 @@ impl EffectDisposition {
     pub const fn label(self) -> &'static str {
         match self {
             Self::Duplicate => "duplicate",
+            Self::OutsidePopulation => "outside-population",
         }
     }
 }
@@ -817,6 +824,7 @@ pub struct AttemptLedger {
     max_attempts: usize,
     max_identity_bytes: usize,
     attempts: Vec<AttemptFact>,
+    population: Option<PopulationRequirement>,
 }
 
 impl AttemptLedger {
@@ -835,7 +843,20 @@ impl AttemptLedger {
             max_attempts: limits.max_attempts,
             max_identity_bytes: limits.max_identity_bytes,
             attempts: Vec::new(),
+            population: None,
         })
+    }
+
+    /// Declare the finite population of related effects this registration
+    /// establishes (FSpec FR-058) from the population `relation`, the
+    /// recovery relation selected for this registration, requires. A relation
+    /// that requires no population leaves the ledger without one. The
+    /// population's identity, membership rule and members are read from the
+    /// relation, not restated.
+    #[must_use]
+    pub fn with_population(mut self, relation: &RelationSelection) -> Self {
+        self.population = relation.population().cloned();
+        self
     }
 
     /// Admit one exact attempt under the authored finite bound.
@@ -914,18 +935,29 @@ impl AttemptLedger {
     /// The business effects the admitted attempts established, in admission
     /// order, deciding duplicates from effect identity alone.
     ///
-    /// The effect the first establishing attempt names is retained as
-    /// established; a *distinct* effect a later attempt names claims the same
-    /// singleton occurrence and is retained as
-    /// [`EffectDisposition::Duplicate`]. An effect an attempt names again,
-    /// as a redelivered observation does, is retained once: a duplicate
-    /// delivery is not a duplicate business effect (FSpec FR-058). The result
-    /// holds at most one fact for each admitted attempt, so it is bounded by
-    /// the ledger. A registration whose effect is a declared finite
-    /// population of related effects is not modelled here.
+    /// Without a declared population the registration's effect is one
+    /// singleton occurrence: the effect the first establishing attempt names
+    /// is retained as established and a *distinct* effect a later attempt
+    /// names claims the same occurrence and is retained as
+    /// [`EffectDisposition::Duplicate`]. With a declared population there is
+    /// no singleton: distinct effects that are members of it are related
+    /// effects, never duplicates of one another, and an effect that is not a
+    /// member is retained as [`EffectDisposition::OutsidePopulation`], so it
+    /// is never mistaken for a member (FSpec FR-058-AC-4).
+    /// An effect an attempt names again, as a redelivered observation does, is
+    /// retained once: re-observing one effect key is replay, not a duplicate
+    /// business effect (FSpec FR-058, FR-226). The result holds at most one
+    /// fact for each admitted attempt, so it is bounded by the ledger.
     #[must_use]
     pub fn effects(&self) -> Vec<CompensationEffectFact> {
+        let members: BTreeSet<&EffectId> = self
+            .population
+            .iter()
+            .flat_map(|population| population.required_members())
+            .collect();
+        let declared = self.population.is_some();
         let mut seen = BTreeSet::new();
+        let mut singleton_claimed = false;
         let mut retained = Vec::new();
         for effect in self
             .attempts
@@ -935,10 +967,17 @@ impl AttemptLedger {
             if !seen.insert(effect) {
                 continue;
             }
+            let disposition = if declared {
+                (!members.contains(effect)).then_some(EffectDisposition::OutsidePopulation)
+            } else {
+                let claimed = singleton_claimed;
+                singleton_claimed = true;
+                claimed.then_some(EffectDisposition::Duplicate)
+            };
             retained.push(CompensationEffectFact {
                 effect: effect.clone(),
                 registration: self.registration.identity.clone(),
-                disposition: (!retained.is_empty()).then_some(EffectDisposition::Duplicate),
+                disposition,
             });
         }
         retained

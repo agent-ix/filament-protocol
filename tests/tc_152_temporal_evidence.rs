@@ -20,9 +20,10 @@ use filament_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
 use filament_protocol::evidence::{assess, package, EvidenceRecord, EvidenceRefusal};
 use filament_spec_language::checked_handoff::Corpus;
 use fsl_eval::temporal::evidence::{
-    ActivationState, CompletenessRecord, EvidencePackage, EvidencePosition, EvidenceRef,
-    EvidenceRequest, ExecutionDisposition, ExecutionOrigin, Payload, Relation,
-    SemanticTriggerIdentity, TemporalEvidenceLimits, TraceBinding, TriggerEvidence,
+    ActivationState, CaptureFact, CapturedValue, CompletenessRecord, EvidencePackage,
+    EvidencePosition, EvidenceRef, EvidenceRequest, ExecutionDisposition, ExecutionOrigin,
+    Indeterminate, Payload, Receipt, Relation, SemanticTriggerIdentity, TemporalEvidenceLimits,
+    TraceBinding, TriggerDelivery, TriggerEvidence,
 };
 use fsl_eval::temporal::{ClockCover, ProgressClosure, ProgressCompleteness, Valuation};
 use fsl_package::{BarePackage, BareSupply};
@@ -412,4 +413,80 @@ fn instance_valuations_cross_the_retained_surface_to_fsls_call() {
         let baseline = assess(&evidence, clause, &shared, &mut unlimited()).expect("baseline");
         assert_eq!(record, baseline, "R's atoms are shared, not instance-bound");
     }
+}
+
+/// FR-046-AC-7: the clause of the `instance_bound` kind is `on each`, so its
+/// atom (which reads the `over` binder `view`, not the capture or the `on each`
+/// binder) is instance-bound and FSL's evidence call reads it from
+/// `Position.instance_valuations[trigger][atom]`: a true entry, a false entry
+/// and an absent entry give three different records, the absent one is a
+/// missing valuation naming the instance, and a shared valuation for the same
+/// atom is ignored.
+#[test]
+#[trace("FR-046-AC-7", "TC-152")]
+fn the_evaluation_reads_the_instance_valuation_of_the_trigger() {
+    let admitted = handoff("instance_bound");
+    let bare = bare(&admitted);
+    let evidence = package(&bare, &mut join_budget()).expect("the package constructs");
+    let ids = clauses(&evidence);
+    let [clause] = ids.as_slice() else {
+        panic!("one clause: {ids:?}");
+    };
+    let trigger = id("t1");
+    let asked = |entry: Option<Valuation>| {
+        let mut asked = request(&evidence, clause, 4);
+        asked.trigger = Some(trigger.clone());
+        asked.origins = Vec::new();
+        asked.deliveries = vec![TriggerDelivery {
+            identity: trigger.clone(),
+            receipt: Receipt::new(b"r1".as_slice()),
+            anchor: "obs0".to_owned(),
+            payload: Payload::new(b"a".as_slice()),
+            guard: Some(true),
+            captures: vec![CaptureFact::Value {
+                anchor: "obs0".to_owned(),
+                value: CapturedValue::new(b"5".as_slice()),
+            }],
+        }];
+        for position in &mut asked.positions {
+            position.valuations = BTreeMap::new();
+            position.instance_valuations = entry
+                .iter()
+                .map(|valuation| (trigger.clone(), BTreeMap::from([(0, valuation.clone())])))
+                .collect();
+        }
+        asked
+    };
+    let record =
+        |entry| assess(&evidence, clause, &asked(entry), &mut unlimited()).expect("record");
+    let held = record(Some(Valuation::True));
+    let broken = record(Some(Valuation::False));
+    let absent = record(None);
+    // A shared valuation for the atom is not read: the instance entry decides.
+    let mut shared_true = asked(Some(Valuation::False));
+    for position in &mut shared_true.positions {
+        position.valuations = BTreeMap::from([(0, Valuation::True)]);
+    }
+    assert_eq!(
+        assess(&evidence, clause, &shared_true, &mut unlimited()).expect("record"),
+        broken,
+        "a shared valuation does not stand in for the instance's"
+    );
+    assert_eq!(held.activation, ActivationState::Active);
+    assert_eq!(held.truth, Some(fsl_eval::temporal::evidence::Truth::True));
+    assert_eq!(
+        broken.truth,
+        Some(fsl_eval::temporal::evidence::Truth::False)
+    );
+    assert_ne!(held, broken);
+    assert_eq!(absent.truth, None, "an absent entry gives no truth");
+    assert!(
+        matches!(
+            absent.indeterminate,
+            Some(Indeterminate::MissingValuation { atom: 0, instance: Some(ref named), .. })
+                if *named == trigger
+        ),
+        "{:?}",
+        absent.indeterminate
+    );
 }

@@ -26,7 +26,7 @@ When a `local-projection` or `realizability` claim is dispatched, the dispatcher
 
 The channel premise (ordering policy and delivery policy, which the requester states; sender, receiver and message type, which the linked declaration carries) of every channel and the role internality of every role in the claim's admitted fragment; and the per-claim premises the requester supplied (FR-030).
 
-FSL's read view of the checked package (`ix://agent-ix/filament-spec-language/ADR-017`, read through FR-044) publishes each channel's ordering and delivery policy and each role declaration. It publishes a channel's sender, receiver and message type (FR-151-AC-7) but not a role's internality. Until FSL publishes it (FR-151-AC-9), the dispatcher forwards the internality as the requester states it and verifies none against the checked package.
+FSL's read view of the checked package (`ix://agent-ix/filament-spec-language/ADR-017`, read through FR-044) publishes each channel's ordering and delivery policy and each role declaration. It publishes a channel's sender, receiver and message type (FR-151-AC-7) but no role internality: internality is a binding fact, the binding's exact `internal` or `external` (`ix://agent-ix/filament-specification/FR-217`, FR-050-AC-10), and a checked role carries none (FSpec FR-465). The dispatcher forwards the internality as the binding states it and reads none from the checked package.
 
 ## Outputs
 
@@ -38,7 +38,7 @@ Upstream admission already refuses a checked-package channel with a missing comp
 
 - The dispatcher shall hand the backend each channel's ordering and delivery policy and each role declaration exactly as the checked package authors them.
 - The dispatcher shall hand the backend each channel's sender, receiver and message type as the linked declaration carries them; the requester states none of them.
-- The dispatcher shall hand the backend each role internality exactly as the requester stated it, until FSL publishes it (FR-151-AC-9).
+- The dispatcher shall hand the backend each role internality exactly as the binding states it, `internal` or `external` (FR-151-AC-9), and read none from the checked package.
 - When the requester's ordering or delivery premise for a channel differs from the checked package's declaration of it, the dispatcher shall refuse that disposition under FR-030 naming the channel.
 - When the requester's premise differs from the checked package's declaration, the dispatcher shall invoke no backend for that claim.
 - The dispatcher shall retain on the disposition each premise it handed the backend.
@@ -61,7 +61,7 @@ Upstream admission already refuses a checked-package channel with a missing comp
 | FR-151-AC-5 | Given a stand-in that returns the `Inconclusive` verdict with a `BoundReached` `InconclusiveCause`, truth `pending` and basis `unsettled`, one that returns the same verdict with truth `satisfied`, and one that returns a requires-bound outcome, each disposition carries the outcome and the cause unchanged and holds neither truth `satisfied` nor truth `violated`, and the first holds truth `pending`. | Test (TC-161) |
 | FR-151-AC-6 | Given the request of FR-151-AC-3, the refused disposition holds neither truth `satisfied` nor truth `violated` and retains no value for the omitted premise, and the same request with the premise restored is sent to the stand-in with exactly the restored value. | Test (TC-161) |
 | FR-151-AC-7 | Given a fragment with channels, the stand-in backend's recorded call carries each channel's sender, receiver and message type equal to the checked package's, as FSL's read view publishes them. | Test (TC-168) |
-| FR-151-AC-9 | Given a fragment with roles, the stand-in backend's recorded call carries each role internality equal to the checked package's, as FSL's read view publishes it. | Blocked: FSpec FR-465 gives a role no internality member, and FSL's read view publishes none |
+| FR-151-AC-9 | Given a fragment with roles, the stand-in backend's recorded call carries each role's internality equal to the binding's exact `internal` or `external`, none read from the checked package, and a binding that omits one is refused. | Test (TC-161) |
 | FR-151-AC-8 | Given a request whose ordering premise for a channel differs from the checked package's declaration, and a second whose delivery premise differs, each disposition is refused under FR-030 naming the channel, the stand-in records no call, and every independent disposition is unchanged. | Test (TC-161) |
 
 ## Adopted vocabulary

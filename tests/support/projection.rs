@@ -11,8 +11,8 @@ use filament_exact::{
     UniverseId,
 };
 use filament_protocol::dispatch::{
-    dispatch, Binding, ChannelPremise, Fragment, Premises, ProtocolClaimKind, ProtocolOutcome,
-    ProtocolRequest, ProviderBoundary,
+    dispatch, Binding, ChannelPremise, Fragment, Internality, Premises, ProtocolClaimKind,
+    ProtocolOutcome, ProtocolRequest, ProviderBoundary,
 };
 use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, FslEngine};
 use filament_protocol::link::LinkedProtocol;
@@ -23,7 +23,7 @@ use fsl_route::ProviderOrigin;
 
 use super::dynamic::Dynamic;
 
-pub type Asked = Binding<(), ()>;
+pub type Asked = Binding<()>;
 pub type Boundary<'p> = ProviderBoundary<'p, Asked, EngineResult>;
 
 pub const RECORDS: &str = "record Ack { ok: Boolean; }\nrecord Note { ok: Boolean; }\n\
@@ -76,7 +76,7 @@ pub fn assessed_root() -> AssessedRootDraft {
 }
 
 /// The claim: project the global protocol onto the channels and roles named.
-pub fn claim(dynamic: &Dynamic) -> ProtocolRequest<(), ()> {
+pub fn claim(dynamic: &Dynamic) -> ProtocolRequest<()> {
     claim_of(
         ProtocolClaimKind::LocalProjection,
         dynamic.linked(),
@@ -92,7 +92,7 @@ pub fn claim_of(
     linked: &LinkedProtocol,
     clause: &CheckedNodeId,
     named: impl Fn(&str, &str) -> CheckedNodeId,
-) -> ProtocolRequest<(), ()> {
+) -> ProtocolRequest<()> {
     let channels: Vec<_> = ["Order", "Pick", "Cancelled"]
         .iter()
         .map(|name| named("channel", name))
@@ -124,7 +124,10 @@ pub fn claim_of(
                     (node, premise)
                 })
                 .collect(),
-            roles: roles.into_iter().map(|node| (node, ())).collect(),
+            roles: roles
+                .into_iter()
+                .map(|node| (node, Internality::Internal))
+                .collect(),
         },
         sources: vec![clause.clone()],
     }
@@ -138,7 +141,7 @@ pub fn boundary<'p>(
     profile: &'static str,
 ) -> Boundary<'p> {
     let mut boundary = Boundary::new();
-    let engine = FslEngine::new(dynamic.package(), move |_: &Binding<(), ()>| {
+    let engine = FslEngine::new(dynamic.package(), move |_: &Binding<()>| {
         EngineRequest::Projection(Box::new(ProjectionRequest {
             protocol: dynamic.clause().clone(),
             definition_key: Some("ix://test/Flow".to_owned()),
@@ -165,7 +168,7 @@ pub fn settle(
     dynamic: &Dynamic,
     role: &'static str,
     profile: &'static str,
-) -> ProtocolOutcome<EngineResult, Binding<(), ()>> {
+) -> ProtocolOutcome<EngineResult, Binding<()>> {
     let mut boundary = boundary(dynamic, role, profile);
     dispatch(
         &mut boundary,

@@ -144,7 +144,7 @@ fn a_decisive_result_with_no_source_identity_is_refused_alone() {
     let mut unbound = request(&dynamic, KIND, &["Head"]);
     unbound.sources.clear();
     let bound = request(&dynamic, KIND, &["Head"]);
-    let together = dispatch_claims::<_, _, _, CheckedNodeId, _>(
+    let together = dispatch_claims::<_, _, CheckedNodeId, _>(
         &mut boundary,
         declarations,
         &[],
@@ -153,7 +153,7 @@ fn a_decisive_result_with_no_source_identity_is_refused_alone() {
             ClaimRequest::Protocol(bound.clone()),
         ],
     );
-    let alone: Vec<ClaimDisposition<&str, _, _, _, _>> = dispatch_claims::<_, _, _, CheckedNodeId, _>(
+    let alone: Vec<ClaimDisposition<&str, _, _, _>> = dispatch_claims::<_, _, CheckedNodeId, _>(
         &mut boundary,
         declarations,
         &[],
