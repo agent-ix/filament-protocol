@@ -34,8 +34,7 @@ use fsl_replay::planner::ClauseForm;
 use fsl_replay::{ItemLabel, SettlementBasis, Truth};
 
 use crate::assume_guarantee::{
-    bind as bind_claim, owner, AssumeGuaranteeBinding, AssumeGuaranteeKind, AssumeGuaranteeRequest,
-    PremiseList,
+    bind as bind_claim, owner, AssumeGuaranteeBinding, AssumeGuaranteeRequest, PremiseList,
 };
 use crate::closure::AssessmentExecution;
 use crate::declarations::Declarations;
@@ -481,7 +480,7 @@ fn unoffered_path(
 /// Bind a composition request (FR-030, FR-200): the claim binding of
 /// [`assume_guarantee::bind`](crate::assume_guarantee::bind), then the
 /// guarantees and premises it declares, each checked against the component
-/// package that owns the node. No backend is named, because none decides it.
+/// package that owns the node.
 ///
 /// # Errors
 ///
@@ -490,11 +489,6 @@ pub fn bind<T: Clone + Premise>(
     components: &[&Declarations],
     request: &AssumeGuaranteeRequest<T>,
 ) -> Result<AssumeGuaranteeBinding<T>, DispositionRefusal> {
-    if let Some(backend) = &request.backend {
-        return Err(DispositionRefusal::BackendNamedForComposition(
-            backend.clone(),
-        ));
-    }
     let binding = bind_claim(components, request)?;
     let declared = |node: &CheckedNodeId| owner(components, node).is_some();
     let mut seen = BTreeSet::new();
@@ -537,9 +531,6 @@ pub fn decide<T: Clone + Premise>(
     components: &[&Declarations],
     request: &AssumeGuaranteeRequest<T>,
 ) -> CompositionOutcome<T> {
-    if request.kind != AssumeGuaranteeKind::Composition {
-        return CompositionOutcome::Refused(DispositionRefusal::NotAComposition);
-    }
     let binding = match bind(components, request) {
         Ok(binding) => binding,
         Err(refusal) => return CompositionOutcome::Refused(refusal),

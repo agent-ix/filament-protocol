@@ -70,6 +70,7 @@ One disposition per requested claim (FR-029), carrying the backend's result, ref
 | FR-150-AC-15 | Given the same registration and a request of one `local-projection` claim and one `global-conformance` result, the global result is returned unchanged beside the engine's projection result. | Test (TC-165) |
 | FR-150-AC-16 | Given FSL's linked engine registered and a `realizability` claim over a checked protocol whose branches every role can tell apart, the engine decides it: truth `satisfied`, basis `closed-scope`, FSL's result carried and the selected backend `protocol-analysis`. | Test (TC-166) |
 | FR-150-AC-17 | Given the same registration and a protocol with a hidden choice, and given a protocol whose uninformed role must act differently in each branch of a choice (an incompatible merge), each claim settles truth `violated` with basis `decisive-counterexample`, and the result's separating-witness record equals the one FSL's indistinguishable-histories counterexample holds, unchanged. | Test (TC-166) |
+| FR-150-AC-18 | Given a checked-handoff directory written by FSL's writer and nothing else, FSL's `compile` of it, and a protocol subject built by FSL's `protocol_subject` from the compiled handoff's checked package, domain package documents and emission ceiling, a `realizability` claim over the handoff's protocol settles as AC-16 and AC-17 state: `satisfied` on `closed-scope` for a protocol every role can tell apart, and `violated` on `decisive-counterexample` with the separating-witness record unchanged for an incompatible merge. | Test (TC-172) |
 
 ## Adopted vocabulary
 
@@ -87,6 +88,6 @@ One disposition per requested claim (FR-029), carrying the backend's result, ref
 - [FR-002](./FR-002-link-finite-protocol-representation.md) supplies the linked graph whose source identities bind the returned result.
 - [FR-005](./FR-005-dispatch-independent-protocol-claims.md), [FR-029](./FR-029-return-one-disposition-per-requested-claim.md) and [FR-030](./FR-030-bind-each-disposition-to-its-exact-premises.md) supply closed dispatch, independence and premise binding.
 - [FR-153](./FR-153-settle-unsupported-while-no-fsl-backend-serves-the-kind.md) states the empty-candidate settlement.
-- [FR-301](./FR-301-admit-protocol-refinement-dispatch.md) states the same dispatch-and-carry rule for the `refinement` claim kind.
+- [FR-301](./FR-301-decide-protocol-refinement-claims.md) decides the `refinement` claim kind in this library rather than dispatching it.
 - `ix://agent-ix/filament-specification/FR-060` states the independence of global conformance from the advanced claims.
 - FSL ADR-017 fixes the protocol boundary of the checked package this library reads.

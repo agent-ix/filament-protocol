@@ -1,157 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! The stand-in backend of TC-200 to TC-204. It is registered at the provider
-//! boundary under a descriptor FSL's registry accepts, records every call and
-//! answers from a function of the call. It decides nothing.
+//! The composition requests of TC-200 to TC-204. A composition is decided by
+//! the library, so no backend is registered.
 
 // Each test binary uses a different part of these helpers.
 #![allow(dead_code)]
 
-use std::cell::RefCell;
 use std::convert::Infallible;
-use std::rc::Rc;
 
 use filament_contract_model::CheckedNodeId;
-use filament_protocol::assume_guarantee::{
-    AssumeGuaranteeBinding, AssumeGuaranteeKind, AssumeGuaranteeRequest, AssumeGuaranteeResult,
-    PremiseLists,
-};
+use filament_protocol::assume_guarantee::{AssumeGuaranteeRequest, PremiseLists};
 use filament_protocol::composition::Guarantee;
 use filament_protocol::dispatch::{
-    Answer, Claim, ClaimDisposition, ClaimRequest, Fragment, ProviderBoundary,
+    Binding, ClaimDisposition, ClaimRequest, Fragment, ProviderBoundary,
 };
-use filament_protocol::disposition::{FslBoundary, FslReport};
-use fsl_foundation::BackendId;
 use fsl_replay::planner::ClauseForm;
-use fsl_replay::{InconclusiveCause, ItemLabel};
-use fsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
-use fsl_semantics::check::Capability;
+use fsl_replay::ItemLabel;
 
 use super::dynamic::Dynamic;
 
 pub type Entry = CheckedNodeId;
-pub type Bind = AssumeGuaranteeBinding<Entry>;
 pub type Req = AssumeGuaranteeRequest<Entry>;
-/// The unified claim a provider is asked about; these tests ask no
-/// projection or realizability, whose components are therefore `()`.
-pub type Asked = Claim<(), (), Entry>;
-pub type Boundary = ProviderBoundary<'static, Asked, Answer<Infallible, Out>>;
+/// A boundary that serves no backend: composition and refinement ask none.
+pub type Boundary = ProviderBoundary<'static, Binding<(), ()>, Infallible>;
 pub type Claims = ClaimRequest<&'static str, (), (), Entry>;
-pub type Settled = ClaimDisposition<&'static str, (), (), Entry, Infallible, Out>;
-
-/// The result a stand-in returns: opaque artifacts the dispatcher must carry
-/// and the parts it reads.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Out {
-    pub label: ItemLabel,
-    pub cause: Option<InconclusiveCause>,
-    pub subjects: Vec<CheckedNodeId>,
-    pub premises: Option<PremiseLists<Entry>>,
-    pub assumptions: Option<Vec<CheckedNodeId>>,
-    pub certificate: Option<&'static str>,
-    pub implementation_half: Option<&'static str>,
-    pub specification_half: Option<&'static str>,
-    pub discharge: Vec<(&'static str, &'static str)>,
-}
-
-impl Out {
-    pub fn new(label: ItemLabel) -> Self {
-        Self {
-            label,
-            cause: None,
-            subjects: Vec::new(),
-            premises: None,
-            assumptions: Some(Vec::new()),
-            certificate: None,
-            implementation_half: None,
-            specification_half: None,
-            discharge: Vec::new(),
-        }
-    }
-}
-
-impl AssumeGuaranteeResult<Entry> for Out {
-    fn label(&self) -> ItemLabel {
-        self.label
-    }
-    fn subjects(&self) -> &[CheckedNodeId] {
-        &self.subjects
-    }
-    fn retained_premises(&self) -> Option<&PremiseLists<Entry>> {
-        self.premises.as_ref()
-    }
-    fn retained_assumptions(&self) -> Option<&[CheckedNodeId]> {
-        self.assumptions.as_deref()
-    }
-}
-
-pub type Reply = Box<dyn Fn(&Bind) -> FslReport<Out>>;
-
-#[derive(Clone, Default)]
-pub struct Calls(Rc<RefCell<Vec<Bind>>>);
-
-impl Calls {
-    pub fn len(&self) -> usize {
-        self.0.borrow().len()
-    }
-    pub fn all(&self) -> Vec<Bind> {
-        self.0.borrow().clone()
-    }
-}
-
-pub struct Standin {
-    answer: Reply,
-    calls: Calls,
-}
-
-impl FslBoundary<Asked, Answer<Infallible, Out>> for Standin {
-    fn report(&mut self, claim: &Asked) -> FslReport<Answer<Infallible, Out>> {
-        let Claim::AssumeGuarantee(bound) = claim else {
-            return FslReport::Failed(None);
-        };
-        self.calls.0.borrow_mut().push(bound.clone());
-        (self.answer)(bound).map(Answer::AssumeGuarantee)
-    }
-}
-
-pub fn serve(boundary: &mut Boundary, name: &str, kinds: &[Capability], answer: Reply) -> Calls {
-    let calls = Calls::default();
-    let descriptor = BackendDescriptor::new(
-        Candidate::new(BackendId::new(name)),
-        ProviderOrigin::Linked,
-        kinds.iter().map(|kind| (*kind, Mode::Unbounded)),
-        None,
-        None,
-    )
-    .expect("a descriptor FSL's registry accepts");
-    boundary
-        .register(
-            descriptor,
-            Standin {
-                answer,
-                calls: calls.clone(),
-            },
-        )
-        .expect("the registration is accepted");
-    calls
-}
-
-pub fn always(result: Out) -> Reply {
-    Box::new(move |_| FslReport::Result(result.clone()))
-}
+pub type Settled = ClaimDisposition<&'static str, (), (), Entry, Infallible>;
 
 /// A request over the roles `S` and `R` as component subjects, with the
-/// channel `Head` as an assumption identity and a distinct entry in each of
-/// the four premise lists.
-pub fn request(dynamic: &Dynamic, kind: AssumeGuaranteeKind) -> Req {
-    let composition = kind == AssumeGuaranteeKind::Composition;
-    let mut asked = Req {
-        kind,
+/// channels `Head` and `Tail` as assumption identities and a distinct entry in
+/// each of the four premise lists.
+pub fn request(dynamic: &Dynamic) -> Req {
+    Req {
         fragment: Fragment {
             channels: vec![dynamic.named("channel", "Head")],
             roles: vec![dynamic.named("role", "S")],
         },
         subjects: vec![dynamic.named("role", "S"), dynamic.named("role", "R")],
-        backend: None,
         assumptions: vec![
             dynamic.named("channel", "Head"),
             dynamic.named("channel", "Tail"),
@@ -167,13 +50,7 @@ pub fn request(dynamic: &Dynamic, kind: AssumeGuaranteeKind) -> Req {
             guarantee(dynamic, "New", ClauseForm::Liveness, &["Reject", "Tail"]),
         ],
         sources: vec![dynamic.clause().clone()],
-    };
-    // A refinement carries neither declared guarantees nor premise entries.
-    if !composition {
-        asked.guarantees.clear();
-        asked.premises = PremiseLists::default();
     }
-    asked
 }
 
 /// A `proved` guarantee at the channel `name` whose proof used the channels
@@ -188,15 +65,6 @@ pub fn guarantee(dynamic: &Dynamic, name: &str, form: ClauseForm, uses: &[&str])
             .map(|used| dynamic.named("channel", used))
             .collect(),
     }
-}
-
-/// `out` naming the request's subjects and retaining its premises and
-/// assumptions, as an honest backend does.
-pub fn honest(request: &Req, mut out: Out) -> Out {
-    out.subjects.clone_from(&request.subjects);
-    out.premises = Some(request.premises.clone());
-    out.assumptions = Some(request.assumptions.clone());
-    out
 }
 
 /// A node of the checked package that its protocol does not declare.

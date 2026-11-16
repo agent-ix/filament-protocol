@@ -102,6 +102,9 @@ pub fn request(kind: &str, corpus: Corpus) -> CheckedHandoffRequest {
 /// writer assembled for it.
 pub struct Handoff {
     _holder: tempfile::TempDir,
+    /// The handoff directory itself.
+    #[allow(dead_code)] // Only the realizability fixture compiles the directory back.
+    pub root: PathBuf,
     /// Every file below the handoff root.
     pub files: BTreeMap<String, Vec<u8>>,
     /// The evidence for reading `checked-package.json`.
@@ -144,6 +147,7 @@ fn finish(holder: tempfile::TempDir, out: PathBuf, asked: CheckedHandoffRequest)
     let evidence = evidence(&asked).expect("evidence");
     Handoff {
         _holder: holder,
+        root: out,
         files,
         evidence,
     }

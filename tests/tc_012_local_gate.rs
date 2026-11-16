@@ -647,6 +647,9 @@ fn tc_012_every_conditional_site_is_selected_and_phantom_features_refuse() {
         policy.conditions,
         [
             Condition::Test {
+                path: "src/refinement.rs".to_owned(),
+            },
+            Condition::Test {
                 path: "src/refusal/cause.rs".to_owned(),
             },
             Condition::Test {

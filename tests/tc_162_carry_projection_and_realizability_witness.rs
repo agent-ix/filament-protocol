@@ -10,6 +10,7 @@ mod support {
     pub mod standin;
 }
 
+use filament_contract_model::CheckedNodeId;
 use filament_protocol::dispatch::{
     dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal,
     ProtocolClaimKind, ProtocolOutcome,
@@ -143,7 +144,7 @@ fn a_decisive_result_with_no_source_identity_is_refused_alone() {
     let mut unbound = request(&dynamic, KIND, &["Head"]);
     unbound.sources.clear();
     let bound = request(&dynamic, KIND, &["Head"]);
-    let together = dispatch_claims(
+    let together = dispatch_claims::<_, _, _, CheckedNodeId, _>(
         &mut boundary,
         declarations,
         &[],
@@ -152,7 +153,7 @@ fn a_decisive_result_with_no_source_identity_is_refused_alone() {
             ClaimRequest::Protocol(bound.clone()),
         ],
     );
-    let alone: Vec<ClaimDisposition<&str, _, _, _, _, _>> = dispatch_claims(
+    let alone: Vec<ClaimDisposition<&str, _, _, _, _>> = dispatch_claims::<_, _, _, CheckedNodeId, _>(
         &mut boundary,
         declarations,
         &[],

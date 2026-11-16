@@ -63,10 +63,10 @@ repository owns its strict implementation and evidence-backed conformance.
 - Projection, realizability and model-level refinement algorithms, and
   protocol exploration semantics (dynamic roles, queues, joins, loops); FSL owns
   them ([ADR-010](adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md)).
-  This library dispatches those claims
-  ([FR-301](functional/FR-301-admit-protocol-refinement-dispatch.md)) and
-  carries the results. The protocol-level assume-guarantee composition
-  procedure is this library's (ADR-010 Decision 6, FR-200..FR-204); atomic and
+  This library dispatches projection and realizability and carries the
+  results. The protocol-level assume-guarantee composition and refinement
+  procedures are this library's (ADR-010 Decisions 6 and 7, FR-200..FR-204,
+  [FR-301](functional/FR-301-decide-protocol-refinement-claims.md)); atomic and
   temporal obligations stay FSL's.
 - An external choreography library before E03 admission.
 

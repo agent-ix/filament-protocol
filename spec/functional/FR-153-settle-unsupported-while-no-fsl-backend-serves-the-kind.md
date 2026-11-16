@@ -73,5 +73,5 @@ One `unsupported` disposition (FR-241) per such claim, carrying FSL's cause `uns
 - `ix://agent-ix/filament-specification/FR-290` supplies the candidate table whose empty row settles `unsupported`.
 - [FR-057](./FR-057-map-fsl-unsupported-outcomes-to-typed-dispositions.md) supplies the cause-carrying pattern and the `unsupported-requested-capability` name.
 - [FR-150](./FR-150-dispatch-projection-and-realizability-to-fsl.md) supplies the dispatch used once a backend serves the kind.
-- [FR-301](./FR-301-admit-protocol-refinement-dispatch.md) states the same absence pattern for the `refinement` claim kind.
+- [FR-301](./FR-301-decide-protocol-refinement-claims.md) states the same unsupported-absence pattern for an undecidable `refinement` claim, decided here rather than dispatched.
 - `ix://agent-ix/filament-specification/FR-060` states that an unsupported advanced claim does not erase a valid independent global result.

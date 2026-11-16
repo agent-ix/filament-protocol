@@ -41,7 +41,6 @@ fn protocol(
         &'static str,
         CheckedNodeId,
         Sentinel,
-        std::convert::Infallible,
     >,
 ) -> ProtocolOutcome<Sentinel, support::standin::Bind> {
     match disposition {
@@ -57,7 +56,7 @@ fn an_empty_registry_settles_both_claims_unsupported_and_leaves_global_conforman
     let mut boundary = Boundary::new();
     let declarations = dynamic.linked().declarations();
     let global = || ClaimRequest::GlobalConformance("conformant");
-    let settled = dispatch_claims(
+    let settled = dispatch_claims::<_, _, _, CheckedNodeId, _>(
         &mut boundary,
         declarations,
         &[],
@@ -67,7 +66,8 @@ fn an_empty_registry_settles_both_claims_unsupported_and_leaves_global_conforman
             global(),
         ],
     );
-    let alone = dispatch_claims(&mut boundary, declarations, &[], &[global()]);
+    let alone =
+        dispatch_claims::<_, _, _, CheckedNodeId, _>(&mut boundary, declarations, &[], &[global()]);
     for claim in settled.iter().take(2) {
         let disposition = unsupported(protocol(claim.clone()));
         assert_eq!(disposition.execution(), AssessmentExecution::Unsupported);
@@ -99,7 +99,7 @@ fn an_unsupported_disposition_holds_truth_and_basis_unavailable() {
 fn a_conformant_global_result_yields_no_projection_or_realizability_result() {
     let dynamic = Dynamic::with("workflow", 3);
     let mut boundary = Boundary::new();
-    let settled = dispatch_claims(
+    let settled = dispatch_claims::<_, _, _, CheckedNodeId, _>(
         &mut boundary,
         dynamic.linked().declarations(),
         &[],

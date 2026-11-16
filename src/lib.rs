@@ -27,7 +27,7 @@ extern crate self as filament_protocol;
 // established here.
 // ---------------------------------------------------------------------------
 
-/// The `composition` and `refinement` claim requests and the refinement dispatch to FSL's backend (FR-200..204).
+/// The `composition` claim request, its premise lists and its binding (FR-200..204).
 pub mod assume_guarantee;
 /// Count, allocation and deadline guards. Owner chunk: C-29 (submodule: C-30).
 pub mod bounds;
@@ -64,6 +64,8 @@ pub mod link;
 pub mod observation_link;
 /// Closed public operation and claim outcome algebras.
 pub mod outcome;
+/// Protocol refinement decision: extra traces, deadlock, divergence, stronger assumptions (FR-301, FR-202, FR-204).
+pub mod refinement;
 /// B-owned typed refusal envelope. Owner chunk: C-01 (submodules: C-02, C-03).
 pub mod refusal;
 /// Seed, toolchain and corpus reproduction record. Owner chunk: C-31.
