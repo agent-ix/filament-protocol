@@ -385,14 +385,14 @@ fn a_missing_anchor_settles_as_a_non_value_never_a_boolean() {
     }
 }
 
-/// FR-046-AC-7: the request carries `Position.instance_valuations` on each
-/// position, FSL's evidence call accepts it, and the record the library
-/// returns is the one the call reports. R's clauses read their atoms from the
-/// shared valuations, so the per-instance entries are accepted and not read:
-/// an entry that disagrees with the shared valuation changes nothing, and the
-/// assessed instance's entry is the one an instance-bound atom would read.
+/// FR-046-AC-1 (the pass-through half only; FR-046-AC-7 stays owed): the
+/// request carries `Position.instance_valuations` on each position, FSL's
+/// evidence call accepts it, and the record the library returns is the one the
+/// call reports. R's clauses read their atoms from the shared valuations, so
+/// the per-instance entries are accepted and not read; this test does not show
+/// `instance_valuations` being read.
 #[test]
-#[trace("FR-046-AC-7", "TC-152")]
+#[trace("FR-046-AC-1", "TC-152")]
 fn instance_valuations_cross_the_retained_surface_to_fsls_call() {
     let admitted = handoff("event_position");
     let bare = bare(&admitted);

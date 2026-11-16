@@ -32,10 +32,12 @@ use filament_contract_model::{
     CheckedNodeId, CheckedPackageV2, CheckedProtocolActivationRow, CheckedSemanticNodeV2,
     CheckedSourceMapEntry, CheckedTerm, LiteralKind, TemporalBinding,
 };
+use fsl_package::checked_views::temporal_subject;
 use fsl_package::protocol_view::{
     causal_relation, control_operation, delivery, locus, protocol_view, temporal_binding,
     CausalEdge, ControlOperation, ProtocolView, Scheduling, ViewRefusal,
 };
+use fsl_semantics::check::TemporalProfile;
 
 /// A consumer-owned refusal produced while linking an admitted protocol.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -273,7 +275,10 @@ impl LinkedProtocol {
         &self.requirement_terms
     }
 
-    /// The selected clock bindings for required temporal clauses, in view order.
+    /// The clock bindings of the required temporal clauses whose profile is
+    /// clock-configured, keyed by each binding's `declaration`. A required
+    /// clause of the `infinite-trace` profile has no entry, so this is not
+    /// one per requirement.
     pub fn temporal_bindings(&self) -> &[TemporalBinding] {
         &self.temporal_bindings
     }
@@ -313,6 +318,17 @@ impl LinkedProtocol {
     pub fn edges(&self) -> &[CausalEdge] {
         &self.edges
     }
+}
+
+/// Whether the profile `identity` selects a clock: the reader's rule for which
+/// clauses own a `temporal_bindings` row.
+fn is_clock_configured(identity: &str) -> bool {
+    TemporalProfile::from_identity(identity).is_some_and(|profile| {
+        !matches!(
+            profile,
+            TemporalProfile::InfiniteTrace | TemporalProfile::Timed
+        )
+    })
 }
 
 /// Link the protocol clause `protocol` of `package`.
@@ -383,19 +399,28 @@ pub fn link(
     }
 
     let mut requirement_terms = Vec::with_capacity(view.requirements().len());
-    let mut temporal_bindings = Vec::with_capacity(view.requirements().len());
+    let mut temporal_bindings = Vec::new();
     for id in view.requirements().iter().copied() {
         let term = package.term(id).ok_or_else(|| LinkRefusal::MissingMember {
             node: id.clone(),
             member: "body",
         })?;
         requirement_terms.push(term.clone());
-        // A package selects clocks only for clauses of a clocked temporal
-        // profile. A package with no clock rows at all (a required clause of
-        // the unbounded `infinite-trace` profile, which has no clock to
-        // select) has nothing to bind; once it has rows, a required clause
-        // without one is still refused.
-        if let Some(rows) = package.temporal_bindings() {
+        // Contract IR's reader keeps a clock row only for a clause of a
+        // clock-configured temporal profile; a clause of the unbounded
+        // `infinite-trace` profile (or the timed one) binds nothing. A
+        // clocked required clause without its row is still refused.
+        let profile = temporal_subject(package, id)
+            .map_err(|_| LinkRefusal::MissingMember {
+                node: id.clone(),
+                member: "temporal_profile",
+            })?
+            .profile()
+            .definition
+            .identity
+            .clone();
+        if is_clock_configured(&profile) {
+            let rows = package.temporal_bindings().unwrap_or(&[]);
             let binding = temporal_binding(rows, id).map_err(LinkRefusal::View)?;
             temporal_bindings.push(binding.clone());
         }

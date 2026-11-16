@@ -81,6 +81,13 @@ fn linked_lists_and_edges_equal_the_owners_view_and_relation() {
     assert_eq!(linked.compensations(), ids(view.compensations()));
     assert_eq!(linked.requirements(), ids(view.requirements()));
     assert_eq!(linked.requirement_terms().len(), view.requirements().len());
+    // Bindings are keyed by `declaration`: one per clocked required clause.
+    for binding in linked.temporal_bindings() {
+        assert!(view
+            .requirements()
+            .iter()
+            .any(|clause| **clause == binding.declaration));
+    }
     assert_eq!(linked.temporal_bindings().len(), view.requirements().len());
     assert_eq!(linked.run(), view.run());
     assert_eq!(linked.finish(), view.finish());
