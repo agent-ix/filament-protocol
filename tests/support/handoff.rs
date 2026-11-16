@@ -103,6 +103,7 @@ pub fn request(kind: &str, corpus: Corpus) -> CheckedHandoffRequest {
 pub struct Handoff {
     _holder: tempfile::TempDir,
     /// The handoff directory itself.
+    #[allow(dead_code)] // Only the realizability fixture compiles the directory back.
     pub root: PathBuf,
     /// Every file below the handoff root.
     pub files: BTreeMap<String, Vec<u8>>,
