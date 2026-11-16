@@ -15,7 +15,7 @@ request boundary.
 
 ## Test Procedure
 
-For each of **R**'s four temporal clauses, construct the `EvidenceRequest` at
+For each of **R**'s four temporal clauses, and for the `instance_bound` kind's `on each` clause with a capture (a true, a false and an absent `instance_valuations` entry for the trigger's instance), construct the `EvidenceRequest` at
 the caller boundary, pass it through the checked-package evidence entry, and
 compare the returned `EvidenceResult` fields with the assessment record. Verify
 that the request and result remain in-memory values, and that the boundary

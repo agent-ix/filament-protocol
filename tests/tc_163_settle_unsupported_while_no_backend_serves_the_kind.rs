@@ -38,7 +38,7 @@ fn protocol(
     disposition: ClaimDisposition<
         &'static str,
         support::standin::Assumptions,
-        &'static str,
+        filament_protocol::dispatch::Internality,
         CheckedNodeId,
         Sentinel,
     >,

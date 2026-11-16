@@ -11,7 +11,7 @@ mod support {
 use filament_contract_model::CheckedNodeId;
 use filament_protocol::declarations::Ordering;
 use filament_protocol::dispatch::{
-    dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal,
+    dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, DispositionRefusal, Internality,
     ProtocolClaimKind, ProtocolOutcome,
 };
 use filament_protocol::disposition::{ClaimSettlement, Disposition, FslReport};
@@ -90,7 +90,7 @@ fn requests_differing_in_one_premise_component_differ_in_identity_and_provenance
     for role in base.fragment.roles.clone() {
         let mut other = base.clone();
         let stated = other.premises.roles.get_mut(&role).expect("premise");
-        *stated = "another internality";
+        *stated = Internality::External;
         assert_ne!(base, other);
         let (mut boundary, _) = serving();
         let settled = dispatch(&mut boundary, dynamic.linked().declarations(), &other);
@@ -155,14 +155,17 @@ fn an_external_role_reaches_the_backend_as_external_and_nothing_more() {
     let dynamic = Dynamic::with("workflow", 3);
     let mut asked = request(&dynamic, KIND, &["Head"]);
     let role = dynamic.named("role", "R");
-    asked.premises.roles.insert(role.clone(), "external");
+    asked
+        .premises
+        .roles
+        .insert(role.clone(), Internality::External);
     let (mut boundary, calls) = serving();
     dispatch(&mut boundary, dynamic.linked().declarations(), &asked);
     let received = calls.all();
     let [call] = received.as_slice() else {
         panic!("one call");
     };
-    assert_eq!(call.request.premises.roles[&role], "external");
+    assert_eq!(call.request.premises.roles[&role], Internality::External);
     assert_eq!(call.request.premises.roles.len(), 2);
     assert_eq!(call.request.premises, asked.premises);
 }
@@ -318,6 +321,46 @@ fn a_requester_premise_that_disagrees_with_the_package_is_refused_alone() {
     assert_eq!(
         settled[2],
         ClaimDisposition::GlobalConformance("conformant")
+    );
+    assert_eq!(calls.len(), 0);
+}
+
+#[test]
+#[trace("TC-161", "FR-151-AC-9")]
+fn each_role_internality_reaches_the_backend_as_the_binding_states_it() {
+    let dynamic = Dynamic::with("workflow", 3);
+    let mut asked = request(&dynamic, KIND, &["Head"]);
+    let sender = dynamic.named("role", "S");
+    let receiver = dynamic.named("role", "R");
+    asked
+        .premises
+        .roles
+        .insert(sender.clone(), Internality::Internal);
+    asked
+        .premises
+        .roles
+        .insert(receiver.clone(), Internality::External);
+    let (mut boundary, calls) = serving();
+    dispatch(&mut boundary, dynamic.linked().declarations(), &asked);
+    let received = calls.all();
+    let [call] = received.as_slice() else {
+        panic!("one call");
+    };
+    // The checked role declarations carry no internality: what the backend
+    // holds per role is exactly the binding's own, mixed, value.
+    assert_eq!(call.request.premises.roles[&sender], Internality::Internal);
+    assert_eq!(
+        call.request.premises.roles[&receiver],
+        Internality::External
+    );
+    assert_ne!(Internality::Internal, Internality::External);
+    // A binding that omits it is refused; none is read from the package.
+    asked.premises.roles.remove(&receiver);
+    let (mut boundary, calls) = serving();
+    let outcome = dispatch(&mut boundary, dynamic.linked().declarations(), &asked);
+    assert_eq!(
+        outcome,
+        ProtocolOutcome::Refused(DispositionRefusal::AbsentRoleInternality(receiver))
     );
     assert_eq!(calls.len(), 0);
 }

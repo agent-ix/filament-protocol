@@ -50,6 +50,14 @@ attempt, failed attempt and duplicate effect remain three distinct outcomes".
 `FR-058-AC-1` states that "A failed refund attempt followed by one successful
 retry retains both attempts and one successful refund effect".
 
+Where a registration declares a finite population of related effects, `FR-058`
+requires the "exact declared population scope, membership and completeness
+authorities"; population identity and membership are D-owned and completeness
+is F-owned. The ledger reads only the exact members of that declared selection
+and decides no completeness. A member is a related effect, not an occurrence
+claimed twice; `FR-226-AC-3` still makes a second distinct key on the same
+singleton occurrence the duplicate and re-observing one complete key replay.
+
 An attempt identity never compares equal to an effect identity. `FR-235-AC-2`
 states that rule, and `FR-235-AC-3` refuses "A transport trace identifier,
 successful transport status, repeated delivery or equal payload alone" as an
@@ -68,7 +76,8 @@ under [FR-024](./FR-024-decide-recovery-only-by-authored-relation.md).
 | FR-023-AC-3 | An attempt identity compares unequal to every effect identity, and a transport status, trace identifier, repeated delivery or equal payload establishes neither. | Test (TC-003) |
 | FR-023-AC-4 | A successful send, receive, delivery, attempt or compensating-operation invocation establishes no compensation effect. | Test (TC-003) |
 | FR-023-AC-5 | An attempt whose outcome is unestablished carries an absent outcome and receives no default member, and every reported outcome matches an exact `FR-236` label with no alias spelling accepted. | Test (TC-003) |
-| FR-023-AC-6 | Given a registration's attempt ledger, the effect the first establishing attempt names is retained as established and each further distinct effect identity an attempt names as a duplicate business effect (the registration's effect being one singleton occurrence), while an effect an attempt names again is retained once, so a duplicate delivery never creates a duplicate effect and the facts are bounded by the admitted attempts. | Test (TC-169) |
+| FR-023-AC-6 | Given a registration's attempt ledger with no declared population, the effect the first establishing attempt names is retained as established and each further distinct effect identity an attempt names as a duplicate business effect (the registration's effect being one singleton occurrence), while an effect an attempt names again is retained once, so a duplicate delivery never creates a duplicate effect and the facts are bounded by the admitted attempts. | Test (TC-169) |
+| FR-023-AC-7 | Given a registration's attempt ledger that declares a finite population of related effects (the `PopulationRequirement` the recovery relation authors), distinct effects that are members of the population are retained as established and none is a duplicate of another, an effect a member names again is retained once, and an effect outside the population still claims the registration's one singleton occurrence so that a second distinct such effect is a duplicate business effect; a population with no member or a repeated member is refused. | Test (TC-176) |
 
 ## Adopted vocabulary
 

@@ -10,8 +10,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use filament_protocol::dispatch::{
-    BackendResult, Binding, ChannelPremise, Fragment, Premises, ProtocolClaimKind, ProtocolRequest,
-    ProviderBoundary,
+    BackendResult, Binding, ChannelPremise, Fragment, Internality, Premises, ProtocolClaimKind,
+    ProtocolRequest, ProviderBoundary,
 };
 use filament_protocol::disposition::{FslBoundary, FslReport};
 use fsl_foundation::source::provenance::OccurrenceKey;
@@ -29,11 +29,11 @@ use fsl_semantics::check::Capability;
 use super::dynamic::Dynamic;
 
 pub type Assumptions = &'static str;
-pub type Req = ProtocolRequest<Assumptions, &'static str>;
-pub type Bind = Binding<Assumptions, &'static str>;
+pub type Req = ProtocolRequest<Assumptions, Internality>;
+pub type Bind = Binding<Assumptions, Internality>;
 /// The unified claim a provider is asked about; these tests ask no
 /// composition or refinement, whose entries are therefore `()`.
-pub type Asked = Binding<Assumptions, &'static str>;
+pub type Asked = Binding<Assumptions, Internality>;
 pub type Boundary = ProviderBoundary<'static, Asked, Sentinel>;
 
 /// The result a stand-in returns, with the parts the dispatcher reads.
@@ -182,7 +182,10 @@ pub fn request(dynamic: &Dynamic, kind: ProtocolClaimKind, channels: &[&str]) ->
                     (node, premise)
                 })
                 .collect(),
-            roles: roles.into_iter().map(|node| (node, "internal")).collect(),
+            roles: roles
+                .into_iter()
+                .map(|node| (node, Internality::Internal))
+                .collect(),
         },
         sources: vec![dynamic.clause().clone()],
     }

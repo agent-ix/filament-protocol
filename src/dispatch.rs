@@ -79,9 +79,20 @@ pub struct ChannelPremise {
     pub delivery: Delivery,
 }
 
+/// A role's internality: a binding fact, never read from the checked package
+/// (FSpec FR-217, FR-050-AC-10). The vocabulary is exactly `internal` and
+/// `external`; `external` is not assumed fully observable.
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
+pub enum Internality {
+    /// A bound role inside the assessed protocol.
+    Internal,
+    /// A bound role outside the assessed protocol.
+    External,
+}
+
 /// The per-claim premises the requester supplied, keyed by the channel or role
 /// they are the premise of (FR-151). `I` is one role internality, as the
-/// requester states it.
+/// binding states it (use [`Internality`]).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Premises<I> {
     /// The premise of each channel.

@@ -5,8 +5,11 @@
 mod support {
     pub mod dynamic;
     pub mod handoff;
+    pub mod standin;
 }
 
+use filament_protocol::declarations::Capacity;
+use filament_protocol::dispatch::{dispatch, ProtocolClaimKind, ProtocolOutcome};
 use filament_protocol::disposition::{AssessmentUnsupported, UnsupportedCause};
 use filament_protocol::dynamics::{
     assess_channels, ChannelAssessment, ChannelEvent, ChannelFact, ChannelOutcome, OverflowOutcome,
@@ -14,9 +17,12 @@ use filament_protocol::dynamics::{
 };
 use fsl_eval::simulation::protocol::Unsupported;
 use fsl_package::protocol_view::Delivery;
+use fsl_replay::{SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
 use fsl_semantics::check::{ChannelOverflow, LossSelector};
 use ix_trace_rs::trace;
 use support::dynamic::{at, message, Dynamic};
+use support::standin::{always, request, serve, Boundary, Sentinel};
 
 fn enqueue(name: &str, key: &str) -> ChannelEvent {
     ChannelEvent::Enqueue {
@@ -372,5 +378,45 @@ fn a_fact_naming_no_declared_channel_refuses_the_history() {
             dynamic.construct(node)
         }),
         Err(HistoryRefusal::UndeclaredSubject { node: role })
+    );
+}
+
+#[test]
+#[trace("TC-052", "FR-054-AC-5")]
+fn a_symbolic_capacity_is_carried_unchanged_through_link_and_dispatch_not_stepped() {
+    let dynamic = Dynamic::with("workflow", 3);
+    let declarations = dynamic.linked().declarations();
+    let channel = dynamic.named("channel", "Symbolic");
+    // Linking keeps the symbolic capacity as authored; it is never resolved
+    // to a number (stepping for every N is undecidable, FSL FR-530).
+    assert_eq!(
+        declarations.channel(&channel).expect("declared").capacity,
+        Capacity::Symbolic("Bound".into())
+    );
+    // Dispatch hands the backend that declaration unchanged.
+    let mut boundary = Boundary::new();
+    let calls = serve(
+        &mut boundary,
+        "backend",
+        &[Capability::Realizability],
+        always(Sentinel::new(
+            "ok",
+            Truth::Satisfied,
+            SettlementBasis::ClosedScope,
+        )),
+    );
+    let asked = request(&dynamic, ProtocolClaimKind::Realizability, &["Symbolic"]);
+    let outcome = dispatch(&mut boundary, declarations, &asked);
+    assert!(
+        matches!(outcome, ProtocolOutcome::Settled(_)),
+        "{outcome:?}"
+    );
+    let received = calls.all();
+    let [call] = received.as_slice() else {
+        panic!("one call");
+    };
+    assert_eq!(
+        call.channels[0].capacity,
+        Capacity::Symbolic("Bound".into())
     );
 }

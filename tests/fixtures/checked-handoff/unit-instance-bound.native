@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+language "ix:native" edition "1-draft";
+profile t = "filament.temporal.event-position.false-extension/v1";
+import "agent-ix/checked-handoff-library" as L;
+model M = "agent-ix/checked-handoff";
+
+// An `on each` clause with a capture: its atom reads the trigger's binder, so
+// it is instance-bound and is valued per trigger instance (FR-046-AC-7).
+temporal Settle using t over (view: M::Workflow) clock "events" on each (q: M::Workflow) when (q.ready) {
+    capture amount: Int[0, 1000] = q.total;
+    eventually[0, 3] holds(L::Ready(view.ready) and amount >= 0)
+}

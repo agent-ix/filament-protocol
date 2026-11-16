@@ -12,6 +12,7 @@ use crate::ids::{
 use crate::ByteDigest;
 
 use super::purity::PureAssessment;
+use super::recovery::PopulationRequirement;
 
 const REGISTRATION_IDENTITY_DOMAIN: &[u8] = b"filament.protocol.compensation-registration/v1";
 
@@ -817,6 +818,7 @@ pub struct AttemptLedger {
     max_attempts: usize,
     max_identity_bytes: usize,
     attempts: Vec<AttemptFact>,
+    population: Option<PopulationRequirement>,
 }
 
 impl AttemptLedger {
@@ -835,7 +837,18 @@ impl AttemptLedger {
             max_attempts: limits.max_attempts,
             max_identity_bytes: limits.max_identity_bytes,
             attempts: Vec::new(),
+            population: None,
         })
+    }
+
+    /// Declare the finite population of related effects this registration
+    /// establishes (FSpec FR-058). The selection is the one the recovery
+    /// relation authors, so its identity, membership rule and members are not
+    /// restated here; only its exact members are read.
+    #[must_use]
+    pub fn with_population(mut self, population: PopulationRequirement) -> Self {
+        self.population = Some(population);
+        self
     }
 
     /// Admit one exact attempt under the authored finite bound.
@@ -914,18 +927,27 @@ impl AttemptLedger {
     /// The business effects the admitted attempts established, in admission
     /// order, deciding duplicates from effect identity alone.
     ///
-    /// The effect the first establishing attempt names is retained as
-    /// established; a *distinct* effect a later attempt names claims the same
-    /// singleton occurrence and is retained as
-    /// [`EffectDisposition::Duplicate`]. An effect an attempt names again,
-    /// as a redelivered observation does, is retained once: a duplicate
-    /// delivery is not a duplicate business effect (FSpec FR-058). The result
-    /// holds at most one fact for each admitted attempt, so it is bounded by
-    /// the ledger. A registration whose effect is a declared finite
-    /// population of related effects is not modelled here.
+    /// Without a declared population the registration's effect is one
+    /// singleton occurrence: the effect the first establishing attempt names
+    /// is retained as established and a *distinct* effect a later attempt
+    /// names claims the same occurrence and is retained as
+    /// [`EffectDisposition::Duplicate`]. With a declared population, distinct
+    /// effects that are members of it are related effects, never duplicates of
+    /// one another; an effect outside the population still claims the one
+    /// singleton occurrence and a second distinct such effect is a duplicate.
+    /// An effect an attempt names again, as a redelivered observation does, is
+    /// retained once: re-observing one effect key is replay, not a duplicate
+    /// business effect (FSpec FR-058, FR-226). The result holds at most one
+    /// fact for each admitted attempt, so it is bounded by the ledger.
     #[must_use]
     pub fn effects(&self) -> Vec<CompensationEffectFact> {
+        let members: BTreeSet<&EffectId> = self
+            .population
+            .iter()
+            .flat_map(|population| population.required_members())
+            .collect();
         let mut seen = BTreeSet::new();
+        let mut singleton_claimed = false;
         let mut retained = Vec::new();
         for effect in self
             .attempts
@@ -935,10 +957,18 @@ impl AttemptLedger {
             if !seen.insert(effect) {
                 continue;
             }
+            let duplicate = if members.contains(effect) {
+                false
+            } else {
+                // The first effect outside the population claims the singleton.
+                let claimed = singleton_claimed;
+                singleton_claimed = true;
+                claimed
+            };
             retained.push(CompensationEffectFact {
                 effect: effect.clone(),
                 registration: self.registration.identity.clone(),
-                disposition: (!retained.is_empty()).then_some(EffectDisposition::Duplicate),
+                disposition: duplicate.then_some(EffectDisposition::Duplicate),
             });
         }
         retained
