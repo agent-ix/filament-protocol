@@ -14,7 +14,7 @@ Verify that a refinement whose system rests on an assumption the request did not
 
 ## Test Procedure
 
-Decide refinements whose implementation or specification rests on offered, unoffered and unused assumptions, with and without an extra trace, beside other claims. Decide compositions whose relied-on proof reaches an unoffered assumption directly, through a sibling, in reversed order and through an unproved or cycle-member guarantee, replay each counterexample, and alter its steps, premise and offered side. Tag each test with the exact acceptance criterion it verifies.
+Decide refinements, over protocols written by FSL's checked-handoff writer that require an `infinite-trace` temporal clause, whose implementation or specification rests on offered, unoffered and unused assumptions, with and without an extra trace, beside other claims. Decide compositions whose relied-on proof reaches an unoffered assumption directly, through a sibling, in reversed order and through an unproved or cycle-member guarantee, replay each counterexample, and alter its steps, premise and offered side. Tag each test with the exact acceptance criterion it verifies.
 
 ## Expected Results
 

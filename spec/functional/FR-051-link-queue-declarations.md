@@ -44,6 +44,8 @@ Per channel: the checked node id, the sender and receiver role nodes, the messag
 | FR-051-AC-3 | Over channels authoring `block`, `reject` and `loss` with each of `head`, `tail` and `new`, each linked channel's overflow policy is the authored one, and no channel is linked without one. | Test (TC-050) |
 | FR-051-AC-4 | Over channels of distinct senders, receivers and message types, each linked channel carries its sender role, receiver role and message type node exactly as FSL's `channel_endpoints` reads them, and two channels of different message types carry different type nodes. | Test (TC-168) |
 | FR-051-AC-5 | Given a package whose channel `from` is a text literal instead of a role reference, Contract IR's reader refuses it as a malformed wire, so no channel with unreadable ends is linked. | Test (TC-171) |
+| FR-051-AC-6 | Each linked channel's sender and receiver is a declared role of the same protocol and is the role the source names, and a package whose channel `from` or `to` is repointed at a node that is no role is refused by Contract IR's reader, so no channel with an unbound end is linked. | Test (TC-175) |
+| FR-051-AC-7 | The payload binder of each `send` and `receive` on a channel has the type node the linked channel carries as its message type, and channels of different message types have different binder types. | Test (TC-175) |
 
 ## Dependencies
 

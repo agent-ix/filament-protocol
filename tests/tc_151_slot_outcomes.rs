@@ -697,3 +697,364 @@ fn a_bound_that_is_absent_or_malformed_is_read_exactly() {
         "the authored seven is read"
     );
 }
+
+/// FR-045-AC-4: the retry behavior of FR-022 that `tc_003` asserts on the
+/// retired report, restated on the outcome map. The `retry.relation` slot and
+/// the ledger's bound are checked separately: `AttemptLedger::admit` never
+/// consults the relation. The relation holds between consecutive attempts, does
+/// not hold for a skipped tally, and is Unavailable (never a Boolean) when a
+/// binder is missing; the bound read from `attempts maximum` ends the
+/// admissions. (FR-045-AC-2's recovery
+/// assertions stay owed: the recovery slots do not evaluate yet.)
+#[test]
+#[trace("FR-045-AC-4", "TC-151")]
+fn the_retry_and_bound_behaviors_hold_on_the_outcome_map() {
+    let admitted = handoff();
+    let bare = bare(&admitted);
+    let node = compensation_key(&admitted, "Full");
+    let bound = admitted
+        .package()
+        .graph()
+        .nodes
+        .iter()
+        .find(|node| {
+            &*node.semantic_form == "compensation"
+                && node.declaration.as_ref().is_some_and(|declaration| {
+                    declaration.qualified_name.last().map(|part| &**part) == Some("Full")
+                })
+        })
+        .map(|node| attempts_maximum(node).expect("authored bound"))
+        .and_then(|found| found)
+        .expect("the compensation Full authors a bound");
+    assert_eq!(bound.get(), 3);
+
+    let relation = |earlier: i64, later: i64, supplied: bool| {
+        let values = vec![
+            ("targetFull", Some(int(5))),
+            ("activatedFull", Some(Value::Boolean(false))),
+            ("earlierFull", Some(attempt(&bare, &node, "Full", earlier))),
+            (
+                "laterFull",
+                supplied.then(|| attempt(&bare, &node, "Full", later)),
+            ),
+        ];
+        let (slot, supply) = call(&bare, &node, "retry.relation", values);
+        evaluate(&bare, &slot, &supply, &mut Meter::new(UNLIMITED)).expect("evaluates")
+    };
+
+    let forward = Definition {
+        identity: DefinitionId::new(b"definition:full", "full"),
+        paired_forward_effect: EffectId::new(b"effect:forward", "forward"),
+        retry_bound: Some(bound),
+    };
+    let registration = Registry::default()
+        .observe(
+            PureAssessment::checked(&NoCapabilities::default()).expect("pure"),
+            &[forward],
+            &ForwardFact::EstablishedEffect(EffectId::new(b"effect:forward", "forward")),
+        )
+        .expect("registers")[0]
+        .registration
+        .clone();
+    let mut ledger =
+        AttemptLedger::new(registration.clone(), AlgebraLimits::owner_max()).expect("ledger");
+    let fact = |number: i64| AttemptFact {
+        attempt: AttemptId::new(format!("attempt:{number}").as_bytes(), "attempt"),
+        registration: registration.identity.clone(),
+        established_effect: None,
+        outcome: Some(AttemptOutcome::Failed),
+    };
+    let pure = || PureAssessment::checked(&NoCapabilities::default()).expect("pure");
+
+    // The first attempt needs no relation; each retry needs it to hold.
+    assert!(matches!(
+        ledger.admit(pure(), fact(0)),
+        AttemptAdmission::Admitted { .. }
+    ));
+    for (earlier, later) in [(0, 1), (1, 2)] {
+        assert!(holds(&relation(earlier, later, true)), "{earlier}->{later}");
+        assert!(matches!(
+            ledger.admit(pure(), fact(later)),
+            AttemptAdmission::Admitted { .. }
+        ));
+    }
+    // Past the bound the relation may still hold; the bound refuses it.
+    assert!(holds(&relation(2, 3, true)));
+    assert!(matches!(
+        ledger.admit(pure(), fact(3)),
+        AttemptAdmission::RetryBoundExceeded { .. }
+    ));
+    assert_eq!(ledger.attempts().len(), 3);
+
+    // A relation that does not hold, or whose binder is unavailable, is not
+    // a Boolean and admits nothing.
+    assert!(!holds(&relation(0, 2, true)), "skipping a tally");
+    let missing = relation(0, 1, false);
+    assert!(
+        matches!(missing.outcome, SlotOutcome::Unavailable { .. }),
+        "{:?}",
+        missing.outcome
+    );
+}
+
+/// FR-045-AC-5: the compensation assessment performs no I/O. The assessment
+/// runs here (the slot calls and the ledger above and in the other tests of
+/// this file complete in a plain process), and the module that holds the
+/// compensation algebra, the recovery decision and the slot mapping names no
+/// network, storage, process, environment, clock-sleep or telemetry path, and
+/// the crate declares no I/O dependency.
+#[test]
+#[trace("FR-045-AC-5", "TC-151")]
+fn the_compensation_modules_name_no_io_path_or_crate() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut files = Vec::new();
+    sources(&root.join("src").join("compensation"), &mut files);
+    files.push((
+        "src/slot.rs".to_owned(),
+        std::fs::read_to_string(root.join("src").join("slot.rs")).expect("slot source"),
+    ));
+    assert!(
+        files.len() >= 6,
+        "the compensation modules and the slot mapping"
+    );
+    for (path, text) in &files {
+        for io in [
+            "std::net",
+            "std::fs",
+            "std::process",
+            "std::env",
+            "std::io",
+            "std::thread",
+            "tokio",
+            "reqwest",
+            "hyper",
+            "ureq",
+            "tracing",
+            "opentelemetry",
+            "sqlx",
+            "rusqlite",
+        ] {
+            let named = text
+                .lines()
+                .filter(|line| !line.trim_start().starts_with("//"))
+                .any(|line| line.contains(io));
+            assert!(!named, "{path} names {io}");
+            for imported in use_paths(text) {
+                let hit = imported == io || imported.starts_with(&format!("{io}::"));
+                assert!(!hit, "{path} imports {imported}");
+            }
+        }
+    }
+    // The crate's own normal dependencies (cargo metadata, offline) include no
+    // I/O crate; third-party transitive crates are out of this control's scope.
+    let output = std::process::Command::new(env!("CARGO"))
+        .args(["metadata", "--format-version", "1", "--offline", "--locked"])
+        .current_dir(root)
+        .output()
+        .expect("cargo metadata runs");
+    assert!(output.status.success(), "cargo metadata failed");
+    let metadata: serde_json::Value = serde_json::from_slice(&output.stdout).expect("metadata");
+    let names: std::collections::BTreeMap<&str, &str> = metadata["packages"]
+        .as_array()
+        .expect("packages")
+        .iter()
+        .map(|package| {
+            (
+                package["id"].as_str().expect("id"),
+                package["name"].as_str().expect("name"),
+            )
+        })
+        .collect();
+    let nodes: std::collections::BTreeMap<&str, &serde_json::Value> = metadata["resolve"]["nodes"]
+        .as_array()
+        .expect("nodes")
+        .iter()
+        .map(|node| (node["id"].as_str().expect("id"), node))
+        .collect();
+    let root_id = metadata["resolve"]["root"].as_str().expect("root");
+    let seen: Vec<&str> = nodes[root_id]["deps"]
+        .as_array()
+        .expect("deps")
+        .iter()
+        .filter(|dep| {
+            dep["dep_kinds"]
+                .as_array()
+                .expect("kinds")
+                .iter()
+                .any(|kind| kind["kind"].is_null())
+        })
+        .map(|dep| dep["pkg"].as_str().expect("pkg"))
+        .collect();
+    assert!(seen.len() > 5, "the normal dependencies were read");
+    for id in seen {
+        let name = names[id];
+        for io in [
+            "tokio",
+            "reqwest",
+            "hyper",
+            "ureq",
+            "tracing",
+            "opentelemetry",
+            "sqlx",
+            "rusqlite",
+        ] {
+            assert_ne!(name, io, "the normal dependencies include {io}");
+        }
+    }
+}
+
+/// Every path a `use` item of `text` imports, with brace groups expanded and
+/// aliases dropped: `use std::{fs::File, io::Write};` yields `std::fs::File`
+/// and `std::io::Write`.
+fn use_paths(text: &str) -> Vec<String> {
+    let code: String = text
+        .lines()
+        .map(|line| line.split("//").next().unwrap_or(""))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let mut paths = Vec::new();
+    for statement in code.split(';') {
+        let statement = statement.trim();
+        let statement = statement.strip_prefix("pub ").unwrap_or(statement);
+        let statement = statement
+            .find("use ")
+            .filter(|at| statement[..*at].trim().is_empty() || statement[..*at].ends_with(')'))
+            .map(|at| &statement[at + 4..]);
+        if let Some(tree) = statement {
+            let flat: String = tree.split_whitespace().collect::<Vec<_>>().join(" ");
+            paths.extend(expand_use_tree(&flat));
+        }
+    }
+    paths
+}
+
+fn expand_use_tree(tree: &str) -> Vec<String> {
+    let tree = tree.trim();
+    let Some(open) = tree.find('{') else {
+        let path = tree.split(" as ").next().unwrap_or(tree);
+        return vec![path.replace(' ', "").trim_start_matches("::").to_owned()];
+    };
+    let prefix = tree[..open].replace(' ', "");
+    let close = tree.rfind('}').expect("balanced braces");
+    let (mut depth, mut start, mut items) = (0usize, open + 1, Vec::new());
+    for (at, ch) in tree[open + 1..close].char_indices() {
+        let at = at + open + 1;
+        match ch {
+            '{' => depth += 1,
+            '}' => depth -= 1,
+            ',' if depth == 0 => {
+                items.push(&tree[start..at]);
+                start = at + 1;
+            }
+            _ => {}
+        }
+    }
+    items.push(&tree[start..close]);
+    items
+        .into_iter()
+        .filter(|item| !item.trim().is_empty())
+        .flat_map(|item| {
+            let prefix = prefix.clone();
+            expand_use_tree(item).into_iter().map(move |rest| {
+                let joined = if rest == "self" {
+                    prefix.trim_end_matches("::").to_owned()
+                } else {
+                    format!("{prefix}{rest}")
+                };
+                joined.trim_start_matches("::").to_owned()
+            })
+        })
+        .collect()
+}
+
+/// FR-045-AC-7: with the per-binder charge log of AC-8 in place, each
+/// assessment reports attribution as supported: the log is FSL's, carried
+/// whole on a completed and on an unavailable result, the unavailable binder
+/// has its own entry, and a binder the slot does not read has none (no zero
+/// entry is substituted for it).
+#[test]
+#[trace("FR-045-AC-7", "TC-151")]
+fn attribution_is_supported_and_no_zero_entry_stands_in_for_a_missing_binder() {
+    let admitted = handoff();
+    let bare = bare(&admitted);
+    let node = compensation_key(&admitted, "Full");
+    let selected = |member: &str| {
+        bare.select_protocol_slot(&ProtocolSlotDescriptor::new(node.clone(), member, None))
+            .expect("selects")
+    };
+    let retry_slot = selected("retry.relation");
+    let guard_slot = selected("trigger.guard");
+    let binder = |slot: &fsl_package::BareSlot, name: &str| {
+        slot.sources()
+            .iter()
+            .find(|source| source.name() == name)
+            .expect("binder")
+            .binder()
+            .clone()
+    };
+
+    // One unavailable binder among four.
+    let values = vec![
+        ("targetFull", None),
+        ("activatedFull", Some(Value::Boolean(false))),
+        ("earlierFull", Some(attempt(&bare, &node, "Full", 0))),
+        ("laterFull", Some(attempt(&bare, &node, "Full", 1))),
+    ];
+    let (slot, supply) = call(&bare, &node, "retry.relation", values);
+    let mut meter = Meter::new(UNLIMITED);
+    let result = evaluate(&bare, &slot, &supply, &mut meter).expect("call");
+    assert!(matches!(result.outcome, SlotOutcome::Unavailable { .. }));
+    let unavailable = binder(&retry_slot, "targetFull");
+    assert!(
+        result.charges.binder(&unavailable).is_some(),
+        "the unavailable binder has its own entry (its work is not charged: it is never read)"
+    );
+    assert_eq!(
+        result.charges.accounting_version(),
+        fsl_eval::value::BINDER_ACCOUNTING_VERSION
+    );
+    for kind in LimitKind::ALL {
+        assert_eq!(
+            result.charges.total().amount(kind),
+            meter.consumed(kind),
+            "{kind:?}"
+        );
+    }
+    // A binder of another slot is not read here and has no entry.
+    let foreign = binder(&guard_slot, "triggerFull");
+    assert!(result.charges.binder(&foreign).is_none());
+
+    // The same log is carried whole on a completed result.
+    let values = vec![
+        ("targetFull", Some(int(5))),
+        ("activatedFull", Some(Value::Boolean(false))),
+        ("earlierFull", Some(attempt(&bare, &node, "Full", 0))),
+        ("laterFull", Some(attempt(&bare, &node, "Full", 1))),
+    ];
+    let (slot, supply) = call(&bare, &node, "retry.relation", values);
+    let mut meter = Meter::new(UNLIMITED);
+    let done = evaluate(&bare, &slot, &supply, &mut meter).expect("call");
+    assert!(holds(&done));
+    for name in ["targetFull", "activatedFull", "earlierFull", "laterFull"] {
+        assert!(
+            done.charges.binder(&binder(&retry_slot, name)).is_some(),
+            "{name} has an entry on a completed result"
+        );
+    }
+    for kind in LimitKind::ALL {
+        assert_eq!(done.charges.total().amount(kind), meter.consumed(kind));
+    }
+    assert!(done.charges.binder(&foreign).is_none());
+}
+
+/// The import scan expands brace groups, so a grouped import cannot hide an
+/// I/O path from the FR-045-AC-5 scan.
+#[test]
+#[trace("FR-045-AC-5", "TC-151")]
+fn the_import_scan_expands_brace_groups() {
+    let paths = use_paths("use std::{fs::File, io::Write};\nuse std::{self, env as e};\n");
+    assert_eq!(
+        paths,
+        ["std::fs::File", "std::io::Write", "std", "std::env"]
+    );
+}

@@ -219,6 +219,44 @@ impl Realizability {
         ship: &str,
         cancel: &str,
     ) -> Self {
+        Self::build(protocol, delivery, warehouse, extra, ship, cancel, "")
+    }
+
+    /// `worked_as`, with the temporal clause `Due` (a required clause of the
+    /// infinite-trace profile, with the fairness row it needs) declared before
+    /// the protocol and required by it after its channels (FSL FR-383).
+    pub fn requiring(protocol: &str, clause: &str) -> Self {
+        Self::build(
+            protocol,
+            "exactly-once-premise",
+            "",
+            &format!("requires temporal {clause};\n"),
+            super::projection::PICK,
+            super::projection::CANCELLED,
+            clause,
+        )
+    }
+
+    fn build(
+        protocol: &str,
+        delivery: &str,
+        warehouse: &str,
+        extra: &str,
+        ship: &str,
+        cancel: &str,
+        clause: &str,
+    ) -> Self {
+        let (profile, temporal) = if clause.is_empty() {
+            (String::new(), String::new())
+        } else {
+            (
+                "profile tt = \"filament.temporal.infinite-trace/v1\";\n".to_owned(),
+                format!(
+                    "temporal {clause} using tt over (c: M::Workflow) clock \"model-steps\" \
+                     on origin {{\nfair weak whole M::Workflow::apply;\nalways true }}\n"
+                ),
+            )
+        };
         let mut members = MEMBERS.replace("exactly-once-premise", delivery);
         if !warehouse.is_empty() {
             members = members.replace("role Warehouse on M::Depot;\n", warehouse);
@@ -226,8 +264,8 @@ impl Realizability {
         let text = format!(
             "language \"ix:native\" edition \"1-draft\";\n\
              profile pp = \"filament.protocol.finite-global/v1\";\n\
-             model M = \"{PACKAGE}\";\n\
-             {RECORDS}protocol {protocol} using pp over (k: M::Workflow) on origin {{\n{members}{extra}\n\
+             {profile}model M = \"{PACKAGE}\";\n\
+             {temporal}{RECORDS}protocol {protocol} using pp over (k: M::Workflow) on origin {{\n{members}{extra}\n\
              run sequence Main {{\n\
              send Placed via Order as (placed: Ack) {{ true }};\n\
              receive Got via Order of Placed as (got: Ack) {{ true }};\n\

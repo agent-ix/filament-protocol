@@ -55,7 +55,7 @@ not an input or an output.
 - The link layer shall keep its own refusals because the checked package does
   not refuse them. It shall refuse zero-progress iteration when a `repeat`
   control's maximum is zero; it shall read selected temporal bindings for the
-  required temporal clauses through FSL's `temporal_binding`;
+  required temporal clauses through FSL's `temporal_binding` for each required clause whose temporal profile is clock-configured (the rule of Contract IR's reader: an `infinite-trace` clause has no clock row and binds nothing, so a protocol that requires one links; a clocked required clause without its row is refused);
   duplicate role authority by reading every listed role node's authority
   through its checked node content; and conflicting channel premises by reading
   each listed channel's premise terms and FSL's `delivery`. It shall retain the

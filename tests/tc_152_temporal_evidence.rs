@@ -12,6 +12,7 @@ use std::path::Path;
 
 use filament_contract_model::{
     read_checked_package, CheckedNodeId, CheckedPackageDispatchResult, CheckedPackageReadLimits,
+    CheckedPackageRefusalCause,
 };
 use filament_eval::{CallAdmissionFailure, CallFailure};
 use filament_exact::Meter;
@@ -316,12 +317,12 @@ fn call_refusals_keep_their_cause_names_and_charge_nothing() {
     assert!(assess(&evidence, clause, &base, &mut unlimited()).is_ok());
 }
 
-/// TC-152: the reader refuses two name rows for one clause occurrence, so no
-/// admitted package reaches `AmbiguousName`, the one construction refusal of
-/// the bytes route. FR-046-AC-5 therefore has no input to carry (it stays
-/// planned).
+/// FR-046-AC-5: the bytes reader refuses two name rows for one clause
+/// occurrence as an invalid package with the cause `ConflictingDefinition`
+/// (the reader's own cause for it), so no admitted package holds the rows that
+/// would make FSL's package construction refuse as `AmbiguousName`.
 #[test]
-#[trace("TC-152")]
+#[trace("FR-046-AC-5", "TC-152")]
 fn the_reader_refuses_the_rows_that_would_be_ambiguous() {
     let handoff = written("event_position", Corpus::None);
     let mut json: serde_json::Value =
@@ -338,7 +339,11 @@ fn the_reader_refuses_the_rows_that_would_be_ambiguous() {
         &handoff.evidence,
     );
     assert!(
-        matches!(result, CheckedPackageDispatchResult::Refused(_)),
+        matches!(
+            &result,
+            CheckedPackageDispatchResult::Refused(refusal)
+                if refusal.cause == Some(CheckedPackageRefusalCause::ConflictingDefinition)
+        ),
         "{result:?}"
     );
 }
@@ -377,5 +382,34 @@ fn a_missing_anchor_settles_as_a_non_value_never_a_boolean() {
             Some(fsl_eval::temporal::evidence::NonValueKind::Missing),
             "{name}"
         );
+    }
+}
+
+/// FR-046-AC-1 (the pass-through half only; FR-046-AC-7 stays owed): the
+/// request carries `Position.instance_valuations` on each position, FSL's
+/// evidence call accepts it, and the record the library returns is the one the
+/// call reports. R's clauses read their atoms from the shared valuations, so
+/// the per-instance entries are accepted and not read; this test does not show
+/// `instance_valuations` being read.
+#[test]
+#[trace("FR-046-AC-1", "TC-152")]
+fn instance_valuations_cross_the_retained_surface_to_fsls_call() {
+    let admitted = handoff("event_position");
+    let bare = bare(&admitted);
+    let evidence = package(&bare, &mut join_budget()).expect("R's package constructs");
+    for clause in &clauses(&evidence) {
+        let shared = request(&evidence, clause, 3);
+        let mut carried = shared.clone();
+        for position in &mut carried.positions {
+            position.instance_valuations =
+                BTreeMap::from([(id("o1"), BTreeMap::from([(0, Valuation::False)]))]);
+        }
+        let direct = evidence
+            .evaluate_temporal_evidence(clause, &carried, &mut unlimited())
+            .expect("FSL accepts the per-instance valuations");
+        let record = assess(&evidence, clause, &carried, &mut unlimited()).expect("the record");
+        assert_eq!(record, EvidenceRecord::from(direct.result()));
+        let baseline = assess(&evidence, clause, &shared, &mut unlimited()).expect("baseline");
+        assert_eq!(record, baseline, "R's atoms are shared, not instance-bound");
     }
 }

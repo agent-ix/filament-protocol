@@ -1090,11 +1090,10 @@ mod tests {
 
     use super::unoffered;
 
-    // The assumptions of a real system come from FSL's view of the protocol's
-    // required `infinite-trace` temporal clauses, which cannot be written to,
-    // linked from or read back from a checked-handoff directory in this
-    // repository; the rule that compares them with the offered ones is the
-    // pure set difference tested here, over plain values.
+    // The pure set difference that compares the assumptions a system rests on
+    // with the offered ones, over plain values. The same criteria over real
+    // protocols that require a temporal clause are tested in
+    // `tests/tc_204_refine_under_stronger_assumptions.rs`.
 
     #[test]
     #[trace("TC-204", "FR-204-AC-1")]
