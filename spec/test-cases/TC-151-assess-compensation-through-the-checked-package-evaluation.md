@@ -22,8 +22,8 @@ missing achieved state and an unavailable binder; run a retry bound of `n` and
 `n + 1`; run under a denied-syscall harness; exercise each typed outcome and
 verify no outcome is coerced to Boolean; and inspect the per-binder charge log
 for each binder read, an unread binder, the unattributed entry and the call
-total. Do not construct a local input for the unsupported-construct row or
-recovery predicate rows that recipe **R** cannot reach. Tag each test with the
+total. Do not construct a local input for the unsupported-construct row that
+recipe **R** cannot reach. Tag each test with the
 exact acceptance criterion using `#[trace("FR-045-AC-n", "TC-151")]`.
 
 ## Expected Results

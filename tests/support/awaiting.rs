@@ -28,12 +28,7 @@ pub struct Awaiting {
 
 impl Awaiting {
     pub fn new() -> Self {
-        let dir = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/tests/fixtures/checked-handoff"
-        );
-        let unit = std::fs::read_to_string(format!("{dir}/unit-event-position.native"))
-            .expect("recipe unit");
+        let unit = super::handoff::unit_text("unit-event-position.native");
         assert!(unit.contains(ANCHOR), "the recipe's attempt line moved");
         let source = unit.replacen(ANCHOR, &format!("{AWAIT}{ANCHOR}"), 1);
         let holder = tempfile::tempdir().expect("temporary directory");

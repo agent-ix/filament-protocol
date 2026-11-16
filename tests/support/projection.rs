@@ -44,10 +44,11 @@ pub const CANCELLED: &str = "send Cn via Cancelled as (c: CancelMsg) { true };\n
 
 /// `Buyer` places an order; `Seller` reads it and owns `ship | cancel`.
 pub fn worked(ship: &str, cancel: &str) -> Dynamic {
+    let money = super::handoff::MONEY_UNIT;
     Dynamic::from_source(&format!(
         "language \"ix:native\" edition \"1-draft\";\n\
          profile pp = \"filament.protocol.finite-global/v1\";\n\
-         model M = \"agent-ix/checked-handoff\";\n\
+         model M = \"agent-ix/checked-handoff\";\n{money}\
          {RECORDS}protocol Flow using pp over (input: M::Workflow) on origin {{\n{MEMBERS}\n\
          run sequence Main {{\n\
          send Placed via Order as (placed: Ack) {{ true }};\n\

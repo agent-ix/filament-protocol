@@ -13,7 +13,9 @@ use filament_protocol::dispatch::RegistrationError;
 use filament_protocol::dispatch::{
     dispatch, dispatch_claims, ClaimDisposition, ClaimRequest, ProtocolClaimKind, ProtocolOutcome,
 };
-use filament_protocol::disposition::{ClaimSettlement, Disposition, FslReport, UnsupportedCause};
+use filament_protocol::disposition::{
+    ClaimSettlement, Disposition, FailureCause, FslReport, UnsupportedCause,
+};
 use filament_semantic_value::catalog::CatalogCode;
 use fsl_eval::simulation::protocol::Unsupported;
 use fsl_replay::{SettlementBasis, Truth};
@@ -247,6 +249,7 @@ fn each_backend_cause_is_carried_in_the_backends_vocabulary_and_no_other_is_call
 
 #[test]
 #[trace("TC-160", "FR-150-AC-6")]
+#[trace("TC-160", "FR-150-AC-20")]
 fn a_failed_backend_fails_exactly_its_claim_and_no_other_backend_is_called() {
     let dynamic = Dynamic::with("workflow", 3);
     let claims = |dynamic: &Dynamic| -> Vec<ClaimRequest<&'static str, _, _>> {
@@ -268,7 +271,7 @@ fn a_failed_backend_fails_exactly_its_claim_and_no_other_backend_is_called() {
             &[Capability::Realizability],
             Box::new(move |call| {
                 if fail && call.request.fragment.channels == [reject.clone()] {
-                    FslReport::Failed(None)
+                    FslReport::Failed(FailureCause::NoRecord)
                 } else {
                     FslReport::Result(sentinel("ok"))
                 }
@@ -294,8 +297,8 @@ fn a_failed_backend_fails_exactly_its_claim_and_no_other_backend_is_called() {
     assert!(matches!(
         &failing[1],
         ClaimDisposition::Protocol(ProtocolOutcome::Settled(ClaimSettlement::Disposition(
-            Disposition::Failed(_)
-        )))
+            Disposition::Failed(failed)
+        ))) if failed.cause == FailureCause::NoRecord
     ));
     assert_eq!(failing[0], healthy[0]);
     assert_eq!(failing[2], healthy[2]);

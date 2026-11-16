@@ -19,6 +19,7 @@ use filament_protocol::dispatch::{
 use filament_protocol::disposition::{ClaimSettlement, Disposition, Warning};
 use fsl_analyze::analyze::ProtocolItem;
 use fsl_analyze::model_check::{check_protocol, ProtocolCheckRequest};
+use fsl_eval::simulation::protocol::ProtocolTransition;
 use fsl_replay::{
     settle_protocol_check, ModelCheckItem, ModelCheckLimits, ModelCheckOutcome,
     ProtocolCertificateRequest, ReplayRefusal, ResultLabel, SettlementBasis, TerminalValue, Truth,
@@ -120,27 +121,41 @@ fn deadlocked() -> Realizability {
     Realizability::worked_with(&extra, ship, CANCELLED)
 }
 
-#[test]
-#[trace("TC-205", "FR-205-AC-2")]
-fn the_dispatched_record_is_the_checkers_own_record_unchanged() {
-    let fixture = Realizability::worked(PICK, CANCELLED);
-    let dispatched = result(settle(&fixture));
-    let direct = item(&fixture);
+/// FSL's own settlement of the fixture's item, made by its two calls directly.
+fn direct(fixture: &Realizability) -> fsl_replay::ModelCheckRecord<ProtocolTransition> {
+    let direct = item(fixture);
     let limits = direct.request.limits;
     let outcome = check_protocol(direct.request, &Cancel::new()).expect("the subject checks");
-    let direct_record = settle_protocol_check(
+    settle_protocol_check(
         &outcome,
         &limits,
         &direct.certificate,
         &Cancel::new(),
         direct.replay,
+    )
+}
+
+fn assert_same_record(
+    carried: &fsl_replay::ModelCheckRecord<ProtocolTransition>,
+    direct: &fsl_replay::ModelCheckRecord<ProtocolTransition>,
+) {
+    assert_eq!(carried.value, direct.value);
+    assert_eq!(carried.label, direct.label);
+    assert_eq!(carried.basis, direct.basis);
+    assert_eq!(carried.truth, direct.truth);
+    assert_eq!(carried.limits, direct.limits);
+    assert_eq!(
+        carried.counterexample.is_some(),
+        direct.counterexample.is_some()
     );
-    let carried = dispatched.record();
-    assert_eq!(carried.value, direct_record.value);
-    assert_eq!(carried.label, direct_record.label);
-    assert_eq!(carried.basis, direct_record.basis);
-    assert_eq!(carried.truth, direct_record.truth);
-    assert_eq!(carried.limits, direct_record.limits);
+}
+
+#[test]
+#[trace("TC-205", "FR-205-AC-2")]
+fn the_dispatched_record_is_the_checkers_own_record_unchanged() {
+    let fixture = Realizability::worked(PICK, CANCELLED);
+    let dispatched = result(settle(&fixture));
+    assert_same_record(dispatched.record(), &direct(&fixture));
 }
 
 #[test]
@@ -148,15 +163,17 @@ fn the_dispatched_record_is_the_checkers_own_record_unchanged() {
 fn a_deadlock_whose_counterexample_fsl_cannot_replay_is_not_reported_violated() {
     let fixture = deadlocked();
     // The checker itself finds the deadlock.
-    let direct = item(&fixture);
-    let found = check_protocol(direct.request, &Cancel::new()).expect("the subject checks");
+    let found = check_protocol(item(&fixture).request, &Cancel::new()).expect("the subject checks");
     assert!(
         matches!(found, ModelCheckOutcome::Violated { .. }),
         "the checker finds the deadlock: {found:?}"
     );
     let result = result(settle(&fixture));
+    // What FSL settles from a refused replay, carried unchanged.
+    let settled = direct(&fixture);
+    assert_same_record(result.record(), &settled);
+    assert_ne!(settled.truth, Truth::Violated);
     assert_ne!(result.truth(), Truth::Violated);
-    assert_ne!(result.truth(), Truth::Satisfied);
     assert!(result.record().counterexample.is_none());
     assert_ne!(result.record().label, ResultLabel::Refuted);
 }

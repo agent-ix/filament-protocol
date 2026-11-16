@@ -29,6 +29,7 @@ The history's truth, and either the complete-global-conformance witness or every
 
 ## Behavior
 
+- The library shall issue the complete-global-conformance witness only for a conformant history, so that the closure alone, which proves the five axes and the execution, can issue no witness.
 - The library shall withhold complete global success unless the complete-global-conformance closure is `closed`.
 - The library shall not substitute a closed decision scope, a closed surrounding execution, a completed execution or a settled truth for any closure axis.
 - The library shall withhold complete global success for `not-required`.
@@ -50,4 +51,4 @@ The history's truth, and either the complete-global-conformance witness or every
 ## Dependencies
 
 - [FR-208](./FR-208-admit-every-permitted-observation-order-of-a-history.md) and [FR-209](./FR-209-report-adverse-observations-of-a-history-on-their-axis.md) supply the history's truth and axes.
-- The closure algebra is `closure`; the five axes are distinct types over their owners' vocabularies, so no axis substitutes for another at compile time.
+- The closure algebra is `closure`: `ProtocolAssessment::closure_established` proves the closure half as `ClosureEstablished`, and only `history::settle_global` turns it into `CompleteGlobalConformance`, whose constructor is crate-private (a `compile_fail` doctest); the five axes are distinct types over their owners' vocabularies, so no axis substitutes for another at compile time.

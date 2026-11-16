@@ -20,7 +20,7 @@ use filament_protocol::dynamics::{
 };
 use filament_protocol::history::{
     agree, assess, settle_global, AxisVerdict, DynamicAxis, HistoryAssessment, HistoryFacts,
-    IncrementalHistory,
+    IncrementalHistory, PrefixRefusal,
 };
 use fsl_replay::Truth;
 use ix_trace_rs::trace;
@@ -257,7 +257,6 @@ fn an_observation_of_an_undeclared_subject_is_unexpected_on_its_axis_only() {
             message: message("ghost"),
         },
     });
-    let before = facts.clone();
     let result = judge(&dynamic, &facts);
     assert_eq!(
         result.verdict(DynamicAxis::Channels),
@@ -267,13 +266,11 @@ fn an_observation_of_an_undeclared_subject_is_unexpected_on_its_axis_only() {
         assert_eq!(result.verdict(axis), AxisVerdict::Conformant);
     }
     assert_eq!(result.truth(), Truth::Violated);
-    // The history is judged where it stands, not repaired.
-    assert_eq!(facts, before);
 }
 
 #[test]
 #[trace("TC-208", "FR-209-AC-3")]
-fn delivery_out_of_send_order_and_over_capacity_are_non_conformant_on_the_channel_axis() {
+fn delivery_out_of_send_order_is_non_conformant_on_the_channel_axis_only() {
     let dynamic = Dynamic::with_finite_capacities();
     let head = dynamic.named("channel", "Head");
     let fact = |position, event| ChannelFact {
@@ -299,6 +296,10 @@ fn delivery_out_of_send_order_and_over_capacity_are_non_conformant_on_the_channe
     };
     let result = judge(&dynamic, &facts);
     assert_eq!(result.withheld(), [DynamicAxis::Channels]);
+    assert_eq!(
+        result.verdict(DynamicAxis::Channels),
+        AxisVerdict::NonConformant
+    );
     let Ok(outcomes) = result.channels() else {
         panic!("the channels are assessed");
     };
@@ -314,7 +315,114 @@ fn delivery_out_of_send_order_and_over_capacity_are_non_conformant_on_the_channe
         matches!(violations.as_slice(), [QueueViolation::Order { .. }]),
         "{violations:?}"
     );
-    // The over-capacity case is FR-209-AC-1's channel fault above.
+    for axis in [DynamicAxis::Roles, DynamicAxis::Joins, DynamicAxis::Loops] {
+        assert_eq!(result.verdict(axis), AxisVerdict::Conformant);
+    }
+}
+
+#[test]
+#[trace("TC-208", "FR-209-AC-4")]
+fn an_unsupported_axis_is_unavailable_and_a_violation_outranks_it() {
+    // The full choreography declares a channel of symbolic capacity, which FSL
+    // does not step, so its channel axis is unsupported for any history.
+    let dynamic = Dynamic::with("workflow", 3);
+    let unsupported = judge(&dynamic, &conforming(&dynamic));
+    assert_eq!(
+        unsupported.verdict(DynamicAxis::Channels),
+        AxisVerdict::Unsupported
+    );
+    for axis in [DynamicAxis::Roles, DynamicAxis::Joins, DynamicAxis::Loops] {
+        assert_eq!(unsupported.verdict(axis), AxisVerdict::Conformant);
+    }
+    assert_eq!(unsupported.truth(), Truth::Unavailable);
+    // The same unsupported channel axis beside a role breach is violated.
+    let breached = judge(&dynamic, &history(&dynamic, 4, 2, &["a", "b", "c"], 3));
+    assert_eq!(
+        breached.verdict(DynamicAxis::Roles),
+        AxisVerdict::NonConformant
+    );
+    assert_eq!(
+        breached.verdict(DynamicAxis::Channels),
+        AxisVerdict::Unsupported
+    );
+    assert_eq!(breached.truth(), Truth::Violated);
+}
+
+#[test]
+#[trace("TC-208", "FR-209-AC-5")]
+fn a_violation_names_the_declaration_it_breaches_by_checked_node() {
+    let dynamic = Dynamic::with_finite_capacities();
+    let result = judge(&dynamic, &history(&dynamic, 2, 3, &["a", "b", "c"], 3));
+    let Ok(outcomes) = result.channels() else {
+        panic!("assessed");
+    };
+    let reject = dynamic.named("channel", "Reject");
+    let violations: Vec<_> = outcomes
+        .iter()
+        .filter_map(|outcome| match outcome {
+            ChannelOutcome::Assessed(channel) => Some(&channel.violations),
+            ChannelOutcome::Unsupported { .. } => None,
+        })
+        .flatten()
+        .collect();
+    assert_eq!(
+        violations,
+        [&QueueViolation::Capacity {
+            channel: reject,
+            capacity: 2,
+            occupancy: 3,
+        }]
+    );
+    let roles = judge(&dynamic, &history(&dynamic, 4, 2, &["a", "b", "c"], 3));
+    let Ok(assessed) = roles.roles() else {
+        panic!("assessed");
+    };
+    let role = dynamic.named("role", "R");
+    assert!(assessed
+        .iter()
+        .any(|found| found.role == role && found.population_violation.is_some()));
+}
+
+#[test]
+#[trace("TC-208", "FR-209-AC-6")]
+fn only_a_breach_of_the_declarations_is_adverse_and_an_unreadable_fact_is_unavailable() {
+    let dynamic = Dynamic::with_finite_capacities();
+    // A workflow identity that is not text cannot be keyed as an occurrence.
+    let join = dynamic.named("control", "JoinAll");
+    let unreadable = HistoryFacts {
+        joins: vec![JoinFact {
+            at: at(1),
+            join,
+            workflow: filament_protocol::ids::WorkflowInstanceId::new(&[0xff], "ff"),
+            repeat_ordinals: Vec::new(),
+            event: JoinEvent::Settled,
+        }],
+        ..HistoryFacts::default()
+    };
+    let result = judge(&dynamic, &unreadable);
+    assert!(matches!(
+        result.verdict(DynamicAxis::Joins),
+        AxisVerdict::Unreadable(HistoryRefusal::WorkflowNotText { .. })
+    ));
+    assert_eq!(result.truth(), Truth::Unavailable);
+    // A lifecycle event of a static role breaches the declaration.
+    let role = dynamic.named("role", "S");
+    let spawned = HistoryFacts {
+        roles: vec![RoleFact {
+            at: at(1),
+            role: role.clone(),
+            workflow: workflow("w1"),
+            instance: instance("s"),
+            event: RoleEvent::Spawn,
+        }],
+        ..HistoryFacts::default()
+    };
+    let result = judge(&dynamic, &spawned);
+    assert_eq!(
+        result.verdict(DynamicAxis::Roles),
+        AxisVerdict::Unexpected(HistoryRefusal::StaticRoleLifecycle { role })
+    );
+    assert_eq!(result.truth(), Truth::Violated);
 }
 
 // ---------------------------------------------------------------------------
@@ -511,42 +619,77 @@ fn an_absent_closure_axis_is_refused_and_never_defaulted() {
 // FR-211: batch and incremental agreement
 // ---------------------------------------------------------------------------
 
-/// The history cut into three admitted prefixes by position: the roles and the
-/// channel, then the join, then the loop.
-fn prefixes(facts: &HistoryFacts) -> [HistoryFacts; 3] {
-    [
-        HistoryFacts {
-            roles: facts.roles.clone(),
-            channels: facts.channels.clone(),
-            ..HistoryFacts::default()
-        },
-        HistoryFacts {
-            joins: facts.joins.clone(),
-            ..HistoryFacts::default()
-        },
-        HistoryFacts {
-            loops: facts.loops.clone(),
-            ..HistoryFacts::default()
-        },
-    ]
+/// The facts at positions after `after` and up to `through`, on every axis: a
+/// cut of the history by position, which falls inside the facts of an axis.
+fn cut(facts: &HistoryFacts, after: u64, through: u64) -> HistoryFacts {
+    let within = |position: u64| after < position && position <= through;
+    HistoryFacts {
+        roles: facts
+            .roles
+            .iter()
+            .filter(|f| within(f.at.position))
+            .cloned()
+            .collect(),
+        channels: facts
+            .channels
+            .iter()
+            .filter(|f| within(f.at.position))
+            .cloned()
+            .collect(),
+        joins: facts
+            .joins
+            .iter()
+            .filter(|f| within(f.at.position))
+            .cloned()
+            .collect(),
+        loops: facts
+            .loops
+            .iter()
+            .filter(|f| within(f.at.position))
+            .cloned()
+            .collect(),
+    }
+}
+
+/// Admit `facts` in prefixes ending at each position of `ends`, the last
+/// through the end of the history, and return the assessment after each.
+fn advance_through(
+    dynamic: &Dynamic,
+    facts: &HistoryFacts,
+    ends: &[u64],
+) -> Vec<HistoryAssessment> {
+    let mut path = IncrementalHistory::new(dynamic.linked().declarations(), |node| {
+        dynamic.construct(node)
+    });
+    let mut after = 0;
+    ends.iter()
+        .chain([&u64::MAX])
+        .map(|end| {
+            let assessed = path.advance(cut(facts, after, *end)).expect("extends");
+            after = *end;
+            assessed
+        })
+        .collect()
 }
 
 #[test]
 #[trace("TC-208", "FR-211-AC-1")]
-fn batch_and_incremental_assessment_agree_on_conforming_and_faulty_histories() {
+fn batch_and_incremental_assessment_agree_when_prefixes_cut_inside_every_axis() {
     let dynamic = Dynamic::with_finite_capacities();
+    // Positions: roles 1-4 (2 workers), channel 5-6, join 7-10, loop 11-14.
+    // The cuts at 2, 5 and 8 fall inside the role facts, after the first
+    // channel fact and inside the join facts.
     for facts in [conforming(&dynamic), faulty(&dynamic)] {
         let batch = judge(&dynamic, &facts);
-        let mut path = IncrementalHistory::new(dynamic.linked().declarations(), |node| {
-            dynamic.construct(node)
-        });
-        let last = prefixes(&facts)
-            .into_iter()
-            .map(|prefix| path.advance(prefix))
-            .last()
-            .expect("three prefixes");
-        assert_eq!(agree(&batch, &last), Ok(()));
-        assert_eq!(batch, last);
+        let steps = advance_through(&dynamic, &facts, &[2, 5, 8]);
+        let last = steps.last().expect("prefixes");
+        assert_eq!(agree(&batch, last), Ok(()));
+        assert_eq!(&batch, last);
+        // A path that kept only the last prefix instead of appending to what
+        // it had admitted would not agree, so the agreement above is the
+        // appending of `HistoryFacts::extend`.
+        let replaced = judge(&dynamic, &cut(&facts, 8, u64::MAX));
+        assert!(agree(&batch, &replaced).is_err());
     }
 }
 
@@ -556,31 +699,31 @@ fn the_incremental_path_settles_a_join_before_the_final_fact_arrives() {
     let dynamic = Dynamic::with_finite_capacities();
     let facts = conforming(&dynamic);
     let batch = judge(&dynamic, &facts);
-    let mut path = IncrementalHistory::new(dynamic.linked().declarations(), |node| {
-        dynamic.construct(node)
-    });
-    let [first, second, third] = prefixes(&facts);
-    let early = path.advance(first);
-    let Ok(joins) = early.joins() else {
-        panic!("assessed");
-    };
-    assert!(joins.is_empty(), "no join fact has arrived yet");
-    let mid = path.advance(second);
-    // The loop facts are still to come, yet the join is settled, and as the
-    // whole history settles it.
-    let (Ok(settled), Ok(final_joins)) = (mid.joins(), batch.joins()) else {
-        panic!("assessed");
+    // Cuts at 8 (branches a and b done, the join not settled) and 10 (settled).
+    let [before, settled, last] = advance_through(&dynamic, &facts, &[8, 10])
+        .try_into()
+        .expect("three assessments");
+    let Ok(open) = before.joins() else {
+        panic!("assessed")
     };
     assert!(
-        matches!(settled.as_slice(), [JoinOutcome::Assessed(join)] if join.settled),
-        "{settled:?}"
+        matches!(open.as_slice(), [JoinOutcome::Assessed(join)] if !join.settled),
+        "{open:?}"
     );
-    assert_eq!(settled, final_joins);
-    let Ok(loops) = mid.loops() else {
+    let (Ok(joins), Ok(final_joins)) = (settled.joins(), batch.joins()) else {
+        panic!("assessed");
+    };
+    // The loop facts are still to come, yet the join is settled, and as the
+    // whole history settles it.
+    assert!(
+        matches!(joins.as_slice(), [JoinOutcome::Assessed(join)] if join.settled),
+        "{joins:?}"
+    );
+    assert_eq!(joins, final_joins);
+    let Ok(loops) = settled.loops() else {
         panic!("assessed")
     };
     assert!(loops.is_empty());
-    let last = path.advance(third);
     assert_eq!(agree(&batch, &last), Ok(()));
 }
 
@@ -597,4 +740,27 @@ fn a_divergence_between_the_paths_is_a_refusal_naming_the_axes_that_differ() {
     let divergence = agree(&batch, &incremental).expect_err("they differ");
     assert_eq!(divergence.axes, [DynamicAxis::Roles, DynamicAxis::Loops]);
     assert_eq!(agree(&batch, &batch), Ok(()));
+}
+
+#[test]
+#[trace("TC-208", "FR-211-AC-4")]
+fn a_prefix_that_does_not_extend_the_history_is_refused_and_admits_nothing() {
+    let dynamic = Dynamic::with_finite_capacities();
+    let facts = conforming(&dynamic);
+    let mut path = IncrementalHistory::new(dynamic.linked().declarations(), |node| {
+        dynamic.construct(node)
+    });
+    path.advance(cut(&facts, 0, 8)).expect("extends");
+    // Positions 7 and 8 are already admitted; 9 and 10 are after them.
+    let refused = path.advance(cut(&facts, 6, 10)).expect_err("overlaps");
+    assert_eq!(
+        refused,
+        PrefixRefusal::NotExtending {
+            admitted: at(8),
+            offered: at(7),
+        }
+    );
+    // Nothing was admitted: the next true extension still agrees with batch.
+    let last = path.advance(cut(&facts, 8, u64::MAX)).expect("extends");
+    assert_eq!(last, judge(&dynamic, &facts));
 }

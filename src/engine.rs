@@ -11,6 +11,7 @@
 
 use filament_contract_model::CheckedPackageV2;
 use filament_exact::Cancel;
+use filament_semantic_value::catalog::CatalogCode;
 use fsl_analyze::analyze::{
     analyze_items, AnalyzeRecord, Disposed, DispositionKind, Engines, Settlement,
 };
@@ -30,7 +31,7 @@ use fsl_replay::{
 use fsl_route::{BackendDescriptor, ProviderOrigin, RegistrationRefusal};
 
 use crate::dispatch::{BackendResult, Binding, ProtocolClaimKind};
-use crate::disposition::{FslBoundary, FslReport, UnsupportedCause};
+use crate::disposition::{FailureCause, FslBoundary, FslReport, UnsupportedCause};
 
 /// The request the caller states for one claim, in the engine's own request
 /// type. The key members and the run budget are the caller's to state; FSL
@@ -63,13 +64,18 @@ pub struct EngineResult {
 }
 
 impl EngineResult {
-    fn of(record: AnalyzeRecord) -> Option<Self> {
-        let artifact = record.protocol_analysis.as_deref()?;
+    fn of(record: AnalyzeRecord) -> Result<Self, FailureCause> {
+        let artifact = record
+            .protocol_analysis
+            .as_deref()
+            .ok_or(FailureCause::NoArtifact)?;
         let settlement = artifact.settlement();
         // FSL writes the record for every result it settles; an engine that
         // cannot write it has failed, which is not an absent record.
-        let run_record = artifact.record().ok()?;
-        Some(Self {
+        let run_record = artifact
+            .record()
+            .map_err(|error| FailureCause::RunRecordRefused(error.to_string()))?;
+        Ok(Self {
             record: Box::new(record),
             settlement,
             run_record,
@@ -169,6 +175,24 @@ impl<'p, S> FslEngine<'p, S> {
     }
 }
 
+/// The cause of a failure FSL disposed of with `kind`: its diagnostic code when
+/// it wrote one, otherwise the disposition itself.
+fn disposed_failure(kind: DispositionKind, code: Option<CatalogCode>) -> FailureCause {
+    code.map_or(
+        FailureCause::DisposedWithoutDiagnostic(kind),
+        FailureCause::Diagnostic,
+    )
+}
+
+/// The cause of a failure FSL settled with `value`: its diagnostic code when it
+/// wrote one, otherwise the settled value itself.
+fn settled_failure(value: &TerminalValue, code: Option<CatalogCode>) -> FailureCause {
+    code.map_or_else(
+        || FailureCause::SettledWithoutDiagnostic(Box::new(value.clone())),
+        FailureCause::Diagnostic,
+    )
+}
+
 /// A report FSL gives no result for, with FSL's own diagnostic carried.
 fn without_result<R>(record: &AnalyzeRecord) -> FslReport<R> {
     match &record.settlement {
@@ -194,15 +218,22 @@ fn without_result<R>(record: &AnalyzeRecord) -> FslReport<R> {
         // A `Disposed` record holds no domain, so a requires-bound outcome
         // cannot be rebuilt from it: it is reported as FSL's own diagnostic
         // on a failure, never as a result.
-        Settlement::Disposed(Disposed { diagnostic, .. }) => {
-            FslReport::Failed(diagnostic.as_ref().map(|found| found.code))
+        Settlement::Disposed(Disposed {
+            kind, diagnostic, ..
+        }) => FslReport::Failed(disposed_failure(
+            *kind,
+            diagnostic.as_ref().map(|found| found.code),
+        )),
+        Settlement::Terminal(terminal) => {
+            let code = terminal.diagnostic();
+            match terminal.value() {
+                TerminalValue::Declined { .. } => code.map_or_else(
+                    || FslReport::Failed(settled_failure(terminal.value(), None)),
+                    FslReport::Refusal,
+                ),
+                value => FslReport::Failed(settled_failure(value, code)),
+            }
         }
-        Settlement::Terminal(terminal) => match terminal.value() {
-            TerminalValue::Declined { .. } => terminal
-                .diagnostic()
-                .map_or(FslReport::Failed(None), FslReport::Refusal),
-            _ => FslReport::Failed(terminal.diagnostic()),
-        },
     }
 }
 
@@ -220,15 +251,58 @@ where
             (EngineRequest::Realizability(request), ProtocolClaimKind::Realizability) => {
                 realizability_item(index, self.package, *request)
             }
-            _ => return FslReport::Failed(None),
+            // The supplied request is another kind than the claim's: FSL's
+            // `inapplicable-kind` refusal of an item whose kind does not apply
+            // (FSL FR-507-AC-7). The code is spelled as FSL's spec spells it;
+            // its owner is to publish it (IR-1513).
+            _ => {
+                return FslReport::Refusal(CatalogCode::new(
+                    "invalid_capability",
+                    "inapplicable-kind",
+                ))
+            }
         };
         let mut records = analyze_items(&self.engines, vec![item], &self.cancel);
         let Some(record) = records.pop() else {
-            return FslReport::Failed(None);
+            return FslReport::Failed(FailureCause::NoRecord);
         };
         if record.protocol_analysis.is_none() {
             return without_result(&record);
         }
-        EngineResult::of(record).map_or(FslReport::Failed(None), FslReport::Result)
+        EngineResult::of(record).map_or_else(FslReport::Failed, FslReport::Result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ix_trace_rs::trace;
+
+    const CODE: CatalogCode = CatalogCode::new("invalid_runtime_input", "invalid-value");
+
+    #[trace("TC-164", "FR-150-AC-20")]
+    #[test]
+    fn a_disposition_with_no_diagnostic_fails_with_the_disposition_as_its_cause() {
+        assert_eq!(
+            disposed_failure(DispositionKind::RequiresBound, None),
+            FailureCause::DisposedWithoutDiagnostic(DispositionKind::RequiresBound)
+        );
+        assert_eq!(
+            disposed_failure(DispositionKind::RequiresBound, Some(CODE)),
+            FailureCause::Diagnostic(CODE)
+        );
+    }
+
+    #[trace("TC-164", "FR-150-AC-20")]
+    #[test]
+    fn a_refuted_record_with_no_diagnostic_fails_with_the_settled_value_as_its_cause() {
+        assert_eq!(
+            settled_failure(&TerminalValue::Refuted, None),
+            FailureCause::SettledWithoutDiagnostic(Box::new(TerminalValue::Refuted))
+        );
+        assert_eq!(
+            settled_failure(&TerminalValue::Refuted, Some(CODE)),
+            FailureCause::Diagnostic(CODE)
+        );
     }
 }

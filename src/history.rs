@@ -28,7 +28,8 @@ use crate::declarations::Declarations;
 use crate::disposition::Construct;
 use crate::dynamics::{
     assess_channels, assess_joins, assess_loops, assess_roles, ChannelFact, ChannelOutcome,
-    HistoryRefusal, JoinFact, JoinOutcome, LoopAssessment, LoopFact, RoleAssessment, RoleFact,
+    HistoryRefusal, JoinFact, JoinOutcome, LoopAssessment, LoopFact, ObservationRef,
+    RoleAssessment, RoleFact,
 };
 
 /// The facts of one finite observed history, by the axis they are about.
@@ -45,6 +46,17 @@ pub struct HistoryFacts {
 }
 
 impl HistoryFacts {
+    /// The observation of every fact, across the four axes.
+    fn observations(&self) -> Vec<&ObservationRef> {
+        self.roles
+            .iter()
+            .map(|fact| &fact.at)
+            .chain(self.channels.iter().map(|fact| &fact.at))
+            .chain(self.joins.iter().map(|fact| &fact.at))
+            .chain(self.loops.iter().map(|fact| &fact.at))
+            .collect()
+    }
+
     /// Append every fact of `later`, after the facts already held.
     pub fn extend(&mut self, later: Self) {
         self.roles.extend(later.roles);
@@ -83,9 +95,26 @@ pub enum AxisVerdict {
     /// and no violation was observed on the rest: neither conformant nor
     /// violating (FR-057).
     Unsupported,
-    /// A fact names a subject the protocol does not declare. The observation is
-    /// unexpected; it is reported, never repaired or discarded.
+    /// An observation breaches what the protocol declares: it names a subject
+    /// or a join branch the protocol does not declare, or a lifecycle event of
+    /// a static role. It is reported with the refusal that names it, never
+    /// repaired or discarded.
     Unexpected(HistoryRefusal),
+    /// A fact cannot be read as an occurrence of the declared protocol (a
+    /// workflow identity that is not text, or an occurrence FSL's key refuses).
+    /// That is no breach of a declaration, so the axis is neither conformant
+    /// nor violated: it is unavailable.
+    Unreadable(HistoryRefusal),
+}
+
+/// Whether `refusal` is an observation that breaches the declarations.
+const fn breaches_declarations(refusal: &HistoryRefusal) -> bool {
+    match refusal {
+        HistoryRefusal::UndeclaredSubject { .. }
+        | HistoryRefusal::StaticRoleLifecycle { .. }
+        | HistoryRefusal::UndeclaredBranch { .. } => true,
+        HistoryRefusal::WorkflowNotText { .. } | HistoryRefusal::Occurrence(_) => false,
+    }
 }
 
 impl AxisVerdict {
@@ -178,7 +207,8 @@ impl HistoryAssessment {
 
     /// The truth of the history: `violated` when any axis is non-conformant or
     /// holds an unexpected observation, `unavailable` when none is but an axis
-    /// is unsupported, otherwise `satisfied`.
+    /// is unsupported or unreadable, otherwise `satisfied`. A violation
+    /// outranks an unsupported axis.
     #[must_use]
     pub fn truth(&self) -> Truth {
         let verdicts = self.verdicts();
@@ -189,10 +219,12 @@ impl HistoryAssessment {
             )
         }) {
             Truth::Violated
-        } else if verdicts
-            .iter()
-            .any(|(_, verdict)| matches!(verdict, AxisVerdict::Unsupported))
-        {
+        } else if verdicts.iter().any(|(_, verdict)| {
+            matches!(
+                verdict,
+                AxisVerdict::Unsupported | AxisVerdict::Unreadable(_)
+            )
+        }) {
             Truth::Unavailable
         } else {
             Truth::Satisfied
@@ -206,7 +238,8 @@ fn judge<T>(
     unsupported: impl Fn(&T) -> bool,
 ) -> AxisVerdict {
     match assessed {
-        Err(refusal) => AxisVerdict::Unexpected(refusal.clone()),
+        Err(refusal) if breaches_declarations(refusal) => AxisVerdict::Unexpected(refusal.clone()),
+        Err(refusal) => AxisVerdict::Unreadable(refusal.clone()),
         Ok(items) if items.iter().any(violates) => AxisVerdict::NonConformant,
         Ok(items) if items.iter().any(unsupported) => AxisVerdict::Unsupported,
         Ok(_) => AxisVerdict::Conformant,
@@ -259,8 +292,8 @@ pub struct GlobalSettlement {
 #[must_use]
 pub fn settle_global(history: &HistoryAssessment, closure: ProtocolAssessment) -> GlobalSettlement {
     let axes = history.withheld();
-    let complete = match closure.complete_global_conformance() {
-        Ok(proof) if axes.is_empty() => Ok(proof),
+    let complete = match closure.closure_established() {
+        Ok(proof) if axes.is_empty() => Ok(CompleteGlobalConformance::of(proof)),
         Ok(_) => Err(Withheld {
             axes,
             closure: Vec::new(),
@@ -308,13 +341,32 @@ pub fn agree(
     }
 }
 
+/// Why a prefix is not admitted.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PrefixRefusal {
+    /// A fact of the offered prefix is not after every fact already admitted,
+    /// so the offered facts are not the next part of the history.
+    NotExtending {
+        /// The latest observation already admitted.
+        admitted: ObservationRef,
+        /// The earliest offered observation, which is not after it.
+        offered: ObservationRef,
+    },
+}
+
 /// The incremental path: facts arrive in admitted prefixes, and each prefix is
 /// assessed as it arrives, so a value the prefix decides is settled before the
-/// rest of the history is known.
+/// rest of the history is known. A prefix must extend the history: every fact
+/// of it is after every fact already admitted, in the history's own order
+/// ([`ObservationRef`]); one that is not is refused and admits nothing.
+///
+/// Each advance assesses everything admitted so far, so the cost of a history
+/// of `n` facts in `k` prefixes is `k` assessments of up to `n` facts.
 pub struct IncrementalHistory<'a, F> {
     declarations: &'a Declarations,
     construct: F,
     admitted: HistoryFacts,
+    latest: Option<ObservationRef>,
 }
 
 impl<'a, F: Fn(&CheckedNodeId) -> Construct> IncrementalHistory<'a, F> {
@@ -325,12 +377,30 @@ impl<'a, F: Fn(&CheckedNodeId) -> Construct> IncrementalHistory<'a, F> {
             declarations,
             construct,
             admitted: HistoryFacts::default(),
+            latest: None,
         }
     }
 
     /// Admit the next prefix and assess everything admitted so far.
-    pub fn advance(&mut self, next: HistoryFacts) -> HistoryAssessment {
+    ///
+    /// # Errors
+    ///
+    /// [`PrefixRefusal::NotExtending`] when a fact of `next` is not after the
+    /// latest fact already admitted; nothing is admitted.
+    pub fn advance(&mut self, next: HistoryFacts) -> Result<HistoryAssessment, PrefixRefusal> {
+        let offered = next.observations();
+        if let (Some(admitted), Some(first)) = (&self.latest, offered.iter().min()) {
+            if *first <= admitted {
+                return Err(PrefixRefusal::NotExtending {
+                    admitted: admitted.clone(),
+                    offered: (*first).clone(),
+                });
+            }
+        }
+        if let Some(last) = offered.into_iter().max() {
+            self.latest = Some(last.clone());
+        }
         self.admitted.extend(next);
-        assess(self.declarations, &self.construct, &self.admitted)
+        Ok(assess(self.declarations, &self.construct, &self.admitted))
     }
 }

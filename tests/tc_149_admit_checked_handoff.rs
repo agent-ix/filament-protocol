@@ -296,9 +296,15 @@ fn numeric_defects_are_the_readers_refusals() {
         ("unsafe bare number", "9007199254740993"),
         ("signed-64 overflow", "9223372036854775808"),
     ] {
-        let bytes = text
-            .replacen("\"start\":1193", &format!("\"start\":{number}"), 1)
-            .into_bytes();
+        // The first source offset of the package, whatever the unit's text is.
+        let marker = "\"start\":";
+        let at = text
+            .match_indices(marker)
+            .map(|(at, _)| at + marker.len())
+            .find(|at| text.as_bytes()[*at].is_ascii_digit())
+            .expect("a source offset");
+        let digits = text[at..].bytes().take_while(u8::is_ascii_digit).count();
+        let bytes = format!("{}{number}{}", &text[..at], &text[at + digits..]).into_bytes();
         let refusal = reader_refusal(admit(
             &files_of(&handoff, &bytes),
             &handoff.evidence,

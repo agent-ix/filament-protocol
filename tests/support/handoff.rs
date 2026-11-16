@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! The handoff directory of recipe R, written in process by FSL's writer
-//! (FSL FR-517) from the recipe inputs under `tests/fixtures/checked-handoff`.
+//! (FSL FR-517) from FSL's own recipe inputs (`examples/checked-handoff` of the
+//! checkout Cargo resolved for the `filament-spec-language` dependency, found
+//! with `cargo metadata`) and the one unit this repository authored itself,
+//! `tests/fixtures/checked-handoff/unit-instance-bound.native`, for which FSL
+//! has no equivalent. No FSL file is copied here.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::sync::OnceLock;
 
 use filament_contract_model::{
     CheckedPackageEvidence, ClockConfiguration, ClockExactNumber, NativeJoinBudget,
@@ -12,10 +18,58 @@ use filament_spec_language::checked_handoff::{evidence, write, CheckedHandoffReq
 use filament_spec_language::emit_checked_v2::{ClockSelection, Request};
 use fsl_package::NativeJoinLimits;
 
-const DIR: &str = concat!(
+/// The directory of the units this repository authored.
+const OWN_DIR: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/tests/fixtures/checked-handoff"
 );
+
+/// FSL's `examples/checked-handoff`, in the checkout of the dependency that
+/// Cargo resolved.
+pub fn fsl_dir() -> &'static Path {
+    static DIR: OnceLock<PathBuf> = OnceLock::new();
+    DIR.get_or_init(|| {
+        let output = Command::new(env!("CARGO"))
+            .args(["metadata", "--format-version", "1", "--offline"])
+            .current_dir(env!("CARGO_MANIFEST_DIR"))
+            .output()
+            .expect("cargo metadata runs");
+        assert!(output.status.success(), "cargo metadata failed");
+        let metadata: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("cargo metadata JSON");
+        let manifest = metadata["packages"]
+            .as_array()
+            .expect("packages")
+            .iter()
+            .find(|package| package["name"] == "filament-spec-language")
+            .and_then(|package| package["manifest_path"].as_str())
+            .expect("the filament-spec-language dependency");
+        Path::new(manifest)
+            .parent()
+            .expect("a manifest directory")
+            .join("examples/checked-handoff")
+    })
+}
+
+/// The unit `U` of dimension `Money` that FSL's model declares `Amount` and
+/// `Total` in, which every unit written for that model declares itself.
+#[allow(dead_code)] // Only the tests that write their own unit declare it.
+pub const MONEY_UNIT: &str = "dimension Money;\nunit U : Money = rational(1, 1);\n";
+
+/// A unit of the recipe: FSL's, or this repository's own instance-bound unit.
+fn unit_path(unit: &str) -> PathBuf {
+    if unit == "unit-instance-bound.native" {
+        Path::new(OWN_DIR).join(unit)
+    } else {
+        fsl_dir().join(unit)
+    }
+}
+
+/// The text of the recipe unit `unit`.
+#[allow(dead_code)] // Only the tests that edit the recipe unit read its text.
+pub fn unit_text(unit: &str) -> String {
+    std::fs::read_to_string(unit_path(unit)).expect("recipe unit")
+}
 
 fn recipe(kind: &str) -> (&'static str, Vec<(&'static str, ClockConfiguration)>) {
     match kind {
@@ -85,12 +139,12 @@ pub fn request(kind: &str, corpus: Corpus) -> CheckedHandoffRequest {
     let (unit, clocks) = recipe(kind);
     CheckedHandoffRequest {
         emit: Request {
-            source: PathBuf::from(format!("{DIR}/{unit}")),
+            source: unit_path(unit),
             package_name: "r".into(),
-            models: vec![PathBuf::from(format!("{DIR}/model.semantic-ir.json"))],
+            models: vec![fsl_dir().join("model.semantic-ir.json")],
             libraries: vec![(
                 "agent-ix/checked-handoff-library".into(),
-                PathBuf::from(format!("{DIR}/library.native")),
+                fsl_dir().join("library.native"),
             )],
             execution_points: None,
             temporal_selections: clocks

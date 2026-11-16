@@ -38,12 +38,13 @@ fn source(lifetime: &str, max: u64, bag_loss: &str) -> String {
             branches(name)
         )
     };
+    let money = super::handoff::MONEY_UNIT;
     format!(
         r#"language "ix:native" edition "1-draft";
 profile v = "filament.model.complete/v1";
 profile p = "filament.protocol.finite-global/v1";
 model M = "agent-ix/checked-handoff";
-function both using v(a: Boolean, b: Boolean, c: Boolean): Boolean pure {{ a and b and c }}
+{money}function both using v(a: Boolean, b: Boolean, c: Boolean): Boolean pure {{ a and b and c }}
 protocol Flow using p over (input: M::Workflow) on origin {{
   role S on M::Workflow;
   role R each M::Provider from workers max {max} lifetime {lifetime};
@@ -82,10 +83,7 @@ protocol Flow using p over (input: M::Workflow) on origin {{
 
 /// The recipe model with the population `workers` of `Provider`.
 pub fn model() -> Vec<u8> {
-    let path = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/tests/fixtures/checked-handoff/model.semantic-ir.json"
-    );
+    let path = super::handoff::fsl_dir().join("model.semantic-ir.json");
     let mut model: serde_json::Value =
         serde_json::from_slice(&std::fs::read(path).expect("model fixture")).expect("model JSON");
     let package = "ix://agent-ix/checked-handoff";

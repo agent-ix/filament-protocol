@@ -29,7 +29,7 @@ use fsl_replay::{
 use fsl_route::{BackendDescriptor, ProviderOrigin, RegistrationRefusal};
 
 use crate::dispatch::{BackendResult, Binding};
-use crate::disposition::{FslBoundary, FslReport};
+use crate::disposition::{FailureCause, FslBoundary, FslReport};
 
 /// FSL's settled record of one protocol check, unchanged.
 #[derive(Debug)]
@@ -117,8 +117,8 @@ where
         } = (self.supply)(binding);
         let limits = request.limits;
         // FSL classifies an engine refusal by its FR-281 table in a
-        // crate-private map; this library does not restate it, so a refusal is
-        // a failure of the selected backend with no code.
+        // crate-private map (ADR-010 G9); this library does not restate it, so
+        // the refusal is carried as the checker's own text.
         match check_protocol(request, &self.cancel) {
             Ok(outcome) => FslReport::Result(ConformanceResult {
                 record: settle_protocol_check(
@@ -129,7 +129,7 @@ where
                     replay,
                 ),
             }),
-            Err(_) => FslReport::Failed(None),
+            Err(refusal) => FslReport::Failed(FailureCause::CheckerRefused(refusal.to_string())),
         }
     }
 }
