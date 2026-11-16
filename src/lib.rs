@@ -40,6 +40,8 @@ pub mod closure;
 pub mod compensation;
 /// Assume-guarantee composition decision: cycles, discharge and stronger assumptions (FR-200..204).
 pub mod composition;
+/// Finite global conformance decided by FSL's protocol checker (FR-205).
+pub mod conformance;
 /// Settlement of inclusive deadline branches (FR-100).
 pub mod deadline;
 /// Authored role, channel, join and loop declarations of a linked protocol.

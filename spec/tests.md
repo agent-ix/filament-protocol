@@ -71,6 +71,9 @@ relationships:
   - { target: ix://agent-ix/filament-protocol/FR-202, type: references }
   - { target: ix://agent-ix/filament-protocol/FR-203, type: references }
   - { target: ix://agent-ix/filament-protocol/FR-204, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-205, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-206, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-207, type: references }
   - { target: ix://agent-ix/filament-protocol/NFR-001, type: references }
   - { target: ix://agent-ix/filament-protocol/NFR-002, type: references }
   - { target: ix://agent-ix/filament-protocol/NFR-003, type: references }
@@ -87,9 +90,9 @@ paths and work that remains planned or blocked. The accepted frozen source basel
 Assurance producer, license, implementation plan, and retained corpus remain
 explicit gates.
 
-The repository carries 70 functional requirements, 8 non-functional
-requirements, 3 integration tests and 51 test cases, and 488 acceptance criteria
-across the 70 FRs and the 8 NFRs. The functional set divides into 9 aggregate or
+The repository carries 73 functional requirements, 8 non-functional
+requirements, 5 integration tests and 54 test cases, and 535 acceptance criteria
+across the 73 FRs and the 8 NFRs (the criteria `quire matrix` lists). The functional set divides into 9 aggregate or
 behavioural parents (FR-001..FR-009), 9 object requirements (FR-010..FR-018),
 24 atomic behavioural parts (FR-019..FR-042) that the parents aggregate
 through `contains`, 2 independent behavioural requirements (FR-301, FR-302)
@@ -98,7 +101,8 @@ rather than being decomposed from them, 5 checked-package requirements
 (FR-043..FR-047), 10 extension requirements for dynamic roles, queues, joins and
 loops (FR-050..FR-059, ADR-010), and 2 core-protocol delta requirements
 (FR-100, FR-101, ADR-010), and 5 composition and refinement requirements
-(FR-200..FR-204, ADR-010). FR-003 through FR-008 now state their
+(FR-200..FR-204, ADR-010), and 3 successors of requirements retired with the
+evaluator (FR-205..FR-207, ADR-010 Decision 8). FR-003 through FR-008 now state their
 obligations once each through those parts; the parent row and the part rows are
 therefore two views of one obligation and must not be added together as
 separate work.
@@ -152,8 +156,10 @@ tree before stage 1, and a figure for the current tree is read by running
 ### Where the retired behaviour goes
 
 The link layer, the compensation assessment over the checked package and the
-temporal evidence route return as FR-044, FR-045 and FR-046. Result, claim
-dispatch, the E02 projection and the producer-contract registry have no
+temporal evidence route return as FR-044, FR-045 and FR-046. Global conformance
+returns as FR-205 (for the question FSL decides), the scenario record as FR-206
+and serialized replay as FR-207; FR-206 and FR-207 are blocked on owners. The
+canonical result, the E02 projection and the producer-contract registry have no
 successor requirement yet; their rows stay retired until one is specified.
 
 ## Functional Requirement Coverage
@@ -166,7 +172,7 @@ in Domain Object Coverage instead.
 | FR-001 | FR-001-AC-1, FR-001-AC-2, FR-001-AC-3, FR-001-AC-4, FR-001-AC-5 | no living test for AC-1..AC-5 | ⛔ Retired — every test of this row's 5 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised (successor: FR-043). |
 | FR-002 | FR-002-AC-1, FR-002-AC-2, FR-002-AC-3, FR-002-AC-4, FR-002-AC-5 | no living test for AC-1..AC-5 | ⛔ Retired — every test of this row's 5 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised (successor: FR-044). |
 | FR-003 | FR-003-AC-1, FR-003-AC-2, FR-003-AC-3, FR-003-AC-4, FR-003-AC-5, FR-003-AC-6, FR-003-AC-7 | TC-003 (AC-1..AC-7); TC-009 (AC-7) | ✅ Implemented — TC-003's eight tests exercise the compensation kernels (activation, registration, attempt and effect accounting, commit ordering, retry bound, recovery) over QObs views with zero action calls. Aggregate view of FR-019..FR-025; evaluation through the checked package returns with FR-045. |
-| FR-004 | FR-004-AC-1, FR-004-AC-2, FR-004-AC-3, FR-004-AC-4 | no living test for AC-1..AC-4 | ⛔ Retired — every test of this row's 4 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised (successor: FR-046). |
+| FR-004 | FR-004-AC-1, FR-004-AC-2, FR-004-AC-3, FR-004-AC-4 | no living test for AC-1..AC-4 | ⛔ Retired — every test of this row's 4 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised (successor: FR-205 for the model-level question; FR-046 for temporal evidence). |
 | FR-005 | FR-005-AC-1, FR-005-AC-2, FR-005-AC-3, FR-005-AC-4, FR-005-AC-5 | no living test for AC-1..AC-5 | ⛔ Retired — every test of this row's 5 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised. |
 | FR-006 | FR-006-AC-1..AC-7, FR-006-AC-9 | no living test for AC-1..AC-7, AC-9 | ⛔ Retired — every test of this row's 8 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised. |
 | FR-007 | FR-007-AC-1, FR-007-AC-2, FR-007-AC-3, FR-007-AC-4, FR-007-AC-5, FR-007-AC-6 | no living test for AC-1..AC-6 | ⛔ Retired — every test of this row's 6 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised. |
@@ -224,8 +230,11 @@ in Domain Object Coverage instead.
 | FR-202 | FR-202-AC-1..AC-7 | TC-202 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests over handoff-compiled protocols (`tests/tc_147_decide_protocol_refinement.rs`); the divergence is a hidden loop of `Pick` sends and receives. |
 | FR-203 | FR-203-AC-1..AC-7 | TC-203 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_decide_composition.rs`). |
 | FR-204 | FR-204-AC-1..AC-12 | TC-204 (AC-1..AC-12) | ✅ Implemented — AC-8..AC-12 (composition) have living traced tests in `tests/tc_200_decide_composition.rs`. AC-1..AC-7 (refinement) have living traced tests in `tests/tc_204_refine_under_stronger_assumptions.rs` over protocols written by FSL's checked-handoff writer that require an `infinite-trace` temporal clause (with its fairness row), link, and give `step_system` a system whose assumption is that clause; AC-1, AC-2 and AC-3 also keep their unit tests over plain values in `src/refinement.rs`. |
+| FR-205 | FR-205-AC-1..AC-4 | TC-205 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests (`tests/tc_205_decide_global_conformance.rs`) over handoff-compiled protocols and FSL's EN-1 checker. Closes V1-PROT-026 for the question FSL decides (every behaviour is deadlock-free); succeeds FR-004 only there. The `refuted` settlement is not tested: FSL's replay of an EN-1 counterexample needs source a handoff does not carry (ADR-010 G9), so AC-3 asserts the refused replay is never read as `violated`. |
+| FR-206 | FR-206-AC-1..AC-3 | no living test for AC-1..AC-3 | ⛔ Blocked — `quoin-evidence` (owner of the intake's `ScenarioEvidence`) cannot join this manifest: it pins `serde =1.0.229` and `filament-observation` pins `serde =1.0.228` (ADR-010 G11). Succeeds FR-006, FR-007 and FR-017. |
+| FR-207 | FR-207-AC-1..AC-2 | no living test for AC-1..AC-2 | ⛔ Blocked — no owner publishes a serialized observed history or a reader of one (ADR-010 G10). Succeeds the replay half of FR-006. |
 
-Behavioural totals across these 61 rows: 410 acceptance criteria, of which 281 carry a living traced test (the criteria `quire matrix` computes as tagged). `quire matrix` computes no retired or planned split, so none is stated.
+Behavioural totals across these 64 rows: 419 acceptance criteria, of which 285 carry a living traced test (the criteria `quire matrix` computes as tagged). `quire matrix` computes no retired or planned split, so none is stated.
 
 ## Domain Object Coverage
 
@@ -271,7 +280,7 @@ Non-functional totals across these 8 rows: 53 acceptance criteria, of which 19 c
 | IT-002 | Observation and temporal facts to protocol evaluator/result | FR-003, FR-004, FR-006, FR-009, FR-017, FR-026, FR-041, NFR-002, NFR-005 | ⛔ Retired — the IT-001/IT-002 procedures were deleted in FSL-1549 stage 1; FR-047-AC-3 owns their replacement on recipe R. |
 | IT-004 | Projection claims through FSL's linked protocol analysis engine | FR-150 | ✅ Implemented — TC-164 and TC-165 run it for `local-projection` and TC-166 and TC-172 for `realizability`; `composition` and `refinement` have no linked FSL engine. |
 | IT-003 | Protocol result through Engineering Assurance, E02, and Quoin | FR-006, FR-007, FR-009, FR-014, FR-017, FR-039, FR-040, NFR-002, NFR-003, NFR-005 | ⛔ Unexecutable — Engineering Assurance and the exact qverify E02 consumer graph are delivered, but Quoin has no Protocol scenario-record intake, so all owed scenarios score zero rather than passing. |
-| IT-005 | Reference workflow corpora over the Protocol-owned cells | FR-019..FR-023, FR-050..FR-056, FR-100 | ✅ Implemented — each corpus names the living tests that run it; the timed-refund end-to-end example and the correlated-workflow cells are not covered (V1-PROT inventory). |
+| IT-005 | Reference workflow corpora over the Protocol-owned cells | FR-019..FR-023, FR-050..FR-056, FR-100, FR-205 | ✅ Implemented — each corpus names the living tests that run it; the timed-refund end-to-end example and the correlated-workflow cells are not covered (V1-PROT inventory). |
 
 Owed integration scenarios: 32 across the three integration tests (IT-001 10,
 IT-002 12, IT-003 10). The IT-001 and IT-002 procedures and their tests were
@@ -341,6 +350,7 @@ a coverage claim in this matrix.
 | TC-202 | Report refinement counterexamples and read verdicts into the axes | Property | P0 | FR-202 | ✅ Implemented — its tests carry every FR-202 criterion (AC-1..AC-7), over handoff-compiled protocols. |
 | TC-203 | Refuse circular guarantee dependencies as self-justifying | Property | P0 | FR-203 | ✅ Implemented — its tests carry every FR-203 criterion (AC-1..AC-7). |
 | TC-204 | Refuse a claim established under assumptions stronger than the request's | Property | P0 | FR-204 | ✅ Implemented — composition AC-8..AC-12 in `tests/tc_200_decide_composition.rs`; refinement AC-1..AC-7 in `tests/tc_204_refine_under_stronger_assumptions.rs` over real protocols that require a temporal clause. |
+| TC-205 | Decide finite global conformance with FSL's protocol checker over compiled protocols | Property | P0 | FR-205 | ✅ Implemented — four tests carry FR-205-AC-1..AC-4 over handoff-compiled protocols (`tests/tc_205_decide_global_conformance.rs`). |
 
 ## V1-PROT inventory
 
@@ -372,15 +382,15 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-022 commit and recovery | FR-021 (TC-003) | Backed |
 | V1-PROT-023 outcome distinctions | FR-023 (TC-003) | Backed |
 | V1-PROT-024 duplicate business effects | FR-023-AC-6 (TC-169); FR-023-AC-7 (TC-176) | Backed: a singleton effect, and a declared population of related effects whose distinct members are not duplicates and whose non-members are recorded as outside the population |
-| V1-PROT-025 finite replay | TC-167; TC-008 | Partial: a rebuilt history gives the same dynamic-axis result; no test replays a serialized trace, and the whole-result replay is retired with FR-006 |
-| V1-PROT-026 global conformance | passthrough only (TC-165 AC-15) | Blocked: FR-004 composes FR-026, FR-027, FR-028 and FR-041, all retired with the evaluator (FSL-1549) and with no successor requirement, so nothing here produces a global-conformance result to test |
+| V1-PROT-025 finite replay | TC-167; TC-008; FR-207 | Partial, and the serialized half is blocked: a rebuilt history gives the same dynamic-axis result (TC-167); no test replays a serialized trace because no owner publishes a serialization of an observed history or a reader of one (FR-207, ADR-010 G10). The whole-result replay is retired with FR-006 |
+| V1-PROT-026 global conformance | FR-205 (TC-205); passthrough (TC-165 AC-15) | Backed for the question FSL decides: FSL's EN-1 checker decides whether every behaviour is deadlock-free and the library carries its record (FR-205). The history questions of retired FR-004 (FR-026, FR-027, FR-028, FR-041) have no FSL engine and stay retired. FSL advertises no `global-conformance` kind and the `refuted` settlement needs a replay a handoff cannot supply (ADR-010 G8, G9) |
 | V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on FSL's engine |
 | V1-PROT-028 realizability | FR-150 (TC-166, TC-172, TC-173) | Backed on FSL's engine; the witness is carried unchanged (FR-302) |
 | V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204, TC-173) | Decided in `src/composition.rs`; no backend. TC-173 runs the corpus over three separately compiled protocols, guarantee labels taken from FSL's realizability results; the stronger-assumption refinement criteria (FR-204 AC-1..AC-7) are tested over protocols that require a temporal clause (TC-204) |
 | V1-PROT-030 refinement | FR-202, FR-204; FR-301 (TC-147, TC-173) | Decided in `src/refinement.rs` over systems built from FSL's protocol step view (FSL FR-578) |
 | V1-PROT-031 no external effects | FR-025 (TC-003, TC-009) | Backed |
 | V1-RUN-003 protocol replay | TC-167; TC-050..TC-055 | Partial: the dynamic axes only |
-| V1-RUN-005, V1-RUN-006 independent axes | FR-014 (TC-011); TC-055, TC-154, TC-163 | Partial, and blocked for publication. Quoin #519 is closed and its intake (`quoin.protocol-scenario-intake/v1`, quoin-evidence) accepts a scenario record for IT-001..IT-003, but the canonical result (FR-006, FR-007) and the scenario record (FR-017) it carries are retired here with no successor, so there is no Protocol value to hand over |
+| V1-RUN-005, V1-RUN-006 independent axes | FR-014 (TC-011); TC-055, TC-154, TC-163; FR-206 | Partial, and the publication half is blocked. Quoin's intake (`quoin.protocol-scenario-intake/v1`, `quoin-evidence` FR-130) accepts a scenario record for IT-001..IT-003, and the dispositions it would be composed from are live (FR-029); FR-206 composes the value from them but needs `quoin-evidence` as a dependency, which cannot resolve beside `filament-observation` (`serde` exact-pin conflict, ADR-010 G11) |
 | V1-RUN-009 related workflow instances | filament-observation TC-005 (order and shipment relationships); TC-154 (a wait links only the instance whose whole subject key matches) | Partial: no payment-attempt or refund relationship test |
 | V1-RUN-011 timed refund | TC-170 (in `tests/tc_154_settle_deadline_captures.rs`); FR-100, FR-101 | Backed on the generic deadline fixture: a timeout starts compensation, a response starts none; failed then successful refund attempt, one effect |
 | V1-RUN-012 compensated fan-out and join | TC-170 (`tests/tc_170_compensated_fan_out_join_run.rs`) | Backed: unsettled join, per-branch compensation, retried undo |
@@ -395,12 +405,12 @@ does not measure binding.
 
 | Category | Total | Passed | Failed | Blocked | Planned | Retired |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Functional requirement rows | 61 | 32 | 0 | 0 | 10 | 19 |
+| Functional requirement rows | 64 | 33 | 0 | 2 | 10 | 19 |
 | Domain object requirement rows | 9 | 3 | 0 | 0 | 3 | 3 |
 | Non-functional requirement rows | 8 | 3 | 0 | 0 | 4 | 1 |
 | Integration rows | 6 | 2 | 0 | 1 | 0 | 3 |
-| Test case rows | 53 | 40 | 0 | 0 | 5 | 8 |
-| Overall | 137 | 80 | 0 | 1 | 22 | 34 |
+| Test case rows | 54 | 41 | 0 | 0 | 5 | 8 |
+| Overall | 141 | 82 | 0 | 3 | 22 | 34 |
 
 The Integration count is six because IT-001 carries a separate version 1 and version 2
 row and IT-004 and IT-005 are implemented; the two contracts may not substitute for each other, so one row cannot
@@ -416,7 +426,7 @@ criterion is a zero inside it rather than a row removed from it.
 
 | Category | Total | Passed | Failed | Blocked |
 | --- | ---: | ---: | ---: | ---: |
-| Overall owed criteria | 526 | 328 | 0 | 0 |
+| Overall owed criteria | 535 | 332 | 0 | 0 |
 
 Passed means the criterion carries a living traced test in the current tree
-(328 of 526, the criteria `quire matrix` lists (473 functional, 53 non-functional) and computes as tagged, recounted with quire 0.38.3 after FR-023-AC-7, FR-046-AC-7, FR-054-AC-10 and FR-151-AC-9 gained living tests). Blocked is none: FSL delivered the evaluation entries that FR-045 and FR-046 wait on. The criteria not counted as passed include those that verify by Inspection or Analysis only and FR-014-AC-6, which waits on IT-003's Quoin scenario-record handoff; `quire matrix` computes no planned or retired split, so none is stated here.
+(332 of 535, the criteria `quire matrix` lists (482 functional, 53 non-functional) and computes as tagged, recounted with quire 0.38.3 after FR-205-AC-1..AC-4 gained living tests). The 9 criteria of FR-205 to FR-207 are new; the 5 of FR-206 and FR-207 and FR-206-AC-1 (Inspection) are not counted as passed. Blocked is none: FSL delivered the evaluation entries that FR-045 and FR-046 wait on. The criteria not counted as passed include those that verify by Inspection or Analysis only and FR-014-AC-6, which waits on IT-003's Quoin scenario-record handoff; `quire matrix` computes no planned or retired split, so none is stated here.

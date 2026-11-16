@@ -36,13 +36,19 @@ use crate::disposition::{
 use crate::refinement::{decide as decide_refinement, RefinementOutcome, RefinementRequest};
 use crate::refusal::ProtocolCauseKind;
 
-/// The two claim kinds this module dispatches.
+/// The claim kinds this module dispatches.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ProtocolClaimKind {
     /// `local-projection`.
     LocalProjection,
     /// `realizability`.
     Realizability,
+    /// `global-conformance` (FR-205): FSL's explicit-state check of every
+    /// behaviour of the protocol (FSL FR-215, FR-636). FSL routes that check as
+    /// a `temporal-satisfaction` item, because no engine advertises the
+    /// `global-conformance` kind itself, so the capability FR-290 selects on is
+    /// FSL's `temporal-satisfaction`.
+    GlobalConformance,
 }
 
 impl ProtocolClaimKind {
@@ -52,6 +58,7 @@ impl ProtocolClaimKind {
         match self {
             Self::LocalProjection => Capability::LocalProjection,
             Self::Realizability => Capability::Realizability,
+            Self::GlobalConformance => Capability::TemporalSatisfaction,
         }
     }
 }
@@ -101,7 +108,8 @@ pub struct Premises {
     pub roles: BTreeMap<CheckedNodeId, Internality>,
 }
 
-/// One requested `local-projection` or `realizability` claim.
+/// One requested `local-projection`, `realizability` or `global-conformance`
+/// claim.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProtocolRequest<A> {
     /// The claim kind.

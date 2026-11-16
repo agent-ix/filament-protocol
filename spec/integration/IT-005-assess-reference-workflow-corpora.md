@@ -29,6 +29,8 @@ relationships:
     type: verifies
   - target: ix://agent-ix/filament-protocol/FR-020
     type: verifies
+  - target: ix://agent-ix/filament-protocol/FR-205
+    type: verifies
 ---
 # IT-005: Assess the reference workflow corpora over the Protocol-owned cells
 
@@ -56,12 +58,13 @@ Run each living test named in the table. Each corpus row names the cells it back
 
 | Corpus | Cells | Run by | What is asserted |
 | --- | --- | --- | --- |
-| Finite replay | V1-PROT-025, V1-RUN-003 | TC-167; TC-008 | A finite observed history is assessed on the role, queue, join and loop axes, and a history rebuilt over a second compilation gives the same result (TC-167). TC-008 separately types the reproduction record; no test yet replays a serialized trace through it. |
+| Finite replay | V1-PROT-025, V1-RUN-003 | TC-167; TC-008 | A finite observed history is assessed on the role, queue, join and loop axes, and a history rebuilt over a second compilation gives the same result (TC-167). TC-008 separately types the reproduction record; no test replays a serialized trace, because no owner publishes a serialization of an observed history (FR-207, ADR-010 G10). |
 | Timed refund | V1-RUN-011, V1-PROT-019 | TC-154; TC-170 | Inclusive deadline branches settle only on complete progress; captures bind once, in order. TC-170 runs a refund-shaped run on the generic deadline fixture: a timeout starts compensation and a response starts none; a failed attempt then a successful retry give one effect and no duplicate. |
 | Fan-out and join | V1-RUN-012, V1-PROT-010 | TC-053; TC-167; TC-170 | Each join policy, threshold and `outstanding` rule is judged on an observed history; a run that breaks one axis fails on that axis only (TC-167). |
 | Retry | V1-PROT-021, V1-PROT-023 | TC-003 (FR-022, FR-023) | The initial attempt counts, the authored retry bound admits exactly and one over refuses; attempts, effects and outcomes stay distinct. |
 | Compensation | V1-PROT-020, V1-PROT-022, V1-PROT-024 | TC-003 (FR-019..FR-021); TC-169; TC-176 | Registration needs its matching effect and is replay-idempotent; commit and recovery orderings follow only the authored causal order; a declared population of related effects holds distinct members that are not duplicates (TC-176). |
 | Dynamic roles | V1-PROT-012, V1-PROT-013 | TC-051, TC-052, TC-167 | Lifetime and population bound of a replicated role; queue capacity and overflow; a faulty run is judged on each axis separately. |
+| Global conformance | V1-PROT-026 | TC-205 | FSL's linked EN-1 checker decides whether every behaviour of a handoff-compiled protocol is deadlock-free, and the library carries its record unchanged (FR-205): a deadlock-free protocol is proved on `closed-scope`, and a deadlock whose counterexample FSL cannot replay is never read as `violated`. The history questions of retired FR-004 stay retired. |
 | Projection | V1-PROT-027 | TC-164, TC-165 (IT-004) | FSL's linked engine decides it. |
 | Realizability | V1-PROT-028 | TC-166, TC-172, TC-173 | FSL's linked engine decides it over a subject built from a checked-handoff directory by FSL's `protocol_subject`; the witness is carried unchanged (FR-302). TC-173 runs the reference workflow family as a table: satisfied, hidden choice and incompatible merge, the witness carried unchanged. |
 | Composition, refinement | V1-PROT-029, V1-PROT-030 | TC-200..TC-204, TC-147, TC-173 | Composition and refinement are decided in `src/composition.rs` and `src/refinement.rs` (TC-200..TC-204, TC-147), the refinement over transition systems built from FSL's protocol step view (FSL FR-578). TC-173 runs refinement over the reference workflow family (refines, extra trace, deadlock, divergence, unsupported, incomplete) through `decide` and `dispatch_claims`, and composition over three separately compiled protocols with guarantee labels taken from FSL's engine results (proved, unproved premise, circular, incompatible with a replayable counterexample, order independence). |
@@ -72,4 +75,4 @@ Every corpus row passes. A cell with no row is a stated gap in the V1-PROT inven
 
 ## Dependencies
 
-The result-publication cells (V1-RUN-005, V1-RUN-006 as published) are blocked: Quoin #519 is closed, but the canonical result and scenario record it takes are retired here (FR-006, FR-007, FR-017). Global conformance (V1-PROT-026) is blocked the same way (FR-004). Composition and refinement are decided by this library; refinement over a linked protocol is built from FSL's step view. The `v1-draft.2` witness carrier (FR-302) is landed for realizability and refinement.
+The result-publication cells (V1-RUN-005, V1-RUN-006 as published) are blocked: Quoin #519 is closed and its intake takes a scenario record, which FR-206 composes, but `quoin-evidence` cannot join this manifest beside `filament-observation` (exact `serde` pins disagree, ADR-010 G11). Serialized replay (V1-PROT-025) is blocked on an owner (FR-207, G10). Global conformance (V1-PROT-026) is FR-205: FSL advertises no `global-conformance` kind, so it selects on `temporal-satisfaction`, and an EN-1 counterexample cannot be replayed in process (G8, G9). Composition and refinement are decided by this library; refinement over a linked protocol is built from FSL's step view. The `v1-draft.2` witness carrier (FR-302) is landed for realizability and refinement.
