@@ -46,6 +46,7 @@ Per join: the control identity, the policy (`all`, `any`, `quorum(n)` or `predic
 | FR-052-AC-3 | A loop with an invariant and a lexicographic variant links with both declarations referenced by checked node id, and linking performs no check of either. | Test (TC-050) |
 | FR-052-AC-4 | Over a `choice` control, the linked representation carries its control identity, the owner node and the visible `expression` nodes in the order FSL's `choice_visibility` reads them, without evaluating them. | Test (TC-168) |
 | FR-052-AC-5 | Given a package whose choice `owner` is a text literal instead of a role reference, Contract IR's reader refuses it as a malformed wire, so no choice with unreadable evidence is linked. | Test (TC-171) |
+| FR-052-AC-6 | Over a `choice` control, FSL's control reader gives one case per authored branch label in label order, and each case body is a control of the linked protocol. | Test (TC-175) |
 
 ## Dependencies
 

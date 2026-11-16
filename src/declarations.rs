@@ -206,6 +206,7 @@ pub struct Declarations {
     loops: Vec<LoopDeclaration>,
     choices: Vec<ChoiceDeclaration>,
     awaits: Vec<AwaitDeclaration>,
+    requirements: Vec<CheckedNodeId>,
     schema: ProtocolOccurrenceSchema,
     clause: CheckedNodeId,
 }
@@ -277,7 +278,8 @@ impl Declarations {
     }
 
     /// Whether `id` is the protocol clause or a node it declares: a role,
-    /// channel, queue, join, loop or `await` control. A reference to any
+    /// channel, queue, join, loop or `await` control, or a temporal clause the
+    /// protocol requires (FSL's `ProtocolView::requirements`). A reference to any
     /// other node is not a reference into this checked package's protocol.
     #[must_use]
     pub fn declares(&self, id: &CheckedNodeId) -> bool {
@@ -290,6 +292,7 @@ impl Declarations {
             || self.join(id).is_some()
             || self.loop_at(id).is_some()
             || self.await_at(id).is_some()
+            || self.requirements.contains(id)
     }
 
     /// The role declaration at `id`.
@@ -345,6 +348,7 @@ impl Declarations {
             loops: Vec::new(),
             choices: Vec::new(),
             awaits: Vec::new(),
+            requirements: view.requirements().iter().copied().cloned().collect(),
             schema,
             clause: clause.clone(),
         };

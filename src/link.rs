@@ -389,15 +389,16 @@ pub fn link(
             node: id.clone(),
             member: "body",
         })?;
-        let rows = package
-            .temporal_bindings()
-            .ok_or_else(|| LinkRefusal::MissingMember {
-                node: id.clone(),
-                member: "temporal_bindings",
-            })?;
-        let binding = temporal_binding(rows, id).map_err(LinkRefusal::View)?;
         requirement_terms.push(term.clone());
-        temporal_bindings.push(binding.clone());
+        // A package selects clocks only for clauses of a clocked temporal
+        // profile. A package with no clock rows at all (a required clause of
+        // the unbounded `infinite-trace` profile, which has no clock to
+        // select) has nothing to bind; once it has rows, a required clause
+        // without one is still refused.
+        if let Some(rows) = package.temporal_bindings() {
+            let binding = temporal_binding(rows, id).map_err(LinkRefusal::View)?;
+            temporal_bindings.push(binding.clone());
+        }
     }
 
     let declarations = Declarations::read(package, &view)?;
