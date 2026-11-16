@@ -28,6 +28,14 @@ relationships:
     type: relates_to
   - target: ix://agent-ix/filament-protocol/FR-207
     type: relates_to
+  - target: ix://agent-ix/filament-protocol/FR-208
+    type: relates_to
+  - target: ix://agent-ix/filament-protocol/FR-209
+    type: relates_to
+  - target: ix://agent-ix/filament-protocol/FR-210
+    type: relates_to
+  - target: ix://agent-ix/filament-protocol/FR-211
+    type: relates_to
   - target: ix://agent-ix/filament-spec-language/ADR-017
     type: depends_on
   - target: ix://agent-ix/filament-spec-language/ADR-020
@@ -39,7 +47,7 @@ relationships:
 
 ## Status
 
-Accepted; Decision 6 reverses the composition assumption on 2026-11-15 and Decision 7 the protocol refinement assumption on 2026-11-16. Decision 8 (2026-11-16) amends the assumptions that FR-004, FR-006, FR-007 and FR-017 stay in force: they were retired with the evaluator (FSL-1549), and FR-205, FR-206 and FR-207 succeed them. This record fixes the split between this library and FSL's
+Accepted; Decision 6 reverses the composition assumption on 2026-11-15 and Decision 7 the protocol refinement assumption on 2026-11-16. Decision 8 (2026-11-16) amends the assumptions that FR-004, FR-006, FR-007 and FR-017 stay in force: they were retired with the evaluator (FSL-1549), and FR-205 to FR-211 succeed them. This record fixes the split between this library and FSL's
 `fsl-analyze` for the dynamic, projection, realizability, composition and
 refinement extension. It authors no requirement; it reserves requirement-id
 blocks and names, per capability, what this library owns and what it consumes.
@@ -128,8 +136,8 @@ them (FR-005). Those are different questions, and the split follows them.
    - *Assessment:* judging an observed history against the authored role
      lifetimes, queue bounds and premises, join thresholds, loop bounds and
      compensation relations, with the progress, closure and completeness axes
-     kept independent (FR-053..FR-056, FR-019..025; FR-004, FR-026..028 and
-     FR-041 are retired, Decision 8).
+     kept independent (FR-053..FR-056, FR-019..025, FR-208..FR-211; FR-004,
+     FR-026..028 and FR-041 are retired, Decision 8).
    - *Dispatch:* one disposition per requested claim kind, bound to its exact
      fragment, backend, assumptions and premises, with explicit `unsupported`
      where no FSL engine serves the kind (FR-005, FR-029, FR-030).
@@ -217,10 +225,14 @@ them (FR-005). Those are different questions, and the split follows them.
      (`settle_protocol_check`). The library dispatches that check and carries
      FSL's record unchanged. It decides no deadlock, evaluates no temporal
      formula and adds no refinement (Decision 1; FSL FR-530 and FR-147 stand).
-     The check answers whether every behaviour is deadlock-free. It does not
-     answer the retired history questions (order invariance, adverse
-     observations, closure axes, batch against incremental), which have no FSL
-     engine and stay retired.
+     The check answers whether every behaviour is deadlock-free. The history
+     questions of retired FR-004 are this library's, decided in `history` over
+     the live assessment axes of `dynamics` and the closure algebra of
+     `closure`, as composition and refinement are (Decisions 6, 7): order
+     invariance (FR-208), adverse observations named by axis (FR-209), the five
+     closure axes kept independent of the history's truth (FR-210), and batch
+     against incremental agreement (FR-211). They need no FSL engine: FSL
+     explores a protocol, and these judge one admitted history (see Context).
    - *Scenario record (V1-RUN-005, V1-RUN-006, FR-206).* The shape is Quoin's
      (`quoin.protocol-scenario-intake/v1`, FR-130 in `quoin-evidence`); this
      library composes the value from its live dispositions and declares none
@@ -238,7 +250,7 @@ them (FR-005). Those are different questions, and the split follows them.
 | TL-6 core roles, messages, channels, control, compensation, replay | Compensation and channel steps for model subjects | FR-100 to FR-149: only the delta over the existing FR-002, FR-003, FR-004, FR-019 to FR-028 and FR-041 coverage. Each new requirement names the V1-PROT capability it closes and the existing requirement it extends; a capability those FRs already cover gets no new FR | Rewrite as a delta ticket; close the rows the existing FRs already cover |
 | TL-10 projection and realizability | Claim vocabulary and routing only. No engine (gaps G1, G2) | FR-150 to FR-199: dispatch of both kinds to FSL's backend once one exists; premise binding for communication and visibility premises; carrying a FSL witness with trace-position correspondence to the linked graph (FR-302); `unsupported` while no backend exists, with global conformance preserved | Rewrite to dispatch and carrying only; the decision procedures move to a ticket for the FSL code lead (G1, G2); keep blocked by that ticket |
 | TL-9 composition and refinement | Model-level refinement engine, protocol abstract side, replay, certificate; atomic and temporal obligations. FSL provides no protocol-level composition or refinement procedure (Decisions 6, 7) | FR-200 to FR-249: the protocol-level composition decision (cycles, discharge, stronger assumptions; Decision 6) and refinement decision (traces, deadlock, divergence, stronger assumptions; Decision 7); premise binding; paired counterexamples | Both decided here (FR-200..FR-204, FR-301) |
-| TL-8 reference workflows, integration, qualification | Backends for the corpora where FSL has them | Integration tests and evidence for each Protocol-owned cell, as IT and TC artifacts that cite the FR blocks above; and FR-205 to FR-207, the successors of the retired FR-004, FR-006, FR-007 and FR-017 (Decision 8) | Keep as the last layer; scope corpora to the capabilities that have backends. V1-PROT-025 and V1-RUN-005/006 stay blocked on G10 and G11 |
+| TL-8 reference workflows, integration, qualification | Backends for the corpora where FSL has them | Integration tests and evidence for each Protocol-owned cell, as IT and TC artifacts that cite the FR blocks above; and FR-205 to FR-211, the successors of the retired FR-004, FR-026..028, FR-041, FR-006, FR-007 and FR-017 (Decision 8) | Keep as the last layer; scope corpora to the capabilities that have backends. V1-PROT-025 and V1-RUN-005/006 stay blocked on G10 and G11 |
 | TL-12 adopt the extension and delivery DAG | Not applicable | This record is the adoption: it fixes the split, reserves the blocks and names ownership. No further adoption artifact is owed | Close when this record merges |
 
 ## Consequences

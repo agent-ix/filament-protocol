@@ -130,6 +130,18 @@ impl Dynamic {
         Self::build(lifetime, max, "head")
     }
 
+    /// The package without its channels FSL does not step (symbolic capacity,
+    /// an unordered channel losing its head): every channel left is assessed,
+    /// so a conforming history can conform on every axis.
+    pub fn with_finite_capacities() -> Self {
+        let text: String = source("workflow", 3, "head")
+            .lines()
+            .filter(|line| !line.contains("channel Symbolic") && !line.contains("channel BagHead"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        Self::from_source(&text)
+    }
+
     /// The package whose unordered channel `BagHead` loses its `tail`
     /// instead of its `head`.
     pub fn with_unordered_tail_loss() -> Self {

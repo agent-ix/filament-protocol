@@ -59,6 +59,8 @@ pub mod dynamics;
 /// FSL's protocol analysis engine as the provider behind the dispatch boundary (FR-150..153).
 pub mod engine;
 pub mod evidence;
+/// Finite global conformance of one admitted observation history (FR-208..FR-211).
+pub mod history;
 /// Protocol identity newtypes. Owner chunk: C-07.
 pub mod ids;
 pub mod link;

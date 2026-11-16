@@ -11,6 +11,10 @@ relationships:
   - { target: ix://agent-ix/filament-protocol/FR-040, type: depends_on }
   - { target: ix://agent-ix/filament-protocol/FR-150, type: depends_on }
   - { target: ix://agent-ix/filament-protocol/FR-153, type: depends_on }
+  - { target: ix://agent-ix/filament-protocol/FR-208, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-209, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-210, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-211, type: references }
   - { target: ix://agent-ix/filament-specification/FR-059, type: references }
   - { target: ix://agent-ix/filament-specification/FR-060, type: depends_on }
   - { target: ix://agent-ix/filament-specification/FR-290, type: depends_on }
@@ -23,7 +27,7 @@ relationships:
 
 When a `global-conformance` claim is requested for a finite protocol, the dispatcher SHALL bind the claim to its premises (FR-151), take the one backend FSL's registry selects (FR-290), and carry the result FSL's explicit-state protocol checker settled, unchanged.
 
-This requirement succeeds FR-004 for the question FSL decides: whether every behaviour of the protocol is free of deadlock (FSL FR-211, FR-215; FSL FR-636 names this item `global-conformance`). It does not assess an observed history. The retired history questions of FR-026, FR-027, FR-028 and FR-041 (order invariance, adverse observations, closure axes, batch against incremental) have no FSL engine behind them and stay retired; the dynamic-axis assessment of one history is FR-053 to FR-056.
+This requirement succeeds FR-004 for the question FSL decides: whether every behaviour of the protocol is free of deadlock (FSL FR-211, FR-215; FSL FR-636 names this item `global-conformance`). Finite global conformance is that question together with the history questions this library decides itself over the live assessment axes, which succeed FR-026, FR-027, FR-028 and FR-041: order invariance (FR-208), adverse observations (FR-209), closure axes (FR-210) and batch against incremental agreement (FR-211). FSL has no engine for the history questions (ADR-010 Decision 8), so they are not dispatched; this requirement dispatches only the protocol check.
 
 ## Inputs
 
