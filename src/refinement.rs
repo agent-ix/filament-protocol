@@ -3,14 +3,17 @@
 //! (ADR-010 Decision 6).
 //!
 //! This library decides whether an implementation protocol refines a
-//! specification protocol, each given as a finite [`TransitionSystem`]. The
+//! specification protocol, each a finite [`TransitionSystem`] derived from FSL's
+//! view of the checked protocol. The
 //! decision is over observable traces, hiding the internal steps:
 //!
 //! - **Extra traces.** The implementation has an observable trace the
 //!   specification does not allow.
 //! - **Deadlock.** The implementation reaches a non-final state with no step
 //!   at all while the specification, after the same observable trace, can
-//!   still continue.
+//!   still continue and none of the specification states reached is itself
+//!   stuck in a non-final state (an implementation that follows such a
+//!   branch refines the specification).
 //! - **Divergence.** The implementation can take internal steps forever after
 //!   an observable trace after which the specification cannot.
 //! - **Stronger assumptions.** Either system rests on an assumption the request
@@ -28,20 +31,22 @@
 //!
 //! The transition system is this library's own small type, derived from FSL's
 //! read-only protocol step view (FSL FR-578) by [`TransitionSystem::from_view`]
-//! and [`step_system`]. Which steps are observable is this library's to define
-//! (FR-301): a `send` or `receive` on a channel of the claim's fragment is
-//! observable, labelled by the channel's checked node; every other step is
-//! hidden. Atomic and temporal obligations stay FSL's and are not evaluated
+//! and [`step_system`], the only ways to get one. Which steps are observable is
+//! this library's to define (FR-301): a `send` or `receive` on a channel of the
+//! claim's fragment is observable, labelled by the channel's checked node and
+//! by send or receive; every other step is hidden. Atomic and temporal obligations stay FSL's and are not evaluated
 //! here.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use filament_contract_model::{CheckedNodeId, CheckedPackageV2};
+use filament_exact::ObjectReference;
 use fsl_analyze::protocol_analysis::protocol_step_view;
 use fsl_eval::model_subject::ProtocolSubject;
 use fsl_eval::simulation::protocol::StepKind;
+use fsl_foundation::witness::ObservationIdentity;
 use fsl_package::RoleReplication;
-use fsl_replay::protocol_analysis::AssessedRoot;
+use fsl_replay::protocol_analysis::{AssessedRoot, AssessedRootDraft};
 use fsl_replay::{
     ProtocolStepView, ProtocolSteps, RefinementWitness, RefinementWitnessError, SettlementBasis,
     StateIndex, Truth, UnsteppedConstruct,
@@ -57,14 +62,25 @@ use crate::dispatch::{DispositionRefusal, Fragment};
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct StateId(pub u32);
 
+/// An observable action: a send or a receive on a channel of the claim's
+/// fragment (FR-301). A send and a receive on one channel are different
+/// actions, so the order in which a channel is written and read is part of the
+/// trace.
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Action {
+    /// The channel's checked node.
+    pub channel: CheckedNodeId,
+    /// FSL's step kind: [`StepKind::Send`] or [`StepKind::Receive`].
+    pub kind: StepKind,
+}
+
 /// What a step does.
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum Label {
     /// An internal step, hidden from the observable trace.
     Internal,
-    /// An observable action, by the checked node of the channel or role event
-    /// it is.
-    Observable(CheckedNodeId),
+    /// An observable action.
+    Observable(Action),
 }
 
 /// One step of a transition system.
@@ -78,26 +94,59 @@ pub struct Transition {
     pub to: StateId,
 }
 
-/// A finite protocol system.
+/// A finite protocol system. The only ways to get one are
+/// [`TransitionSystem::from_view`] and [`step_system`]: a system always comes
+/// from FSL's view of a checked protocol, never from the caller's statement
+/// of it (FR-301).
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransitionSystem {
-    /// The initial state.
-    pub initial: StateId,
-    /// The states in which the protocol may legitimately stop.
-    pub final_states: Vec<StateId>,
-    /// The steps.
-    pub transitions: Vec<Transition>,
-    /// The assumptions the system's behaviour rests on.
-    pub assumptions: Vec<CheckedNodeId>,
-    /// The constructs the builder could not step, as FSL names them.
-    pub unsupported: Vec<UnsteppedConstruct>,
-    /// Why the builder produced no system when FSL's view stopped (a bound, an
-    /// undetermined state, a refused read); `None` for a built system. A
-    /// system with a reason holds no steps and is never explored.
-    pub incomplete: Option<String>,
+    initial: StateId,
+    final_states: Vec<StateId>,
+    transitions: Vec<Transition>,
+    assumptions: Vec<CheckedNodeId>,
+    unsupported: Vec<UnsteppedConstruct>,
+    incomplete: Option<String>,
 }
 
 impl TransitionSystem {
+    /// The initial state.
+    #[must_use]
+    pub fn initial(&self) -> StateId {
+        self.initial
+    }
+
+    /// The states in which the protocol may legitimately stop.
+    #[must_use]
+    pub fn final_states(&self) -> &[StateId] {
+        &self.final_states
+    }
+
+    /// The steps.
+    #[must_use]
+    pub fn transitions(&self) -> &[Transition] {
+        &self.transitions
+    }
+
+    /// The assumptions the system's behaviour rests on.
+    #[must_use]
+    pub fn assumptions(&self) -> &[CheckedNodeId] {
+        &self.assumptions
+    }
+
+    /// The constructs the builder could not step, as FSL names them.
+    #[must_use]
+    pub fn unsupported(&self) -> &[UnsteppedConstruct] {
+        &self.unsupported
+    }
+
+    /// Why the builder produced no system when FSL's view stopped (a bound, an
+    /// undetermined state, a refused read); `None` for a built system. A
+    /// system with a reason holds no steps and is never explored.
+    #[must_use]
+    pub fn incomplete(&self) -> Option<&str> {
+        self.incomplete.as_deref()
+    }
+
     /// The system of FSL's step view `view` of the protocol in `package`, with
     /// the steps observable that send or receive on a channel in `observed`
     /// (FR-301). Every other step is internal.
@@ -143,7 +192,10 @@ impl TransitionSystem {
             let communicates = matches!(step.kind, StepKind::Send | StepKind::Receive);
             let label = match &step.channel {
                 Some(channel) if communicates && observed.contains(channel) => {
-                    Label::Observable(channel.clone())
+                    Label::Observable(Action {
+                        channel: channel.clone(),
+                        kind: step.kind,
+                    })
                 }
                 _ => Label::Internal,
             };
@@ -168,20 +220,28 @@ impl TransitionSystem {
             }
         };
         let mut assumptions = Vec::new();
-        let nodes = &package.resolved_graph().nodes;
-        for required in steps
+        let mut required = steps
             .assumptions
             .iter()
             .filter_map(|held| held.required_temporal.as_ref())
-        {
+            .peekable();
+        if required.peek().is_some() {
+            // One wire graph and one key per node, read once for every
+            // required clause.
+            let nodes = &package.resolved_graph().nodes;
             let graph = WireGraph::new(nodes.iter().map(|node| &node.node_id))
                 .map_err(|_| "the package has no wire identities")?;
-            let clause = nodes
+            let keyed: Vec<_> = nodes
                 .iter()
-                .map(|node| &node.node_id)
-                .find(|node| graph.key(node).is_ok_and(|key| key == required.clause))
-                .ok_or("a required temporal clause names no node")?;
-            assumptions.push(clause.clone());
+                .filter_map(|node| Some((graph.key(&node.node_id).ok()?, &node.node_id)))
+                .collect();
+            for required in required {
+                let (_, clause) = keyed
+                    .iter()
+                    .find(|(key, _)| *key == required.clause)
+                    .ok_or("a required temporal clause names no node")?;
+                assumptions.push((*clause).clone());
+            }
         }
         Ok(Self {
             initial,
@@ -258,6 +318,20 @@ pub struct RefinementRequest {
     pub sources: Vec<CheckedNodeId>,
     /// The most product states the decision may explore.
     pub max_states: usize,
+    /// The claim's assessed-subject root, the input of the FR-302 witness
+    /// this library does not derive. A refuted claim without it is refused.
+    pub assessed_root: AssessedSubject,
+}
+
+/// The claim's assessed-subject root (FR-302): the observation identity and
+/// the declared object FSL's FR-351 record names. Either absent leaves a
+/// refuted claim without its witness.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct AssessedSubject {
+    /// The observation identity.
+    pub observation: Option<ObservationIdentity>,
+    /// The declared object identity.
+    pub object: Option<ObjectReference>,
 }
 
 /// Why a claim is not decided.
@@ -276,7 +350,7 @@ pub enum Undecidable {
 pub struct SpecSide {
     /// The observable trace the implementation run shows, up to the offending
     /// action for an extra trace.
-    pub trace: Vec<CheckedNodeId>,
+    pub trace: Vec<Action>,
     /// The specification states reachable on that trace, internal steps
     /// included.
     pub reached: BTreeSet<StateId>,
@@ -289,7 +363,7 @@ pub enum Fault {
     /// take after `SpecSide::trace`.
     ExtraTrace {
         /// The offending action.
-        action: CheckedNodeId,
+        action: Action,
     },
     /// The run ends in a non-final state with no step, where the specification
     /// can continue.
@@ -341,6 +415,9 @@ pub struct Refinement {
     pub explored: usize,
     /// Whether the exploration reached every product state.
     pub complete: bool,
+    /// The FR-302 trace-position witness of a refuted claim, FSL's own
+    /// record; `None` for any other verdict.
+    pub witness: Option<RefinementWitness>,
 }
 
 /// What a decided refinement is. The precedence is `Unsupported`, then
@@ -423,7 +500,7 @@ impl Refinement {
     /// # Errors
     ///
     /// [`RefinementWitnessError`] when FSL cannot write the record.
-    pub fn witness(
+    fn derive_witness(
         &self,
         root: &AssessedRoot,
     ) -> Result<Option<RefinementWitness>, RefinementWitnessError> {
@@ -439,7 +516,7 @@ impl Refinement {
                 fault: Fault::ExtraTrace { action },
                 implementation,
                 ..
-            }) => (action, implementation.len().saturating_sub(1)),
+            }) => (&action.channel, implementation.len().saturating_sub(1)),
             Some(Counterexample { implementation, .. }) => {
                 (&self.request.implementation.node, implementation.len())
             }
@@ -489,10 +566,11 @@ impl Graph {
             })
         };
         // The greatest set in which every state has an internal step into it.
-        let mut divergent: BTreeSet<StateId> = succ
-            .keys()
+        let sources: BTreeSet<StateId> = succ.keys().copied().collect();
+        let mut divergent: BTreeSet<StateId> = sources
+            .iter()
             .copied()
-            .filter(|state| internal(state, &succ.keys().copied().collect()))
+            .filter(|state| internal(state, &sources))
             .collect();
         loop {
             let keep: BTreeSet<StateId> = divergent
@@ -538,7 +616,7 @@ impl Graph {
     }
 
     /// The closure of the states `set` reaches by the observable `action`.
-    fn after(&self, set: &BTreeSet<StateId>, action: &CheckedNodeId) -> BTreeSet<StateId> {
+    fn after(&self, set: &BTreeSet<StateId>, action: &Action) -> BTreeSet<StateId> {
         let reached = set
             .iter()
             .flat_map(|state| self.steps(*state))
@@ -548,16 +626,28 @@ impl Graph {
         self.closure(&reached)
     }
 
+    /// Whether the specification, in any of `set`, can continue, and none of
+    /// them is itself a non-final state with no step: an implementation that
+    /// follows a specification branch which stops there refines it (FR-301),
+    /// as one that follows a branch which diverges does.
+    fn can_outlast_a_stop(&self, set: &BTreeSet<StateId>) -> bool {
+        let stops = |state: &StateId| self.steps(*state).next().is_none();
+        set.iter().any(|state| !stops(state))
+            && !set
+                .iter()
+                .any(|state| stops(state) && !self.finals.contains(state))
+    }
+
     fn start(&self) -> BTreeSet<StateId> {
         self.closure(&BTreeSet::from([self.initial]))
     }
 }
 
 /// The observable actions along `run`, in order.
-fn visible(run: &[Transition]) -> Vec<CheckedNodeId> {
+fn visible(run: &[Transition]) -> Vec<Action> {
     run.iter()
         .filter_map(|step| match &step.label {
-            Label::Observable(node) => Some(node.clone()),
+            Label::Observable(action) => Some(action.clone()),
             Label::Internal => None,
         })
         .collect()
@@ -636,10 +726,10 @@ fn explore(implementation: &Graph, specification: &Graph, max_states: usize) -> 
             };
         let run = run_to(&parents, &node);
         let stuck = implementation.steps(*state).next().is_none();
-        let spec_continues = spec_set
-            .iter()
-            .any(|q| specification.steps(*q).next().is_some());
-        if stuck && !implementation.finals.contains(state) && spec_continues {
+        if stuck
+            && !implementation.finals.contains(state)
+            && specification.can_outlast_a_stop(spec_set)
+        {
             findings.insert(counterexample(Fault::Deadlock, run.clone(), &run));
         }
         // Reported where the divergence starts, not at every state along it.
@@ -742,9 +832,7 @@ impl Counterexample {
                 shown == self.specification.trace
                     && implementation.steps(end).next().is_none()
                     && !implementation.finals.contains(&end)
-                    && reached
-                        .iter()
-                        .any(|q| specification.steps(*q).next().is_some())
+                    && specification.can_outlast_a_stop(&reached)
             }
             Fault::Divergence { lasso } => {
                 let Some(back) = walk(&implementation, end, lasso) else {
@@ -807,15 +895,17 @@ pub fn bind(
         if let Some(node) = side.system.assumptions.iter().find(|node| !declared(node)) {
             return Err(DispositionRefusal::UndeclaredAssumption(node.clone()));
         }
-        let observable = side
+        // Each observable label is a channel of the claim's fragment (FR-301).
+        let outside = side
             .system
             .transitions
             .iter()
             .filter_map(|step| match &step.label {
-                Label::Observable(node) => Some(node),
+                Label::Observable(action) => Some(&action.channel),
                 Label::Internal => None,
-            });
-        if let Some(node) = observable.into_iter().find(|node| !declared(node)) {
+            })
+            .find(|channel| !request.fragment.channels.contains(channel));
+        if let Some(node) = outside {
             return Err(DispositionRefusal::UndeclaredLabel(node.clone()));
         }
     }
@@ -889,6 +979,15 @@ fn undecidable(components: &[&Declarations], request: &RefinementRequest) -> Vec
     found
 }
 
+/// The assumptions in `rested` that `offered` does not hold, each once.
+fn unoffered<'a, T: Ord>(rested: &'a [T], offered: &[T]) -> BTreeSet<&'a T> {
+    let offered: BTreeSet<&T> = offered.iter().collect();
+    rested
+        .iter()
+        .filter(|assumption| !offered.contains(assumption))
+        .collect()
+}
+
 /// Decide one `refinement` claim (FR-301): bind it, then run the procedure.
 /// A `refines` or `refuted` verdict needs a source identity to be attributed
 /// to (FR-030).
@@ -918,36 +1017,104 @@ pub fn decide(components: &[&Declarations], request: &RefinementRequest) -> Refi
             complete: sides.iter().all(|system| system.incomplete.is_none()),
         }
     };
-    let offered: BTreeSet<&CheckedNodeId> = request.assumptions.iter().collect();
     let stronger_assumptions: BTreeSet<StrongerAssumption> = [
         (Party::Implementation, &request.implementation),
         (Party::Specification, &request.specification),
     ]
     .into_iter()
     .flat_map(|(party, side)| {
-        side.system
-            .assumptions
-            .iter()
-            .filter(|assumption| !offered.contains(assumption))
-            .map(move |assumption| (party, assumption))
-    })
-    .map(|(party, assumption)| StrongerAssumption {
-        party,
-        assumption: assumption.clone(),
-        offered: request.assumptions.clone(),
+        unoffered(&side.system.assumptions, &request.assumptions)
+            .into_iter()
+            .map(move |assumption| StrongerAssumption {
+                party,
+                assumption: assumption.clone(),
+                offered: request.assumptions.clone(),
+            })
     })
     .collect();
-    let refinement = Refinement {
+    let mut refinement = Refinement {
         request: request.clone(),
         undecidable: undecidable(components, request),
         counterexamples: explored.findings.into_iter().collect(),
         stronger_assumptions: stronger_assumptions.into_iter().collect(),
         explored: explored.states,
         complete: explored.complete,
+        witness: None,
     };
-    let decisive = matches!(refinement.verdict(), Verdict::Refines | Verdict::Refuted);
-    if decisive && request.sources.is_empty() {
-        return RefinementOutcome::Refused(DispositionRefusal::NoSourceIdentity);
+    refinement.witness = refinement.carried_witness();
+    match carry_refusal(&refinement) {
+        Some(refusal) => RefinementOutcome::Refused(refusal),
+        None => RefinementOutcome::Decided(refinement),
     }
-    RefinementOutcome::Decided(refinement)
+}
+
+impl Refinement {
+    /// The witness built under the request's assessed root, when the claim is
+    /// refuted and the root is whole and FSL writes the record.
+    fn carried_witness(&self) -> Option<RefinementWitness> {
+        let subject = &self.request.assessed_root;
+        let root = AssessedRoot::new(Some(AssessedRootDraft {
+            observation: subject.observation.clone(),
+            object: subject.object.clone(),
+        }))
+        .ok()?;
+        self.derive_witness(&root).ok().flatten()
+    }
+}
+
+/// FR-030, FR-302: a decisive result is carried beside the source identities
+/// the disposition retains, and a refuted one with the trace-position witness
+/// of FSL's FR-351 record; without them it is refused. A result that is not
+/// refuted carries no witness.
+fn carry_refusal(refinement: &Refinement) -> Option<DispositionRefusal> {
+    let verdict = refinement.verdict();
+    if !matches!(verdict, Verdict::Refines | Verdict::Refuted) {
+        return refinement
+            .witness
+            .as_ref()
+            .map(|_| DispositionRefusal::WitnessWithoutDecisiveBasis);
+    }
+    if refinement.request.sources.is_empty() {
+        return Some(DispositionRefusal::NoSourceIdentity);
+    }
+    match (verdict, &refinement.witness) {
+        (Verdict::Refuted, None) => Some(DispositionRefusal::DecisiveWithoutWitness),
+        (Verdict::Refines, Some(_)) => Some(DispositionRefusal::WitnessWithoutDecisiveBasis),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use ix_trace_rs::trace;
+
+    use super::unoffered;
+
+    // The assumptions of a real system come from FSL's view of the protocol's
+    // required `infinite-trace` temporal clauses, which cannot be written to,
+    // linked from or read back from a checked-handoff directory in this
+    // repository; the rule that compares them with the offered ones is the
+    // pure set difference tested here, over plain values.
+
+    #[test]
+    #[trace("TC-204", "FR-204-AC-1")]
+    fn systems_resting_on_exactly_the_offered_assumptions_have_no_stronger_one() {
+        assert!(unoffered(&["head", "tail"], &["head", "tail"]).is_empty());
+        assert!(unoffered(&["head"], &["head", "tail"]).is_empty());
+    }
+
+    #[test]
+    #[trace("TC-204", "FR-204-AC-2")]
+    fn an_assumption_not_offered_is_named_once_in_order() {
+        let rested = ["new", "head", "block", "new"];
+        let found: Vec<_> = unoffered(&rested, &["head"]).into_iter().collect();
+        assert_eq!(found, [&"block", &"new"]);
+    }
+
+    #[test]
+    #[trace("TC-204", "FR-204-AC-3")]
+    fn offered_assumptions_nothing_rests_on_change_nothing() {
+        assert!(unoffered::<&str>(&[], &["head", "tail"]).is_empty());
+        assert!(unoffered::<&str>(&[], &[]).is_empty());
+    }
 }

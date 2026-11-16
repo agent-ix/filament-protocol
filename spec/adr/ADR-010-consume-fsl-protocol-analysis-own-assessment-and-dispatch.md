@@ -107,8 +107,9 @@ them (FR-005). Those are different questions, and the split follows them.
    refinement decision procedure, and no queue, role, join or loop
    exploration semantics.** It consumes FSL's. It builds no product
    construction, strategy game or fixed-point engine. The protocol-level
-   assume-guarantee composition procedure is the exception recorded in
-   Decision 6. This is ADR-007 and
+   assume-guarantee composition procedure (Decision 6) and the
+   protocol-level refinement procedure, whose product is built over FSL's
+   step view (Decision 7), are the exceptions. This is ADR-007 and
    AD-001's boundary table applied to the extension. The protocol and
    frame boundaries FSL fixes for the checked package, which this library
    reads and does not redefine, are FSL ADR-017.

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! TC-147, TC-202, TC-204: `refinement` claims decided by this library over
-//! two finite transition systems (FR-301, FR-202, FR-204).
+//! TC-147, TC-148, TC-202: `refinement` claims decided by this library over
+//! the transition systems of real protocols, each built from FSL's protocol
+//! step view of a checked-handoff directory (FR-301, FR-202, FR-302). No
+//! system is stated by the caller.
 
 mod support {
     pub mod assume_guarantee;
@@ -16,104 +18,149 @@ use filament_protocol::dispatch::{
     dispatch_claims, ClaimDisposition, DispositionRefusal, Fragment,
 };
 use filament_protocol::refinement::{
-    Counterexample, Fault, Label, Party, Refinement, RefinementOutcome, RefinementRequest, Side,
-    StateId, Transition, TransitionSystem, Undecidable, Verdict,
+    decide, step_system, Action, AssessedSubject, Counterexample, Fault, Label, Party, Refinement,
+    RefinementOutcome, RefinementRequest, Side, StateId, Transition, Undecidable, Verdict,
 };
-use fsl_eval::simulation::protocol::Unsupported;
+use fsl_eval::simulation::protocol::StepKind;
 use fsl_replay::UnsteppedConstruct;
 use fsl_replay::{SettlementBasis, Truth};
 use ix_trace_rs::trace;
-use support::assume_guarantee::{foreign, Boundary, Claims, Settled};
-use support::dynamic::Dynamic;
+use support::assume_guarantee::{Boundary, Claims, Settled};
+use support::projection::{assessed_root, CANCELLED, PICK, PICK2};
+use support::realizability::Realizability;
 
 const CONFORMANT: &str = "conformant";
+const CHANNELS: [&str; 3] = ["Order", "Pick", "Cancelled"];
 
-fn state(n: u32) -> StateId {
-    StateId(n)
+/// `Order`, then `Pick` or `Cancelled`.
+fn wide() -> Realizability {
+    Realizability::worked(PICK, CANCELLED)
 }
 
-/// An observable step from `from` to `to` on the channel `name`.
-fn seen(dynamic: &Dynamic, from: u32, name: &str, to: u32) -> Transition {
-    Transition {
-        from: state(from),
-        label: Label::Observable(dynamic.named("channel", name)),
-        to: state(to),
+/// `Order`, then `Cancelled` or nothing.
+fn narrow() -> Realizability {
+    Realizability::worked("", CANCELLED)
+}
+
+/// `Order`, then `Cancelled` or `Pick`, over channels that may lose a message.
+fn lossy() -> Realizability {
+    Realizability::delivering("at-most-once", "", "", PICK, CANCELLED)
+}
+
+/// After `Order`, a loop of `Pick` sends and receives that never ends. With
+/// `Pick` hidden it is a divergence.
+fn spinning() -> Realizability {
+    let spin = "repeat Spin by Seller visible () while { true } sequence SpinBody { \
+                send PickIt via Pick as (p: PickMsg) { true };\n\
+                receive PickedUp via Pick of PickIt as (q: PickMsg) { true }; }";
+    Realizability::worked(spin, CANCELLED)
+}
+
+fn fragment(of: &Realizability, names: &[&str]) -> Fragment {
+    Fragment {
+        channels: names.iter().map(|n| of.named("channel", n)).collect(),
+        roles: Vec::new(),
     }
 }
 
-fn hidden(from: u32, to: u32) -> Transition {
-    Transition {
-        from: state(from),
-        label: Label::Internal,
-        to: state(to),
+fn side(of: &Realizability, fragment: &Fragment, max_states: usize) -> Side {
+    Side {
+        node: of.clause().clone(),
+        system: step_system(
+            of.package(),
+            of.clause(),
+            &of.subject(),
+            fragment,
+            max_states,
+        ),
     }
 }
 
-fn system(finals: &[u32], transitions: Vec<Transition>) -> TransitionSystem {
-    TransitionSystem {
-        initial: state(0),
-        final_states: finals.iter().copied().map(state).collect(),
-        transitions,
-        assumptions: Vec::new(),
-        unsupported: Vec::new(),
-        incomplete: None,
-    }
-}
-
-fn request(
-    dynamic: &Dynamic,
-    implementation: TransitionSystem,
-    specification: TransitionSystem,
+fn asked_over(
+    implementation: &Realizability,
+    specification: &Realizability,
+    names: &[&str],
 ) -> RefinementRequest {
+    let fragment = fragment(implementation, names);
+    let draft = assessed_root();
     RefinementRequest {
-        fragment: Fragment {
-            channels: vec![dynamic.named("channel", "Head")],
-            roles: vec![dynamic.named("role", "S")],
-        },
-        implementation: Side {
-            node: dynamic.named("role", "S"),
-            system: implementation,
-        },
-        specification: Side {
-            node: dynamic.named("role", "R"),
-            system: specification,
-        },
+        implementation: side(implementation, &fragment, 4096),
+        specification: side(specification, &fragment, 4096),
+        fragment,
         assumptions: Vec::new(),
-        sources: vec![dynamic.clause().clone()],
-        max_states: 1_000,
+        sources: vec![implementation.clause().clone()],
+        max_states: 100_000,
+        assessed_root: AssessedSubject {
+            observation: draft.observation,
+            object: draft.object,
+        },
     }
 }
 
-fn settle(dynamic: &Dynamic, requests: Vec<Claims>) -> Vec<Settled> {
+fn asked(implementation: &Realizability, specification: &Realizability) -> RefinementRequest {
+    asked_over(implementation, specification, &CHANNELS)
+}
+
+fn components<'a>(
+    implementation: &'a Realizability,
+    specification: &'a Realizability,
+) -> [&'a filament_protocol::declarations::Declarations; 2] {
+    [
+        implementation.linked().declarations(),
+        specification.linked().declarations(),
+    ]
+}
+
+fn outcome(
+    implementation: &Realizability,
+    specification: &Realizability,
+    request: &RefinementRequest,
+) -> RefinementOutcome {
+    decide(&components(implementation, specification), request)
+}
+
+fn decided(
+    implementation: &Realizability,
+    specification: &Realizability,
+    request: &RefinementRequest,
+) -> Refinement {
+    match outcome(implementation, specification, request) {
+        RefinementOutcome::Decided(found) => found,
+        other => panic!("not decided: {other:?}"),
+    }
+}
+
+/// The dispositions the dispatcher settles for `requests`.
+fn settle(
+    implementation: &Realizability,
+    specification: &Realizability,
+    requests: Vec<Claims>,
+) -> Vec<Settled> {
     dispatch_claims(
         &mut Boundary::new(),
-        dynamic.linked().declarations(),
-        &[dynamic.linked().declarations()],
+        implementation.linked().declarations(),
+        &components(implementation, specification),
         &requests,
     )
 }
 
-fn outcome(settled: Settled) -> RefinementOutcome {
+fn settled_outcome(settled: Settled) -> RefinementOutcome {
     match settled {
         ClaimDisposition::Refinement(outcome) => outcome,
         other => panic!("not a refinement disposition: {other:?}"),
     }
 }
 
-fn decide(dynamic: &Dynamic, asked: &RefinementRequest) -> RefinementOutcome {
-    outcome(
-        settle(dynamic, vec![Claims::Refinement(asked.clone())])
-            .into_iter()
-            .next()
-            .expect("one disposition"),
-    )
-}
-
-fn decided(dynamic: &Dynamic, asked: &RefinementRequest) -> Refinement {
-    match decide(dynamic, asked) {
-        RefinementOutcome::Decided(refinement) => refinement,
-        other => panic!("not decided: {other:?}"),
-    }
+/// A node of the package that neither protocol declares.
+fn foreign(of: &Realizability) -> CheckedNodeId {
+    let declarations = of.linked().declarations();
+    of.package()
+        .resolved_graph()
+        .nodes
+        .iter()
+        .map(|node| node.node_id.clone())
+        .find(|node| !declarations.declares(node))
+        .expect("a node the protocol does not declare")
 }
 
 fn faults(refinement: &Refinement) -> Vec<&Fault> {
@@ -124,13 +171,11 @@ fn faults(refinement: &Refinement) -> Vec<&Fault> {
         .collect()
 }
 
-fn dynamic() -> Dynamic {
-    Dynamic::with("workflow", 3)
-}
-
-/// The specification: `Head` then `Reject`, both final at the end.
-fn spec_ab(d: &Dynamic) -> TransitionSystem {
-    system(&[2], vec![seen(d, 0, "Head", 1), seen(d, 1, "Reject", 2)])
+fn action(of: &Realizability, channel: &str, kind: StepKind) -> Action {
+    Action {
+        channel: of.named("channel", channel),
+        kind,
+    }
 }
 
 // ---------------------------------------------------------------- TC-147
@@ -138,22 +183,24 @@ fn spec_ab(d: &Dynamic) -> TransitionSystem {
 #[test]
 #[trace("TC-147", "FR-301-AC-1")]
 fn a_refinement_neither_carries_nor_is_changed_by_a_conformance_result() {
-    let d = dynamic();
-    let asked = request(&d, spec_ab(&d), spec_ab(&d));
-    let alone = decide(&d, &asked);
+    let (wide, narrow) = (wide(), narrow());
+    let same = asked(&wide, &wide);
+    let alone = outcome(&wide, &wide, &same);
     let beside = settle(
-        &d,
+        &wide,
+        &wide,
         vec![
             Claims::GlobalConformance(CONFORMANT),
-            Claims::Refinement(asked),
+            Claims::Refinement(same),
         ],
     );
     assert_eq!(beside[0], ClaimDisposition::GlobalConformance(CONFORMANT));
-    assert_eq!(outcome(beside[1].clone()), alone);
+    assert_eq!(settled_outcome(beside[1].clone()), alone);
     // A refuted refinement leaves the conformant result as it was.
-    let bad = request(&d, system(&[1], vec![seen(&d, 0, "Tail", 1)]), spec_ab(&d));
+    let bad = asked(&wide, &narrow);
     let beside = settle(
-        &d,
+        &wide,
+        &narrow,
         vec![
             Claims::GlobalConformance(CONFORMANT),
             Claims::Refinement(bad),
@@ -164,114 +211,150 @@ fn a_refinement_neither_carries_nor_is_changed_by_a_conformance_result() {
 
 #[test]
 #[trace("TC-147", "FR-301-AC-2")]
-fn unsupported_dynamics_never_refine_and_are_unsupported() {
-    let d = dynamic();
-    let identical = || request(&d, spec_ab(&d), spec_ab(&d));
-    assert_eq!(decided(&d, &identical()).verdict(), Verdict::Refines);
-    // A replicated role in the fragment.
-    let mut dynamic_role = identical();
-    dynamic_role.fragment.roles = vec![d.named("role", "R")];
-    // A channel of symbolic capacity in the fragment.
-    let mut unbounded = identical();
-    unbounded.fragment.channels = vec![d.named("channel", "Symbolic")];
-    // A construct the system builder could not step.
-    let mut construct = identical();
-    construct.specification.system.unsupported =
-        vec![UnsteppedConstruct::Construct(Unsupported::SymbolicCapacity)];
-    for (asked, expected) in [
-        (dynamic_role, Undecidable::DynamicRole(d.named("role", "R"))),
-        (
-            unbounded,
-            Undecidable::UnboundedQueue(d.named("channel", "Symbolic")),
-        ),
-        (
-            construct,
+fn a_replicated_role_in_the_fragment_is_unsupported_and_never_refines() {
+    let pool = "role Warehouse each M::Depot from depots max 2 lifetime workflow;\n";
+    let replicated = Realizability::delivering("exactly-once-premise", pool, "", PICK, CANCELLED);
+    let plain = wide();
+    let mut request = asked(&replicated, &plain);
+    let warehouse = replicated.named("role", "Warehouse");
+    assert_eq!(
+        request.implementation.system.unsupported(),
+        [UnsteppedConstruct::ReplicatedRole(warehouse.clone())]
+    );
+    assert!(request.implementation.system.transitions().is_empty());
+    request.fragment.roles = vec![warehouse.clone()];
+    let found = decided(&replicated, &plain, &request);
+    assert_eq!(
+        found.undecidable,
+        vec![
+            Undecidable::DynamicRole(warehouse.clone()),
             Undecidable::Construct(
-                Party::Specification,
-                UnsteppedConstruct::Construct(Unsupported::SymbolicCapacity),
+                Party::Implementation,
+                UnsteppedConstruct::ReplicatedRole(warehouse)
             ),
-        ),
-    ] {
-        let refinement = decided(&d, &asked);
-        assert_eq!(refinement.undecidable, vec![expected]);
-        assert_eq!(refinement.verdict(), Verdict::Unsupported);
-        assert_eq!(refinement.execution(), AssessmentExecution::Unsupported);
-        assert_eq!(refinement.truth(), Truth::Unavailable);
-        assert_eq!(refinement.basis(), SettlementBasis::Unavailable);
-    }
+        ]
+    );
+    assert!(found.counterexamples.is_empty(), "nothing is invented");
+    assert_eq!(found.verdict(), Verdict::Unsupported);
+    assert_eq!(found.execution(), AssessmentExecution::Unsupported);
+    assert_eq!(found.truth(), Truth::Unavailable);
+    assert_eq!(found.basis(), SettlementBasis::Unavailable);
     // Beside a conformance result, which stays as it was.
-    let mut unbounded = identical();
-    unbounded.fragment.channels = vec![d.named("channel", "Symbolic")];
     let beside = settle(
-        &d,
+        &replicated,
+        &plain,
         vec![
             Claims::GlobalConformance(CONFORMANT),
-            Claims::Refinement(unbounded),
+            Claims::Refinement(request),
         ],
     );
     assert_eq!(beside[0], ClaimDisposition::GlobalConformance(CONFORMANT));
 }
 
 #[test]
+#[trace("TC-147", "FR-301-AC-2")]
+fn a_channel_of_symbolic_capacity_in_the_fragment_is_unsupported() {
+    let symbolic = "channel Sym from Buyer to Seller carries Ack ordering unordered \
+                    delivery exactly-once-premise capacity symbolic(Bound) overflow reject;\n";
+    let unbounded =
+        Realizability::delivering("exactly-once-premise", "", symbolic, PICK, CANCELLED);
+    let plain = wide();
+    let request = asked_over(&unbounded, &plain, &["Order", "Pick", "Cancelled", "Sym"]);
+    let found = decided(&unbounded, &plain, &request);
+    assert!(found.undecidable.contains(&Undecidable::UnboundedQueue(
+        unbounded.named("channel", "Sym")
+    )));
+    assert_eq!(found.verdict(), Verdict::Unsupported);
+    assert_eq!(found.truth(), Truth::Unavailable);
+}
+
+#[test]
 #[trace("TC-147", "FR-301-AC-3")]
 fn a_refinement_is_decided_here_by_observable_traces() {
-    let d = dynamic();
+    let (wide, narrow) = (wide(), narrow());
     // Fewer traces refine; the same traces refine; more do not.
-    let prefix = system(&[1], vec![seen(&d, 0, "Head", 1)]);
-    assert_eq!(
-        decided(&d, &request(&d, prefix, spec_ab(&d))).verdict(),
-        Verdict::Refines
-    );
-    assert_eq!(
-        decided(&d, &request(&d, spec_ab(&d), spec_ab(&d))).verdict(),
-        Verdict::Refines
-    );
-    let more = system(
-        &[2],
-        vec![
-            seen(&d, 0, "Head", 1),
-            seen(&d, 1, "Reject", 2),
-            seen(&d, 1, "Tail", 2),
-        ],
-    );
-    let refinement = decided(&d, &request(&d, more, spec_ab(&d)));
-    assert_eq!(refinement.verdict(), Verdict::Refuted);
-    assert_eq!(refinement.truth(), Truth::Violated);
+    for (implementation, specification, verdict) in [
+        (&narrow, &wide, Verdict::Refines),
+        (&wide, &wide, Verdict::Refines),
+        (&wide, &narrow, Verdict::Refuted),
+    ] {
+        let request = asked(implementation, specification);
+        assert_eq!(
+            decided(implementation, specification, &request).verdict(),
+            verdict
+        );
+    }
+    let found = decided(&wide, &narrow, &asked(&wide, &narrow));
+    assert_eq!(found.truth(), Truth::Violated);
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-3")]
+fn a_protocol_refines_itself_through_the_step_view() {
+    let (fixture, twin) = (wide(), wide());
+    let request = asked(&fixture, &twin);
+    let system = &request.implementation.system;
+    assert!(system
+        .transitions()
+        .iter()
+        .any(|step| matches!(step.label, Label::Observable(_))));
+    assert!(system
+        .transitions()
+        .iter()
+        .any(|step| step.label == Label::Internal));
+    let found = decided(&fixture, &twin, &request);
+    assert_eq!(found.verdict(), Verdict::Refines, "{found:?}");
+    assert_eq!(found.truth(), Truth::Satisfied);
 }
 
 #[test]
 #[trace("TC-147", "FR-301-AC-4")]
 fn a_refinement_past_its_bound_is_incomplete_and_never_refines() {
-    let d = dynamic();
-    let mut asked = request(&d, spec_ab(&d), spec_ab(&d));
+    let (wide, narrow) = (wide(), narrow());
+    let mut request = asked(&wide, &wide);
     for bound in [0, 1] {
-        asked.max_states = bound;
-        let refinement = decided(&d, &asked);
-        assert_eq!(refinement.verdict(), Verdict::Incomplete, "{bound}");
-        assert_eq!(
-            refinement.execution(),
-            AssessmentExecution::ResourceIncomplete
-        );
-        assert_eq!(refinement.truth(), Truth::Unavailable);
-        assert_eq!(refinement.basis(), SettlementBasis::Unavailable);
+        request.max_states = bound;
+        let found = decided(&wide, &wide, &request);
+        assert_eq!(found.verdict(), Verdict::Incomplete, "{bound}");
+        assert_eq!(found.execution(), AssessmentExecution::ResourceIncomplete);
+        assert_eq!(found.truth(), Truth::Unavailable);
+        assert_eq!(found.basis(), SettlementBasis::Unavailable);
     }
     // A counterexample found before the bound is kept and refutes.
-    let extra = system(&[1], vec![seen(&d, 0, "Tail", 1), seen(&d, 1, "Head", 1)]);
-    let mut refuted = request(&d, extra, spec_ab(&d));
-    refuted.max_states = 1;
-    assert_eq!(decided(&d, &refuted).verdict(), Verdict::Refuted);
-    asked.max_states = 3;
-    assert_eq!(decided(&d, &asked).verdict(), Verdict::Refines);
+    let mut refuted = asked(&wide, &narrow);
+    let full = decided(&wide, &narrow, &refuted);
+    assert!(full.complete);
+    refuted.max_states = full.explored - 4;
+    let cut = decided(&wide, &narrow, &refuted);
+    assert!(!cut.complete);
+    assert_eq!(cut.verdict(), Verdict::Refuted);
+    request.max_states = 100_000;
+    assert_eq!(decided(&wide, &wide, &request).verdict(), Verdict::Refines);
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-4")]
+fn a_step_view_past_its_state_limit_is_incomplete_and_never_refines() {
+    let (fixture, twin) = (wide(), wide());
+    let fragment = fragment(&fixture, &CHANNELS);
+    let mut request = asked(&fixture, &twin);
+    request.implementation = side(&fixture, &fragment, 3);
+    assert!(request.implementation.system.incomplete().is_some());
+    assert!(request.implementation.system.transitions().is_empty());
+    let found = decided(&fixture, &twin, &request);
+    assert_eq!(found.verdict(), Verdict::Incomplete, "{found:?}");
+    assert!(found.counterexamples.is_empty(), "nothing is invented");
+    assert_eq!(found.execution(), AssessmentExecution::ResourceIncomplete);
 }
 
 #[test]
 #[trace("TC-147", "FR-301-AC-5")]
 fn removing_or_substituting_a_component_refuses_only_that_disposition() {
-    let d = dynamic();
-    let whole = request(&d, spec_ab(&d), spec_ab(&d));
-    let alone = decide(&d, &whole);
+    let (wide, narrow) = (wide(), narrow());
+    let whole = asked(&wide, &narrow);
+    let alone = outcome(&wide, &narrow, &whole);
     assert!(matches!(alone, RefinementOutcome::Decided(_)));
-    let stranger = foreign(&d);
+    let stranger = foreign(&wide);
     let mut cases: Vec<(&str, RefinementRequest)> = Vec::new();
     let mut vary = |name, change: &dyn Fn(&mut RefinementRequest)| {
         let mut broken = whole.clone();
@@ -291,184 +374,262 @@ fn removing_or_substituting_a_component_refuses_only_that_disposition() {
     vary("source substituted", &|r| {
         r.sources = vec![stranger.clone()]
     });
-    vary("label substituted", &|r| {
-        r.implementation.system.transitions[0].label = Label::Observable(stranger.clone());
+    vary("label outside the fragment", &|r| {
+        r.fragment.channels = vec![wide.named("channel", "Order")];
     });
     for (name, broken) in cases {
         let settled = settle(
-            &d,
+            &wide,
+            &narrow,
             vec![
                 Claims::Refinement(broken),
                 Claims::Refinement(whole.clone()),
             ],
         );
         assert!(
-            matches!(outcome(settled[0].clone()), RefinementOutcome::Refused(_)),
+            matches!(
+                settled_outcome(settled[0].clone()),
+                RefinementOutcome::Refused(_)
+            ),
             "{name}"
         );
-        assert_eq!(outcome(settled[1].clone()), alone, "{name}");
+        assert_eq!(settled_outcome(settled[1].clone()), alone, "{name}");
     }
-    let mut unsourced = whole;
+    let mut unsourced = whole.clone();
     unsourced.sources.clear();
     assert!(matches!(
-        decide(&d, &unsourced),
+        outcome(&wide, &narrow, &unsourced),
         RefinementOutcome::Refused(DispositionRefusal::NoSourceIdentity)
     ));
-    // The refusal names the node.
-    let mut foreign_label = request(&d, spec_ab(&d), spec_ab(&d));
-    foreign_label.specification.system.transitions[0].label = Label::Observable(stranger.clone());
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-5")]
+fn a_label_outside_the_claims_fragment_is_refused_naming_its_channel() {
+    let (wide, narrow) = (wide(), narrow());
+    let mut request = asked(&wide, &narrow);
+    // The implementation observes `Pick`; the claim's fragment does not.
+    request.fragment.channels = vec![
+        wide.named("channel", "Order"),
+        wide.named("channel", "Cancelled"),
+    ];
     assert!(matches!(
-        decide(&d, &foreign_label),
-        RefinementOutcome::Refused(DispositionRefusal::UndeclaredLabel(node)) if node == stranger
+        outcome(&wide, &narrow, &request),
+        RefinementOutcome::Refused(DispositionRefusal::UndeclaredLabel(node))
+            if node == wide.named("channel", "Pick")
     ));
 }
 
 #[test]
 #[trace("TC-147", "FR-301-AC-6")]
 fn the_specification_is_explored_by_subset_and_internal_steps_are_hidden() {
-    let d = dynamic();
-    // The specification chooses between two `Head` branches on its own; only
-    // one of them continues with `Reject`. The implementation takes that one.
-    let nondeterministic = system(
-        &[2, 3],
-        vec![
-            seen(&d, 0, "Head", 1),
-            seen(&d, 0, "Head", 3),
-            seen(&d, 1, "Reject", 2),
-        ],
-    );
+    // The specification chooses between two `Pick` branches on its own; only
+    // one of them continues with `Cancelled`. The implementation takes it.
+    let both = format!("{PICK}\n{CANCELLED}");
+    let specification = Realizability::worked(&both, PICK2);
+    let implementation = Realizability::worked(&both, "");
+    let request = asked(&implementation, &specification);
     assert_eq!(
-        decided(&d, &request(&d, spec_ab(&d), nondeterministic)).verdict(),
+        decided(&implementation, &specification, &request).verdict(),
         Verdict::Refines
     );
-    // Internal steps on either side change no observable trace.
-    let slow_impl = system(
-        &[3],
-        vec![
-            hidden(0, 1),
-            seen(&d, 1, "Head", 2),
-            hidden(2, 4),
-            seen(&d, 4, "Reject", 3),
-        ],
-    );
-    let slow_spec = system(
-        &[3],
-        vec![
-            hidden(0, 1),
-            seen(&d, 1, "Head", 2),
-            seen(&d, 2, "Reject", 3),
-        ],
-    );
+    // A channel outside the fragment is hidden, so protocols that differ only
+    // there refine one another.
+    let (wide, narrow) = (wide(), narrow());
+    let request = asked_over(&wide, &narrow, &["Order"]);
     assert_eq!(
-        decided(&d, &request(&d, slow_impl, slow_spec)).verdict(),
+        decided(&wide, &narrow, &request).verdict(),
+        Verdict::Refines
+    );
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-6")]
+fn a_deadlock_the_specification_also_reaches_on_one_branch_is_not_a_fault() {
+    // The lossy protocol can lose a message and stop; the lossy specification
+    // can too, so the implementation that follows that branch refines it.
+    let lossy = lossy();
+    let twin = self::lossy();
+    let request = asked(&lossy, &twin);
+    let found = decided(&lossy, &twin, &request);
+    assert_eq!(found.verdict(), Verdict::Refines, "{found:?}");
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-7")]
+fn only_sends_and_receives_on_the_fragments_channels_are_observable() {
+    let fixture = wide();
+    let all = asked(&fixture, &fixture);
+    let narrowed = fragment(&fixture, &["Order"]);
+    let system = step_system(
+        fixture.package(),
+        fixture.clause(),
+        &fixture.subject(),
+        &narrowed,
+        4096,
+    );
+    let labels = |system: &filament_protocol::refinement::TransitionSystem| {
+        system
+            .transitions()
+            .iter()
+            .filter_map(|step| match &step.label {
+                Label::Observable(action) => Some(action.channel.clone()),
+                Label::Internal => None,
+            })
+            .collect::<std::collections::BTreeSet<_>>()
+    };
+    assert_eq!(labels(&system), [fixture.named("channel", "Order")].into());
+    assert_eq!(
+        labels(&all.implementation.system),
+        CHANNELS
+            .iter()
+            .map(|name| fixture.named("channel", name))
+            .collect()
+    );
+    // Hiding a channel hides its steps without removing them.
+    assert_eq!(
+        system.transitions().len(),
+        all.implementation.system.transitions().len()
+    );
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-7")]
+fn a_send_and_a_receive_on_one_channel_are_different_actions() {
+    let order = fragment(&wide(), &["Order"]);
+    let fixture = wide();
+    let system = step_system(
+        fixture.package(),
+        fixture.clause(),
+        &fixture.subject(),
+        &order,
+        4096,
+    );
+    let kinds: std::collections::BTreeSet<_> = system
+        .transitions()
+        .iter()
+        .filter_map(|step| match &step.label {
+            Label::Observable(action) => Some(action.kind),
+            Label::Internal => None,
+        })
+        .collect();
+    assert_eq!(kinds, [StepKind::Send, StepKind::Receive].into());
+    // On one channel, send-receive-send-receive is not send-send-receive-receive.
+    let alternating = Realizability::worked(&format!("{PICK}\n{PICK2}"), "");
+    let batched = Realizability::worked(
+        "send PickIt via Pick as (p: PickMsg) { true };\n\
+         send PickIt2 via Pick as (p2: PickMsg) { true };\n\
+         receive PickedUp via Pick of PickIt as (q: PickMsg) { true };\n\
+         receive PickedUp2 via Pick of PickIt2 as (q2: PickMsg) { true };",
+        "",
+    );
+    let request = asked_over(&batched, &alternating, &["Pick"]);
+    let found = decided(&batched, &alternating, &request);
+    assert_eq!(found.verdict(), Verdict::Refuted, "{found:?}");
+    assert!(found.counterexamples.iter().any(|found| matches!(
+        &found.fault,
+        Fault::ExtraTrace { action } if action.kind == StepKind::Send
+    )));
+    // The same channel order refines itself.
+    let request = asked_over(&alternating, &alternating, &["Pick"]);
+    assert_eq!(
+        decided(&alternating, &alternating, &request).verdict(),
         Verdict::Refines
     );
 }
 
 // ---------------------------------------------------------------- TC-202
 
-/// An extra trace: the implementation takes `Head` then `Tail`; the
-/// specification allows `Head` then `Reject` only.
-fn extra_trace(d: &Dynamic) -> RefinementRequest {
-    request(
-        d,
-        system(&[2], vec![seen(d, 0, "Head", 1), seen(d, 1, "Tail", 2)]),
-        spec_ab(d),
-    )
-}
-
-/// A deadlock: the implementation stops after `Head` in a non-final state,
-/// where the specification can still take `Reject`.
-fn deadlock(d: &Dynamic) -> RefinementRequest {
-    request(d, system(&[], vec![seen(d, 0, "Head", 1)]), spec_ab(d))
-}
-
-/// A divergence: after `Head` the implementation loops on internal steps; the
-/// specification finishes.
-fn divergence(d: &Dynamic) -> RefinementRequest {
-    request(
-        d,
-        system(&[], vec![seen(d, 0, "Head", 1), hidden(1, 2), hidden(2, 1)]),
-        system(&[1], vec![seen(d, 0, "Head", 1)]),
-    )
+/// The extra trace of `wide` against `narrow`.
+fn extra_trace() -> (Realizability, Realizability, RefinementRequest) {
+    let (wide, narrow) = (wide(), narrow());
+    let request = asked(&wide, &narrow);
+    (wide, narrow, request)
 }
 
 #[test]
 #[trace("TC-202", "FR-202-AC-1")]
 fn an_extra_trace_yields_a_pair_of_runs() {
-    let d = dynamic();
-    let asked = extra_trace(&d);
-    let refinement = decided(&d, &asked);
-    assert_eq!(refinement.verdict(), Verdict::Refuted);
-    let [counter] = refinement.counterexamples.as_slice() else {
-        panic!("one counterexample: {:?}", refinement.counterexamples);
-    };
-    assert_eq!(
-        counter.fault,
-        Fault::ExtraTrace {
-            action: d.named("channel", "Tail")
-        }
-    );
-    assert_eq!(
-        counter.implementation,
-        vec![seen(&d, 0, "Head", 1), seen(&d, 1, "Tail", 2)]
-    );
-    assert_eq!(
-        counter.specification.trace,
-        vec![d.named("channel", "Head")]
-    );
-    assert_eq!(counter.specification.reached, [state(1)].into());
-    assert!(counter.replay(&asked));
+    let (wide, narrow, request) = extra_trace();
+    let found = decided(&wide, &narrow, &request);
+    assert_eq!(found.verdict(), Verdict::Refuted);
+    assert!(!found.counterexamples.is_empty());
+    for counter in &found.counterexamples {
+        assert_eq!(
+            counter.fault,
+            Fault::ExtraTrace {
+                action: action(&wide, "Pick", StepKind::Send)
+            }
+        );
+        assert_eq!(
+            counter.specification.trace,
+            vec![
+                action(&wide, "Order", StepKind::Send),
+                action(&wide, "Order", StepKind::Receive)
+            ]
+        );
+        assert!(counter.implementation.last().is_some_and(|last| {
+            last.label == Label::Observable(action(&wide, "Pick", StepKind::Send))
+        }));
+        assert!(!counter.specification.reached.is_empty());
+        assert!(counter.replay(&request));
+    }
 }
 
 #[test]
 #[trace("TC-202", "FR-202-AC-2")]
 fn a_deadlock_where_the_specification_continues_yields_a_pair_of_runs() {
-    let d = dynamic();
-    let asked = deadlock(&d);
-    let refinement = decided(&d, &asked);
-    let [counter] = refinement.counterexamples.as_slice() else {
-        panic!("one counterexample: {:?}", refinement.counterexamples);
-    };
-    assert_eq!(counter.fault, Fault::Deadlock);
-    assert_eq!(counter.implementation, vec![seen(&d, 0, "Head", 1)]);
-    assert_eq!(counter.specification.reached, [state(1)].into());
-    assert!(counter.replay(&asked));
+    let (lossy, reliable) = (lossy(), wide());
+    let request = asked(&lossy, &reliable);
+    let found = decided(&lossy, &reliable, &request);
+    assert_eq!(found.verdict(), Verdict::Refuted, "{found:?}");
+    let deadlocks: Vec<_> = found
+        .counterexamples
+        .iter()
+        .filter(|counter| counter.fault == Fault::Deadlock)
+        .collect();
+    assert!(!deadlocks.is_empty(), "{found:?}");
+    for counter in deadlocks {
+        assert!(!counter.specification.reached.is_empty());
+        assert!(counter.replay(&request));
+    }
 }
 
 #[test]
 #[trace("TC-202", "FR-202-AC-3")]
 fn a_divergence_the_specification_lacks_yields_a_lasso() {
-    let d = dynamic();
-    let asked = divergence(&d);
-    let refinement = decided(&d, &asked);
-    let [counter] = refinement.counterexamples.as_slice() else {
-        panic!("one counterexample: {:?}", refinement.counterexamples);
+    let (spinning, narrow) = (spinning(), narrow());
+    let request = asked_over(&spinning, &narrow, &["Order"]);
+    let found = decided(&spinning, &narrow, &request);
+    assert_eq!(found.verdict(), Verdict::Refuted, "{found:?}");
+    let [counter] = found.counterexamples.as_slice() else {
+        panic!("one counterexample: {:?}", found.counterexamples);
     };
-    assert_eq!(
-        counter.fault,
-        Fault::Divergence {
-            lasso: vec![hidden(1, 2), hidden(2, 1)]
-        }
-    );
-    assert!(counter.replay(&asked));
+    let Fault::Divergence { lasso } = &counter.fault else {
+        panic!("a divergence: {counter:?}");
+    };
+    assert!(!lasso.is_empty());
+    assert!(lasso.iter().all(|step| step.label == Label::Internal));
+    assert!(counter.replay(&request));
 }
 
 #[test]
 #[trace("TC-202", "FR-202-AC-4")]
 fn behaviour_the_specification_shares_is_not_a_fault() {
-    let d = dynamic();
+    let (wide, narrow, spinning) = (wide(), narrow(), spinning());
     // Stopping in a final state is not a deadlock.
-    let stops_final = request(&d, system(&[1], vec![seen(&d, 0, "Head", 1)]), spec_ab(&d));
-    assert_eq!(decided(&d, &stops_final).verdict(), Verdict::Refines);
+    let stops = asked(&narrow, &wide);
+    assert_eq!(decided(&narrow, &wide, &stops).verdict(), Verdict::Refines);
     // Both stop where neither continues.
-    let both_stuck = request(&d, system(&[], vec![]), system(&[], vec![]));
-    assert_eq!(decided(&d, &both_stuck).verdict(), Verdict::Refines);
-    // The specification loops on internal steps too.
-    let looping_spec = system(&[], vec![hidden(0, 1), hidden(1, 0)]);
-    let looping_impl = system(&[], vec![hidden(0, 0)]);
+    let twin = self::wide();
     assert_eq!(
-        decided(&d, &request(&d, looping_impl, looping_spec)).verdict(),
+        decided(&wide, &twin, &asked(&wide, &twin)).verdict(),
+        Verdict::Refines
+    );
+    // The specification loops on internal steps too.
+    let looping = asked_over(&spinning, &spinning, &["Order"]);
+    assert_eq!(
+        decided(&spinning, &spinning, &looping).verdict(),
         Verdict::Refines
     );
 }
@@ -476,13 +637,15 @@ fn behaviour_the_specification_shares_is_not_a_fault() {
 #[test]
 #[trace("TC-202", "FR-202-AC-5")]
 fn each_verdict_reads_into_the_axes() {
-    let d = dynamic();
-    let read = |asked: &RefinementRequest| {
-        let r = decided(&d, asked);
+    let (wide, narrow) = (wide(), narrow());
+    let read = |implementation: &Realizability,
+                specification: &Realizability,
+                request: &RefinementRequest| {
+        let r = decided(implementation, specification, request);
         (r.verdict(), r.execution(), r.truth(), r.basis())
     };
     assert_eq!(
-        read(&request(&d, spec_ab(&d), spec_ab(&d))),
+        read(&wide, &wide, &asked(&wide, &wide)),
         (
             Verdict::Refines,
             AssessmentExecution::Completed,
@@ -491,7 +654,7 @@ fn each_verdict_reads_into_the_axes() {
         )
     );
     assert_eq!(
-        read(&extra_trace(&d)),
+        read(&wide, &narrow, &asked(&wide, &narrow)),
         (
             Verdict::Refuted,
             AssessmentExecution::Completed,
@@ -499,24 +662,13 @@ fn each_verdict_reads_into_the_axes() {
             SettlementBasis::DecisiveCounterexample
         )
     );
-    let mut incomplete = request(&d, spec_ab(&d), spec_ab(&d));
+    let mut incomplete = asked(&wide, &wide);
     incomplete.max_states = 1;
     assert_eq!(
-        read(&incomplete),
+        read(&wide, &wide, &incomplete),
         (
             Verdict::Incomplete,
             AssessmentExecution::ResourceIncomplete,
-            Truth::Unavailable,
-            SettlementBasis::Unavailable
-        )
-    );
-    let mut unsupported = request(&d, spec_ab(&d), spec_ab(&d));
-    unsupported.fragment.roles = vec![d.named("role", "R")];
-    assert_eq!(
-        read(&unsupported),
-        (
-            Verdict::Unsupported,
-            AssessmentExecution::Unsupported,
             Truth::Unavailable,
             SettlementBasis::Unavailable
         )
@@ -525,491 +677,193 @@ fn each_verdict_reads_into_the_axes() {
 
 #[test]
 #[trace("TC-202", "FR-202-AC-6")]
-fn the_findings_and_precedence_do_not_depend_on_order() {
-    let d = dynamic();
-    // One system with all three faults: an extra trace, a deadlock after
-    // `Head`, and a divergence after `Reject`.
-    let implementation = system(
-        &[],
-        vec![
-            seen(&d, 0, "Head", 1),
-            seen(&d, 0, "Tail", 4),
-            seen(&d, 1, "Reject", 2),
-            hidden(2, 3),
-            hidden(3, 2),
-            seen(&d, 2, "Head", 5),
-        ],
-    );
-    let mut asked = request(
-        &d,
-        implementation,
-        system(
-            &[3],
-            vec![
-                seen(&d, 0, "Head", 1),
-                seen(&d, 1, "Reject", 2),
-                seen(&d, 2, "Head", 3),
-                seen(&d, 3, "Tail", 6),
-            ],
-        ),
-    );
-    let found = decided(&d, &asked);
+fn the_precedence_does_not_depend_on_the_order_of_the_findings() {
+    let (wide, lossy) = (wide(), lossy());
+    // An extra trace and a deadlock are both kept.
+    let narrow_spec = narrow();
+    let mut request = asked(&lossy, &narrow_spec);
+    let found = decided(&lossy, &narrow_spec, &request);
     assert_eq!(found.verdict(), Verdict::Refuted);
-    let kinds: Vec<_> = faults(&found)
+    let kinds: std::collections::HashSet<_> = faults(&found)
         .into_iter()
         .map(std::mem::discriminant)
         .collect();
-    assert!(kinds.len() >= 3, "{:?}", found.counterexamples);
-    // Reversing every list changes nothing.
-    asked.implementation.system.transitions.reverse();
-    asked.specification.system.transitions.reverse();
-    asked.implementation.system.final_states.reverse();
-    assert_eq!(decided(&d, &asked).counterexamples, found.counterexamples);
-    // Unsupported outranks the refutation and keeps it.
-    asked.fragment.roles = vec![d.named("role", "R")];
-    let outranked = decided(&d, &asked);
+    assert!(kinds.len() >= 2, "{:?}", found.counterexamples);
+    assert_eq!(
+        decided(&lossy, &narrow_spec, &request).counterexamples,
+        found.counterexamples,
+        "deciding again finds the same"
+    );
+    // Unsupported outranks the refutation and keeps it: a role the fragment
+    // names that a component declares as replicated.
+    let pool = "role Warehouse each M::Depot from depots max 2 lifetime workflow;\n";
+    let replicated = Realizability::delivering("exactly-once-premise", pool, "", PICK, CANCELLED);
+    request.fragment.roles = vec![replicated.named("role", "Warehouse")];
+    let outranked = match decide(
+        &[
+            replicated.linked().declarations(),
+            lossy.linked().declarations(),
+            narrow_spec.linked().declarations(),
+        ],
+        &request,
+    ) {
+        RefinementOutcome::Decided(found) => found,
+        other => panic!("not decided: {other:?}"),
+    };
     assert_eq!(outranked.verdict(), Verdict::Unsupported);
     assert_eq!(outranked.counterexamples, found.counterexamples);
     // A refutation outranks an exhausted bound.
-    asked.fragment.roles = vec![d.named("role", "S")];
-    asked.max_states = 2;
-    let bounded = decided(&d, &asked);
-    assert!(!bounded.complete);
-    assert_eq!(bounded.verdict(), Verdict::Refuted);
+    let mut bounded = asked(&wide, &narrow_spec);
+    bounded.max_states = 6;
+    let cut = decided(&wide, &narrow_spec, &bounded);
+    assert!(!cut.complete);
+    assert_eq!(cut.verdict(), Verdict::Refuted);
 }
 
 #[test]
 #[trace("TC-202", "FR-202-AC-7")]
 fn a_counterexample_replays_and_an_altered_one_does_not() {
-    let d = dynamic();
-    for asked in [extra_trace(&d), deadlock(&d), divergence(&d)] {
-        let counter = decided(&d, &asked).counterexamples[0].clone();
+    let (wide, narrow, lossy, spinning) = (wide(), narrow(), lossy(), spinning());
+    let extra = asked(&wide, &narrow);
+    let deadlock = asked(&lossy, &wide);
+    let divergence = asked_over(&spinning, &narrow, &["Order"]);
+    // Each counterexample against a request whose specification shares the
+    // behaviour does not replay.
+    let others = [
+        asked(&wide, &wide),
+        asked(&lossy, &lossy),
+        asked_over(&spinning, &spinning, &["Order"]),
+    ];
+    for ((asked, other), (implementation, specification)) in
+        [extra.clone(), deadlock.clone(), divergence.clone()]
+            .into_iter()
+            .zip(others)
+            .zip([(&wide, &narrow), (&lossy, &wide), (&spinning, &narrow)])
+    {
+        let found = decided(implementation, specification, &asked);
+        let counter = found.counterexamples[0].clone();
         assert!(counter.replay(&asked));
-        // Against a request whose systems differ the same value fails.
-        let mut other = asked.clone();
-        other.implementation.system.transitions.clear();
         assert!(!counter.replay(&other));
         // The spec side is exactly what the trace reaches.
         let mut forged: Counterexample = counter.clone();
-        forged.specification.reached.insert(state(9));
+        forged.specification.reached.insert(StateId(99_999));
         assert!(!forged.replay(&asked));
         let mut forged = counter.clone();
-        forged.specification.trace.push(d.named("channel", "Tail"));
+        forged
+            .specification
+            .trace
+            .push(action(&wide, "Cancelled", StepKind::Send));
         assert!(!forged.replay(&asked));
         // The implementation run must be a run.
         let mut forged = counter.clone();
-        forged.implementation.push(seen(&d, 7, "Head", 8));
+        forged.implementation.push(Transition {
+            from: StateId(99_998),
+            label: Label::Internal,
+            to: StateId(99_999),
+        });
         assert!(!forged.replay(&asked));
         let mut forged = counter.clone();
         forged.implementation.clear();
-        let _ = forged.replay(&asked);
         assert!(!forged.replay(&asked) || forged.implementation.is_empty());
     }
     // Fault-specific forgeries.
-    let asked = extra_trace(&d);
-    let counter = decided(&d, &asked).counterexamples[0].clone();
+    let counter = decided(&wide, &narrow, &extra).counterexamples[0].clone();
     let mut forged = counter.clone();
     forged.fault = Fault::ExtraTrace {
-        action: d.named("channel", "Head"),
+        action: action(&wide, "Pick", StepKind::Receive),
     };
-    assert!(!forged.replay(&asked));
+    assert!(!forged.replay(&extra));
     let mut forged = counter;
     forged.fault = Fault::Deadlock;
-    assert!(!forged.replay(&asked));
-    let asked = divergence(&d);
-    let counter = decided(&d, &asked).counterexamples[0].clone();
+    assert!(!forged.replay(&extra));
+    let counter = decided(&spinning, &narrow, &divergence).counterexamples[0].clone();
+    let Fault::Divergence { lasso } = counter.fault.clone() else {
+        panic!("a divergence");
+    };
     let mut forged = counter.clone();
     forged.fault = Fault::Divergence { lasso: Vec::new() };
-    assert!(!forged.replay(&asked));
+    assert!(!forged.replay(&divergence));
     let mut forged = counter;
     forged.fault = Fault::Divergence {
-        lasso: vec![hidden(1, 2)],
+        lasso: lasso[..1].to_vec(),
     };
-    assert!(!forged.replay(&asked));
+    assert!(lasso.len() < 2 || !forged.replay(&divergence));
 }
 
-// ---------------------------------------------------------------- TC-204
-
-fn assuming(d: &Dynamic, implementation: &[&str], specification: &[&str]) -> RefinementRequest {
-    let mut asked = request(d, spec_ab(d), spec_ab(d));
-    let nodes = |names: &[&str]| -> Vec<CheckedNodeId> {
-        names.iter().map(|n| d.named("channel", n)).collect()
-    };
-    asked.implementation.system.assumptions = nodes(implementation);
-    asked.specification.system.assumptions = nodes(specification);
-    asked.assumptions = vec![d.named("channel", "Head"), d.named("channel", "Tail")];
-    asked
-}
+// ----------------------------------------------------------------- TC-148
 
 #[test]
-#[trace("TC-204", "FR-204-AC-1")]
-fn systems_resting_on_exactly_the_offered_assumptions_refine() {
-    let d = dynamic();
-    let refinement = decided(&d, &assuming(&d, &["Head", "Tail"], &["Head"]));
-    assert!(refinement.stronger_assumptions.is_empty());
-    assert_eq!(refinement.verdict(), Verdict::Refines);
-}
-
-#[test]
-#[trace("TC-204", "FR-204-AC-2")]
-fn an_implementation_resting_on_an_unoffered_assumption_is_refuted_naming_it() {
-    let d = dynamic();
-    let asked = assuming(&d, &["Head", "Block", "New"], &[]);
-    let refinement = decided(&d, &asked);
-    assert_eq!(refinement.verdict(), Verdict::Refuted);
-    assert_eq!(refinement.truth(), Truth::Violated);
-    let named: Vec<_> = refinement
-        .stronger_assumptions
-        .iter()
-        .map(|s| (s.party, s.assumption.clone()))
-        .collect();
-    let mut expected = vec![
-        (Party::Implementation, d.named("channel", "Block")),
-        (Party::Implementation, d.named("channel", "New")),
-    ];
-    expected.sort();
-    assert_eq!(named, expected);
-    assert!(refinement
-        .stronger_assumptions
-        .iter()
-        .all(|s| s.replay(&asked)));
-}
-
-#[test]
-#[trace("TC-204", "FR-204-AC-3")]
-fn offered_assumptions_no_system_used_change_nothing() {
-    let d = dynamic();
-    let refinement = decided(&d, &assuming(&d, &["Head"], &[]));
-    assert_eq!(refinement.verdict(), Verdict::Refines);
-    let none = decided(&d, &assuming(&d, &[], &[]));
-    assert_eq!(none.verdict(), Verdict::Refines);
-}
-
-#[test]
-#[trace("TC-204", "FR-204-AC-4")]
-fn a_stronger_assumption_and_a_counterexample_are_both_kept() {
-    let d = dynamic();
-    let mut asked = assuming(&d, &["Block"], &[]);
-    asked.implementation.system = {
-        let mut bad = system(&[1], vec![seen(&d, 0, "Tail", 1)]);
-        bad.assumptions = asked.implementation.system.assumptions.clone();
-        bad
-    };
-    let refinement = decided(&d, &asked);
-    assert_eq!(refinement.stronger_assumptions.len(), 1);
-    assert_eq!(refinement.counterexamples.len(), 1);
-    assert!(refinement.counterexamples[0].replay(&asked));
-}
-
-#[test]
-#[trace("TC-204", "FR-204-AC-5")]
-fn a_refinement_with_stronger_assumptions_leaves_other_claims_unchanged() {
-    let d = dynamic();
-    let sound = assuming(&d, &[], &[]);
-    let alone = settle(
-        &d,
-        vec![
-            Claims::GlobalConformance(CONFORMANT),
-            Claims::Refinement(sound.clone()),
-        ],
-    );
-    let beside = settle(
-        &d,
-        vec![
-            Claims::GlobalConformance(CONFORMANT),
-            Claims::Refinement(assuming(&d, &["Block"], &[])),
-            Claims::Refinement(sound),
-        ],
-    );
-    assert_eq!(beside[0], alone[0]);
-    assert_eq!(beside[2], alone[1]);
-    assert_ne!(beside[1], alone[1]);
-}
-
-#[test]
-#[trace("TC-204", "FR-204-AC-6")]
-fn a_specification_resting_on_an_unoffered_assumption_is_named_as_such() {
-    let d = dynamic();
-    let asked = assuming(&d, &[], &["Block"]);
-    let refinement = decided(&d, &asked);
-    assert_eq!(refinement.stronger_assumptions.len(), 1);
-    assert_eq!(
-        refinement.stronger_assumptions[0].party,
-        Party::Specification
-    );
-    assert_eq!(refinement.verdict(), Verdict::Refuted);
-}
-
-#[test]
-#[trace("TC-204", "FR-204-AC-7")]
-fn a_stronger_assumption_fails_replay_when_altered() {
-    let d = dynamic();
-    let asked = assuming(&d, &["Block"], &[]);
-    let found = decided(&d, &asked).stronger_assumptions[0].clone();
-    assert!(found.replay(&asked));
-    let mut forged = found.clone();
-    forged.party = Party::Specification;
-    assert!(!forged.replay(&asked));
-    let mut forged = found.clone();
-    forged.assumption = d.named("channel", "Head");
-    assert!(!forged.replay(&asked));
-    let mut forged = found.clone();
-    forged.offered.push(d.named("channel", "Block"));
-    assert!(!forged.replay(&asked));
-    // Once the assumption is offered the finding no longer replays.
-    let mut offered = asked;
-    offered.assumptions.push(d.named("channel", "Block"));
-    assert!(!found.replay(&offered));
-}
-
-// ------------------------------------------- systems from FSL's step view
-
-mod viewed {
-    use super::*;
-    use filament_protocol::refinement::{decide, step_system};
+#[trace("TC-148", "FR-302-AC-1")]
+fn a_refuted_refinement_carries_the_witness_fsls_record_holds() {
+    use fsl_replay::protocol_analysis::AssessedRoot;
     use fsl_replay::SeparatingWitnessRecord;
-    use support::projection::{assessed_root, CANCELLED, PICK};
-    use support::realizability::Realizability;
 
-    const CHANNELS: [&str; 3] = ["Order", "Pick", "Cancelled"];
+    let (wide, narrow) = (wide(), narrow());
+    let request = asked(&wide, &narrow);
+    let found = decided(&wide, &narrow, &request);
+    let witness = found
+        .witness
+        .clone()
+        .expect("a refuted refinement carries a witness");
+    let root = AssessedRoot::new(Some(assessed_root())).expect("a root");
+    let extra = found
+        .counterexamples
+        .iter()
+        .filter(|c| matches!(c.fault, Fault::ExtraTrace { .. }))
+        .min_by_key(|c| c.implementation.len())
+        .expect("an extra trace");
+    let Fault::ExtraTrace { action } = &extra.fault else {
+        unreachable!()
+    };
+    let position = extra.implementation.len() - 1;
+    let record: SeparatingWitnessRecord = root
+        .record(&action.channel, position)
+        .expect("FSL's record of the deciding step");
+    assert!(witness.is(&record));
+    assert_eq!(witness.deciding_node().as_ref(), Some(&action.channel));
+    assert_eq!(witness.trace_position(), Some(position as u64));
+    // The bytes are FSL's canonical record, read back strictly.
+    let bytes = witness.to_bytes().expect("canonical bytes");
+    assert_eq!(
+        fsl_replay::RefinementWitness::from_bytes(&bytes).expect("strict read"),
+        witness
+    );
+    // The dispatcher carries it unchanged.
+    let settled = settle(&wide, &narrow, vec![Claims::Refinement(request)]);
+    let RefinementOutcome::Decided(carried) = settled_outcome(settled[0].clone()) else {
+        panic!("decided");
+    };
+    assert_eq!(carried.witness, Some(witness));
+}
 
-    pub fn asked(
-        implementation: &Realizability,
-        specification: &Realizability,
-        max_states: usize,
-    ) -> RefinementRequest {
-        let fragment = Fragment {
-            channels: CHANNELS
-                .iter()
-                .map(|name| implementation.named("channel", name))
-                .collect(),
-            roles: Vec::new(),
-        };
-        let side = |fixture: &Realizability| Side {
-            node: fixture.clause().clone(),
-            system: step_system(
-                fixture.package(),
-                fixture.clause(),
-                &fixture.subject(),
-                &fragment,
-                max_states,
-            ),
-        };
-        RefinementRequest {
-            implementation: side(implementation),
-            specification: side(specification),
-            fragment: fragment.clone(),
-            assumptions: Vec::new(),
-            sources: vec![implementation.clause().clone()],
-            max_states: 100_000,
-        }
+#[test]
+#[trace("TC-148", "FR-302-AC-2")]
+fn a_refuted_refinement_without_its_witness_is_refused() {
+    let (wide, narrow) = (wide(), narrow());
+    for blank in [
+        AssessedSubject::default(),
+        AssessedSubject {
+            observation: None,
+            ..asked(&wide, &narrow).assessed_root
+        },
+    ] {
+        let mut request = asked(&wide, &narrow);
+        request.assessed_root = blank;
+        let settled = settle(&wide, &narrow, vec![Claims::Refinement(request)]);
+        assert!(matches!(
+            settled_outcome(settled[0].clone()),
+            RefinementOutcome::Refused(DispositionRefusal::DecisiveWithoutWitness)
+        ));
     }
-
-    pub fn settled(
-        implementation: &Realizability,
-        specification: &Realizability,
-        asked: &RefinementRequest,
-    ) -> Refinement {
-        let components = [
-            implementation.linked().declarations(),
-            specification.linked().declarations(),
-        ];
-        match decide(&components, asked) {
-            RefinementOutcome::Decided(found) => found,
-            other => panic!("not decided: {other:?}"),
-        }
-    }
-
-    #[test]
-    #[trace("TC-147", "FR-301-AC-3")]
-    fn a_protocol_refines_itself_through_the_step_view() {
-        let fixture = Realizability::worked(PICK, CANCELLED);
-        let twin = Realizability::worked(PICK, CANCELLED);
-        let asked = asked(&fixture, &twin, 4096);
-        assert!(asked
-            .implementation
-            .system
-            .transitions
-            .iter()
-            .any(|step| matches!(step.label, Label::Observable(_))));
-        assert!(asked
-            .implementation
-            .system
-            .transitions
-            .iter()
-            .any(|step| step.label == Label::Internal));
-        let found = settled(&fixture, &twin, &asked);
-        assert_eq!(found.verdict(), Verdict::Refines, "{found:?}");
-        assert_eq!(found.truth(), Truth::Satisfied);
-    }
-
-    #[test]
-    #[trace("TC-147", "FR-301-AC-3")]
-    fn an_extra_message_the_specification_lacks_is_an_extra_trace() {
-        let fixture = Realizability::worked(PICK, CANCELLED);
-        let narrower = Realizability::worked("", CANCELLED);
-        let asked = asked(&fixture, &narrower, 4096);
-        let found = settled(&fixture, &narrower, &asked);
-        assert_eq!(found.verdict(), Verdict::Refuted, "{found:?}");
-        let pick = fixture.named("channel", "Pick");
-        assert!(found.counterexamples.iter().any(|found| matches!(
-            &found.fault,
-            Fault::ExtraTrace { action } if *action == pick
-        )));
-        assert!(found
-            .counterexamples
-            .iter()
-            .all(|counterexample| counterexample.replay(&asked)));
-        // The other way round, the narrower protocol refines the wider.
-        let reverse = self::asked(&narrower, &fixture, 4096);
-        assert_eq!(
-            settled(&narrower, &fixture, &reverse).verdict(),
-            Verdict::Refines
-        );
-    }
-
-    #[test]
-    #[trace("TC-147", "FR-301-AC-3")]
-    fn a_message_that_can_be_lost_is_a_deadlock_the_reliable_specification_lacks() {
-        let reliable = Realizability::worked(PICK, CANCELLED);
-        let lossy = Realizability::delivering("at-most-once", "", "", PICK, CANCELLED);
-        let asked = asked(&lossy, &reliable, 4096);
-        let found = settled(&lossy, &reliable, &asked);
-        assert_eq!(found.verdict(), Verdict::Refuted, "{found:?}");
-        assert!(faults(&found).contains(&&Fault::Deadlock), "{found:?}");
-        assert!(found
-            .counterexamples
-            .iter()
-            .all(|counterexample| counterexample.replay(&asked)));
-    }
-
-    #[test]
-    #[trace("TC-147", "FR-301-AC-2")]
-    fn a_replicated_role_in_the_protocol_is_unsupported_and_never_refines() {
-        let pool = "role Warehouse each M::Depot from depots max 2 lifetime workflow;\n";
-        let replicated =
-            Realizability::delivering("exactly-once-premise", pool, "", PICK, CANCELLED);
-        let plain = Realizability::worked(PICK, CANCELLED);
-        let asked = asked(&replicated, &plain, 4096);
-        let pool = replicated.named("role", "Warehouse");
-        assert_eq!(
-            asked.implementation.system.unsupported,
-            vec![UnsteppedConstruct::ReplicatedRole(pool.clone())]
-        );
-        assert!(asked.implementation.system.transitions.is_empty());
-        let found = settled(&replicated, &plain, &asked);
-        assert_eq!(
-            found.undecidable,
-            vec![Undecidable::Construct(
-                Party::Implementation,
-                UnsteppedConstruct::ReplicatedRole(pool)
-            )]
-        );
-        assert!(found.counterexamples.is_empty(), "nothing is invented");
-        assert_eq!(found.verdict(), Verdict::Unsupported);
-        assert_eq!(found.truth(), Truth::Unavailable);
-    }
-
-    #[test]
-    #[trace("TC-147", "FR-301-AC-4")]
-    fn a_step_view_past_its_state_limit_is_incomplete_and_never_refines() {
-        let fixture = Realizability::worked(PICK, CANCELLED);
-        let twin = Realizability::worked(PICK, CANCELLED);
-        let asked = asked(&fixture, &twin, 3);
-        assert!(asked.implementation.system.incomplete.is_some());
-        assert!(asked.implementation.system.transitions.is_empty());
-        let found = settled(&fixture, &twin, &asked);
-        assert_eq!(found.verdict(), Verdict::Incomplete, "{found:?}");
-        assert!(found.counterexamples.is_empty(), "nothing is invented");
-        assert_eq!(found.execution(), AssessmentExecution::ResourceIncomplete);
-    }
-
-    #[test]
-    #[trace("TC-147", "FR-301-AC-7")]
-    fn only_sends_and_receives_on_the_fragments_channels_are_observable() {
-        let fixture = Realizability::worked(PICK, CANCELLED);
-        let all = asked(&fixture, &fixture, 4096);
-        let mut narrowed = all.fragment.clone();
-        narrowed.channels = vec![fixture.named("channel", "Order")];
-        let system = step_system(
-            fixture.package(),
-            fixture.clause(),
-            &fixture.subject(),
-            &narrowed,
-            4096,
-        );
-        let labels = |system: &TransitionSystem| {
-            system
-                .transitions
-                .iter()
-                .filter_map(|step| match &step.label {
-                    Label::Observable(node) => Some(node.clone()),
-                    Label::Internal => None,
-                })
-                .collect::<std::collections::BTreeSet<_>>()
-        };
-        assert_eq!(labels(&system), [fixture.named("channel", "Order")].into());
-        assert_eq!(
-            labels(&all.implementation.system),
-            CHANNELS
-                .iter()
-                .map(|name| fixture.named("channel", name))
-                .collect()
-        );
-        // Hiding a channel hides its steps without removing them.
-        assert_eq!(
-            system.transitions.len(),
-            all.implementation.system.transitions.len()
-        );
-    }
-
-    #[test]
-    #[trace("TC-148", "FR-302-AC-1")]
-    fn a_refuted_refinement_carries_the_witness_fsls_record_holds() {
-        let fixture = Realizability::worked(PICK, CANCELLED);
-        let narrower = Realizability::worked("", CANCELLED);
-        let asked = asked(&fixture, &narrower, 4096);
-        let found = settled(&fixture, &narrower, &asked);
-        let root = fsl_replay::protocol_analysis::AssessedRoot::new(Some(assessed_root()))
-            .expect("a root");
-        let witness = found
-            .witness(&root)
-            .expect("FSL writes the record")
-            .expect("a refuted refinement carries a witness");
-        let extra = found
-            .counterexamples
-            .iter()
-            .filter(|c| matches!(c.fault, Fault::ExtraTrace { .. }))
-            .min_by_key(|c| c.implementation.len())
-            .expect("an extra trace");
-        let Fault::ExtraTrace { action } = &extra.fault else {
-            unreachable!()
-        };
-        let position = extra.implementation.len() - 1;
-        let record: SeparatingWitnessRecord = root
-            .record(action, position)
-            .expect("FSL's record of the deciding step");
-        assert!(witness.is(&record));
-        assert_eq!(witness.deciding_node().as_ref(), Some(action));
-        assert_eq!(witness.trace_position(), Some(position as u64));
-        // The bytes are FSL's canonical record, read back strictly.
-        let bytes = witness.to_bytes().expect("canonical bytes");
-        assert_eq!(
-            fsl_replay::RefinementWitness::from_bytes(&bytes).expect("strict read"),
-            witness
-        );
-    }
-
-    #[test]
-    #[trace("TC-148", "FR-302-AC-2")]
-    fn a_refinement_that_is_not_refuted_carries_no_witness() {
-        let fixture = Realizability::worked(PICK, CANCELLED);
-        let twin = Realizability::worked(PICK, CANCELLED);
-        let root = fsl_replay::protocol_analysis::AssessedRoot::new(Some(assessed_root()))
-            .expect("a root");
-        let refines = settled(&fixture, &twin, &asked(&fixture, &twin, 4096));
-        assert_eq!(refines.witness(&root).expect("no record"), None);
-        let bounded = settled(&fixture, &twin, &asked(&fixture, &twin, 3));
-        assert_eq!(bounded.witness(&root).expect("no record"), None);
-    }
+    // A claim that is not refuted needs no root and carries no witness.
+    let mut request = asked(&wide, &wide);
+    request.assessed_root = AssessedSubject::default();
+    let refines = decided(&wide, &wide, &request);
+    assert_eq!(refines.verdict(), Verdict::Refines);
+    assert_eq!(refines.witness, None);
+    let mut bounded = asked(&wide, &wide);
+    bounded.max_states = 1;
+    let incomplete = decided(&wide, &wide, &bounded);
+    assert_eq!(incomplete.verdict(), Verdict::Incomplete);
+    assert_eq!(incomplete.witness, None);
 }
