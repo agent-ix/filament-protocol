@@ -23,6 +23,10 @@ relationships:
     type: depends_on
   - target: ix://agent-ix/filament-specification/FR-352
     type: depends_on
+  - target: ix://agent-ix/filament-protocol/FR-301
+    type: references
+  - target: ix://agent-ix/filament-spec-language/FR-578
+    type: depends_on
 ---
 # FR-302: Carry a trace-position witness on the protocol result wire
 
@@ -62,6 +66,8 @@ When settlement basis is `decisive-witness` or `decisive-counterexample` for a
 imported deciding-element identity, value path and trace position, and the index
 where the admitted record assigns one, from the admitted separating-witness
 record on `native-run-result/2`.
+
+A `refinement` claim is decided here (FR-301), so no backend writes its record. The library builds the record with FSL's `RefinementWitness` (`ix://agent-ix/filament-spec-language/FR-578`), the FR-351 record of the protocol family, under the claim's assessed root, and carries it with `Refinement::witness`: for a refuted claim, the shortest counterexample decides. An extra trace is decided by the offending action's channel node at the zero-based position of the offending step in the implementation run; a deadlock or divergence by the implementation protocol's node at the length of the run; a refutation by a stronger assumption alone by that assumption at position zero. A claim that is not refuted carries no witness. The counterexamples stay the library's own replayable paths (FR-202); the witness is FSL's record pointing at the deciding node and position, and it compares equal, byte for byte, to FSL's record of the same node and position.
 
 A settlement whose basis is `closed-scope`, `unsettled` or `unavailable`
 carries no witness. A decisive basis without its witness refuses the result.

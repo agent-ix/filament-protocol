@@ -6,6 +6,8 @@ mod support {
     pub mod assume_guarantee;
     pub mod dynamic;
     pub mod handoff;
+    pub mod projection;
+    pub mod realizability;
 }
 
 use filament_contract_model::CheckedNodeId;
@@ -18,6 +20,7 @@ use filament_protocol::refinement::{
     StateId, Transition, TransitionSystem, Undecidable, Verdict,
 };
 use fsl_eval::simulation::protocol::Unsupported;
+use fsl_replay::UnsteppedConstruct;
 use fsl_replay::{SettlementBasis, Truth};
 use ix_trace_rs::trace;
 use support::assume_guarantee::{foreign, Boundary, Claims, Settled};
@@ -53,6 +56,7 @@ fn system(finals: &[u32], transitions: Vec<Transition>) -> TransitionSystem {
         transitions,
         assumptions: Vec::new(),
         unsupported: Vec::new(),
+        incomplete: None,
     }
 }
 
@@ -172,7 +176,8 @@ fn unsupported_dynamics_never_refine_and_are_unsupported() {
     unbounded.fragment.channels = vec![d.named("channel", "Symbolic")];
     // A construct the system builder could not step.
     let mut construct = identical();
-    construct.specification.system.unsupported = vec![Unsupported::SymbolicCapacity];
+    construct.specification.system.unsupported =
+        vec![UnsteppedConstruct::Construct(Unsupported::SymbolicCapacity)];
     for (asked, expected) in [
         (dynamic_role, Undecidable::DynamicRole(d.named("role", "R"))),
         (
@@ -181,7 +186,10 @@ fn unsupported_dynamics_never_refine_and_are_unsupported() {
         ),
         (
             construct,
-            Undecidable::Construct(Party::Specification, Unsupported::SymbolicCapacity),
+            Undecidable::Construct(
+                Party::Specification,
+                UnsteppedConstruct::Construct(Unsupported::SymbolicCapacity),
+            ),
         ),
     ] {
         let refinement = decided(&d, &asked);
@@ -752,4 +760,256 @@ fn a_stronger_assumption_fails_replay_when_altered() {
     let mut offered = asked;
     offered.assumptions.push(d.named("channel", "Block"));
     assert!(!found.replay(&offered));
+}
+
+// ------------------------------------------- systems from FSL's step view
+
+mod viewed {
+    use super::*;
+    use filament_protocol::refinement::{decide, step_system};
+    use fsl_replay::SeparatingWitnessRecord;
+    use support::projection::{assessed_root, CANCELLED, PICK};
+    use support::realizability::Realizability;
+
+    const CHANNELS: [&str; 3] = ["Order", "Pick", "Cancelled"];
+
+    pub fn asked(
+        implementation: &Realizability,
+        specification: &Realizability,
+        max_states: usize,
+    ) -> RefinementRequest {
+        let fragment = Fragment {
+            channels: CHANNELS
+                .iter()
+                .map(|name| implementation.named("channel", name))
+                .collect(),
+            roles: Vec::new(),
+        };
+        let side = |fixture: &Realizability| Side {
+            node: fixture.clause().clone(),
+            system: step_system(
+                fixture.package(),
+                fixture.clause(),
+                &fixture.subject(),
+                &fragment,
+                max_states,
+            ),
+        };
+        RefinementRequest {
+            implementation: side(implementation),
+            specification: side(specification),
+            fragment: fragment.clone(),
+            assumptions: Vec::new(),
+            sources: vec![implementation.clause().clone()],
+            max_states: 100_000,
+        }
+    }
+
+    pub fn settled(
+        implementation: &Realizability,
+        specification: &Realizability,
+        asked: &RefinementRequest,
+    ) -> Refinement {
+        let components = [
+            implementation.linked().declarations(),
+            specification.linked().declarations(),
+        ];
+        match decide(&components, asked) {
+            RefinementOutcome::Decided(found) => found,
+            other => panic!("not decided: {other:?}"),
+        }
+    }
+
+    #[test]
+    #[trace("TC-147", "FR-301-AC-3")]
+    fn a_protocol_refines_itself_through_the_step_view() {
+        let fixture = Realizability::worked(PICK, CANCELLED);
+        let twin = Realizability::worked(PICK, CANCELLED);
+        let asked = asked(&fixture, &twin, 4096);
+        assert!(asked
+            .implementation
+            .system
+            .transitions
+            .iter()
+            .any(|step| matches!(step.label, Label::Observable(_))));
+        assert!(asked
+            .implementation
+            .system
+            .transitions
+            .iter()
+            .any(|step| step.label == Label::Internal));
+        let found = settled(&fixture, &twin, &asked);
+        assert_eq!(found.verdict(), Verdict::Refines, "{found:?}");
+        assert_eq!(found.truth(), Truth::Satisfied);
+    }
+
+    #[test]
+    #[trace("TC-147", "FR-301-AC-3")]
+    fn an_extra_message_the_specification_lacks_is_an_extra_trace() {
+        let fixture = Realizability::worked(PICK, CANCELLED);
+        let narrower = Realizability::worked("", CANCELLED);
+        let asked = asked(&fixture, &narrower, 4096);
+        let found = settled(&fixture, &narrower, &asked);
+        assert_eq!(found.verdict(), Verdict::Refuted, "{found:?}");
+        let pick = fixture.named("channel", "Pick");
+        assert!(found.counterexamples.iter().any(|found| matches!(
+            &found.fault,
+            Fault::ExtraTrace { action } if *action == pick
+        )));
+        assert!(found
+            .counterexamples
+            .iter()
+            .all(|counterexample| counterexample.replay(&asked)));
+        // The other way round, the narrower protocol refines the wider.
+        let reverse = self::asked(&narrower, &fixture, 4096);
+        assert_eq!(
+            settled(&narrower, &fixture, &reverse).verdict(),
+            Verdict::Refines
+        );
+    }
+
+    #[test]
+    #[trace("TC-147", "FR-301-AC-3")]
+    fn a_message_that_can_be_lost_is_a_deadlock_the_reliable_specification_lacks() {
+        let reliable = Realizability::worked(PICK, CANCELLED);
+        let lossy = Realizability::delivering("at-most-once", "", "", PICK, CANCELLED);
+        let asked = asked(&lossy, &reliable, 4096);
+        let found = settled(&lossy, &reliable, &asked);
+        assert_eq!(found.verdict(), Verdict::Refuted, "{found:?}");
+        assert!(faults(&found).contains(&&Fault::Deadlock), "{found:?}");
+        assert!(found
+            .counterexamples
+            .iter()
+            .all(|counterexample| counterexample.replay(&asked)));
+    }
+
+    #[test]
+    #[trace("TC-147", "FR-301-AC-2")]
+    fn a_replicated_role_in_the_protocol_is_unsupported_and_never_refines() {
+        let pool = "role Warehouse each M::Depot from depots max 2 lifetime workflow;\n";
+        let replicated =
+            Realizability::delivering("exactly-once-premise", pool, "", PICK, CANCELLED);
+        let plain = Realizability::worked(PICK, CANCELLED);
+        let asked = asked(&replicated, &plain, 4096);
+        let pool = replicated.named("role", "Warehouse");
+        assert_eq!(
+            asked.implementation.system.unsupported,
+            vec![UnsteppedConstruct::ReplicatedRole(pool.clone())]
+        );
+        assert!(asked.implementation.system.transitions.is_empty());
+        let found = settled(&replicated, &plain, &asked);
+        assert_eq!(
+            found.undecidable,
+            vec![Undecidable::Construct(
+                Party::Implementation,
+                UnsteppedConstruct::ReplicatedRole(pool)
+            )]
+        );
+        assert!(found.counterexamples.is_empty(), "nothing is invented");
+        assert_eq!(found.verdict(), Verdict::Unsupported);
+        assert_eq!(found.truth(), Truth::Unavailable);
+    }
+
+    #[test]
+    #[trace("TC-147", "FR-301-AC-4")]
+    fn a_step_view_past_its_state_limit_is_incomplete_and_never_refines() {
+        let fixture = Realizability::worked(PICK, CANCELLED);
+        let twin = Realizability::worked(PICK, CANCELLED);
+        let asked = asked(&fixture, &twin, 3);
+        assert!(asked.implementation.system.incomplete.is_some());
+        assert!(asked.implementation.system.transitions.is_empty());
+        let found = settled(&fixture, &twin, &asked);
+        assert_eq!(found.verdict(), Verdict::Incomplete, "{found:?}");
+        assert!(found.counterexamples.is_empty(), "nothing is invented");
+        assert_eq!(found.execution(), AssessmentExecution::ResourceIncomplete);
+    }
+
+    #[test]
+    #[trace("TC-147", "FR-301-AC-7")]
+    fn only_sends_and_receives_on_the_fragments_channels_are_observable() {
+        let fixture = Realizability::worked(PICK, CANCELLED);
+        let all = asked(&fixture, &fixture, 4096);
+        let mut narrowed = all.fragment.clone();
+        narrowed.channels = vec![fixture.named("channel", "Order")];
+        let system = step_system(
+            fixture.package(),
+            fixture.clause(),
+            &fixture.subject(),
+            &narrowed,
+            4096,
+        );
+        let labels = |system: &TransitionSystem| {
+            system
+                .transitions
+                .iter()
+                .filter_map(|step| match &step.label {
+                    Label::Observable(node) => Some(node.clone()),
+                    Label::Internal => None,
+                })
+                .collect::<std::collections::BTreeSet<_>>()
+        };
+        assert_eq!(labels(&system), [fixture.named("channel", "Order")].into());
+        assert_eq!(
+            labels(&all.implementation.system),
+            CHANNELS
+                .iter()
+                .map(|name| fixture.named("channel", name))
+                .collect()
+        );
+        // Hiding a channel hides its steps without removing them.
+        assert_eq!(
+            system.transitions.len(),
+            all.implementation.system.transitions.len()
+        );
+    }
+
+    #[test]
+    #[trace("TC-148", "FR-302-AC-1")]
+    fn a_refuted_refinement_carries_the_witness_fsls_record_holds() {
+        let fixture = Realizability::worked(PICK, CANCELLED);
+        let narrower = Realizability::worked("", CANCELLED);
+        let asked = asked(&fixture, &narrower, 4096);
+        let found = settled(&fixture, &narrower, &asked);
+        let root = fsl_replay::protocol_analysis::AssessedRoot::new(Some(assessed_root()))
+            .expect("a root");
+        let witness = found
+            .witness(&root)
+            .expect("FSL writes the record")
+            .expect("a refuted refinement carries a witness");
+        let extra = found
+            .counterexamples
+            .iter()
+            .filter(|c| matches!(c.fault, Fault::ExtraTrace { .. }))
+            .min_by_key(|c| c.implementation.len())
+            .expect("an extra trace");
+        let Fault::ExtraTrace { action } = &extra.fault else {
+            unreachable!()
+        };
+        let position = extra.implementation.len() - 1;
+        let record: SeparatingWitnessRecord = root
+            .record(action, position)
+            .expect("FSL's record of the deciding step");
+        assert!(witness.is(&record));
+        assert_eq!(witness.deciding_node().as_ref(), Some(action));
+        assert_eq!(witness.trace_position(), Some(position as u64));
+        // The bytes are FSL's canonical record, read back strictly.
+        let bytes = witness.to_bytes().expect("canonical bytes");
+        assert_eq!(
+            fsl_replay::RefinementWitness::from_bytes(&bytes).expect("strict read"),
+            witness
+        );
+    }
+
+    #[test]
+    #[trace("TC-148", "FR-302-AC-2")]
+    fn a_refinement_that_is_not_refuted_carries_no_witness() {
+        let fixture = Realizability::worked(PICK, CANCELLED);
+        let twin = Realizability::worked(PICK, CANCELLED);
+        let root = fsl_replay::protocol_analysis::AssessedRoot::new(Some(assessed_root()))
+            .expect("a root");
+        let refines = settled(&fixture, &twin, &asked(&fixture, &twin, 4096));
+        assert_eq!(refines.witness(&root).expect("no record"), None);
+        let bounded = settled(&fixture, &twin, &asked(&fixture, &twin, 3));
+        assert_eq!(bounded.witness(&root).expect("no record"), None);
+    }
 }

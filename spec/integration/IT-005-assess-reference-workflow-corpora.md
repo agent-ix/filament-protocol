@@ -64,7 +64,7 @@ Run each living test named in the table. Each corpus row names the cells it back
 | Dynamic roles | V1-PROT-012, V1-PROT-013 | TC-051, TC-052, TC-167 | Lifetime and population bound of a replicated role; queue capacity and overflow; a faulty run is judged on each axis separately. |
 | Projection | V1-PROT-027 | TC-164, TC-165 (IT-004) | FSL's linked engine decides it. |
 | Realizability | V1-PROT-028 | TC-166, TC-172 | FSL's linked engine decides it over a subject built from a checked-handoff directory by FSL's `protocol_subject`; the witness carrier is batch D (FR-302). |
-| Composition, refinement | V1-PROT-029, V1-PROT-030 | TC-200..TC-204 | Composition and refinement are decided in `src/composition.rs` and `src/refinement.rs` (TC-200..TC-204, TC-147), the refinement over caller-supplied transition systems until FSL's compile and link call (S2) derives them. |
+| Composition, refinement | V1-PROT-029, V1-PROT-030 | TC-200..TC-204 | Composition and refinement are decided in `src/composition.rs` and `src/refinement.rs` (TC-200..TC-204, TC-147), the refinement over transition systems built from FSL's protocol step view (FSL FR-578). |
 
 ## Expected Results
 
@@ -72,4 +72,4 @@ Every corpus row passes. A cell with no row is a stated gap in the V1-PROT inven
 
 ## Dependencies
 
-The result-publication cells (V1-RUN-005, V1-RUN-006 as published) are blocked: Quoin #519 is closed, but the canonical result and scenario record it takes are retired here (FR-006, FR-007, FR-017). Global conformance (V1-PROT-026) is blocked the same way (FR-004). Composition and refinement are decided by this library; refinement over a linked protocol waits on FSL's compile and link call (S2). The `v1-draft.2` witness carrier (FR-302) is batch D.
+The result-publication cells (V1-RUN-005, V1-RUN-006 as published) are blocked: Quoin #519 is closed, but the canonical result and scenario record it takes are retired here (FR-006, FR-007, FR-017). Global conformance (V1-PROT-026) is blocked the same way (FR-004). Composition and refinement are decided by this library; refinement over a linked protocol is built from FSL's step view. The `v1-draft.2` witness carrier (FR-302) is batch D.

@@ -179,11 +179,27 @@ impl Realizability {
 
     /// `worked`, with `extra` member declarations (channels) added.
     pub fn worked_with(extra: &str, ship: &str, cancel: &str) -> Self {
+        Self::delivering("exactly-once-premise", "", extra, ship, cancel)
+    }
+
+    /// `worked`, over channels of the `delivery` mode, with the `Warehouse`
+    /// declaration `warehouse` in place of its static one when it is not empty.
+    pub fn delivering(
+        delivery: &str,
+        warehouse: &str,
+        extra: &str,
+        ship: &str,
+        cancel: &str,
+    ) -> Self {
+        let mut members = MEMBERS.replace("exactly-once-premise", delivery);
+        if !warehouse.is_empty() {
+            members = members.replace("role Warehouse on M::Depot;\n", warehouse);
+        }
         let text = format!(
             "language \"ix:native\" edition \"1-draft\";\n\
              profile pp = \"filament.protocol.finite-global/v1\";\n\
              model M = \"{PACKAGE}\";\n\
-             {RECORDS}protocol Flow using pp over (k: M::Workflow) on origin {{\n{MEMBERS}{extra}\n\
+             {RECORDS}protocol Flow using pp over (k: M::Workflow) on origin {{\n{members}{extra}\n\
              run sequence Main {{\n\
              send Placed via Order as (placed: Ack) {{ true }};\n\
              receive Got via Order of Placed as (got: Ack) {{ true }};\n\
@@ -284,7 +300,7 @@ impl Realizability {
     }
 
     /// The protocol subject FSL builds from the compiled handoff alone.
-    fn subject(&self) -> ProtocolSubject<'_> {
+    pub fn subject(&self) -> ProtocolSubject<'_> {
         protocol_subject(
             SubjectPackage {
                 package: self.compiled.checked(),

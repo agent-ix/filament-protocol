@@ -41,7 +41,7 @@ The counterexamples, each a typed value pairing the implementation run with what
 - The library shall set the execution value `refused` on no refinement disposition, because a refusal under FR-030 is a separate act and sets no execution value.
 - The library shall reuse no FSL witness type for a counterexample, because FSL's refinement witnesses are state-based over a model subject and these systems are protocol-level.
 
-FR-302's trace-position witness for a `refinement` claim imports FSL's separating-witness record, which no protocol-level decision writes; the carriage waits on FSL's compile and link call (S2).
+FR-302's trace-position witness for a `refinement` claim is FSL's `RefinementWitness` record (`ix://agent-ix/filament-spec-language/FR-578`), built by `Refinement::witness` for the deciding node and position; the counterexamples stay this library's own paths.
 
 ## Acceptance Criteria
 

@@ -272,6 +272,9 @@ impl<R: BackendResult, B> ProtocolOutcome<R, B> {
 /// A requested claim: finite global conformance, whose result the caller
 /// computed (FR-004) and this dispatcher carries untouched, or a protocol
 /// claim.
+// One request per claim, held briefly; boxing would only hide the claim the
+// caller matches on.
+#[allow(clippy::large_enum_variant)]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ClaimRequest<G, A, I, T> {
     /// `global-conformance`, with its result.

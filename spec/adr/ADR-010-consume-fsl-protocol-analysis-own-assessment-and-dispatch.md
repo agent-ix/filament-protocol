@@ -189,9 +189,8 @@ them (FR-005). Those are different questions, and the split follows them.
    role, a symbolic queue capacity or a construct a system's builder could not
    step, which never refines. The precedence is unsupported, refuted,
    incomplete, refines. The transition system is this library's own small
-   type; FSL exposes no read view that steps a linked protocol into labelled
-   states, so deriving one from a linked protocol is FSL's compile and link
-   call (S2), and until it lands a caller supplies the systems. Atomic and
+   type, derived from FSL's read-only protocol step view (FSL FR-578, S3), with
+   the observable steps defined by FR-301. Atomic and
    temporal obligations and model-level refinement stay FSL's. FR-301 and
    FR-202 state the procedure; the dispatch of a `refinement` claim to a
    backend is removed with the `Claim`/`Answer` plumbing it needed.

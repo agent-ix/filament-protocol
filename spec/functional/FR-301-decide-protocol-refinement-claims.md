@@ -43,6 +43,8 @@ relationships:
     type: depends_on
   - target: ix://agent-ix/filament-spec-language/FR-147
     type: depends_on
+  - target: ix://agent-ix/filament-spec-language/FR-578
+    type: depends_on
 ---
 # FR-301: Decide protocol refinement claims in this library
 
@@ -52,7 +54,7 @@ When a `refinement` claim is requested, the dispatcher SHALL decide it with the 
 
 ## Inputs
 
-One requested `refinement` claim (an `ix://agent-ix/filament-specification/FR-290` label) with its admitted fragment, the implementation and specification protocols (each a checked node and a finite transition system of observable and internal steps, final states, the assumptions it rests on and the constructs its builder could not step), the offered assumption identities, the source identities and the most product states the decision may explore. The checked-package references (FR-043, FR-044) naming the two protocols. The fragment's role and channel declarations (FR-002), read only to find a replicated role or a symbolic capacity.
+One requested `refinement` claim (an `ix://agent-ix/filament-specification/FR-290` label) with its admitted fragment, the implementation and specification protocols (each a checked node and a finite transition system of observable and internal steps, final states, the assumptions it rests on, the constructs its builder could not step and, when FSL's step view stopped, the reason), the offered assumption identities, the source identities and the most product states the decision may explore. The checked-package references (FR-043, FR-044) naming the two protocols. The fragment's role and channel declarations (FR-002), read only to find a replicated role or a symbolic capacity.
 
 ## Outputs
 
@@ -63,13 +65,14 @@ One source-bound refinement disposition retaining its exact fragment, systems, a
 - The dispatcher shall decide each requested `refinement` claim by the procedure FR-202 and FR-204 state, with no backend call.
 - The dispatcher shall explore the specification by subset construction over its internal-step closure, so that a nondeterministic specification and internal steps on either side change no observable trace.
 - The dispatcher shall settle a `refinement` claim `unsupported` when the fragment holds a replicated role or a channel of symbolic capacity, or when a system reports a construct its builder could not step, and `refines` in no such case.
-- The dispatcher shall settle a `refinement` claim `incomplete` when the exploration reaches the request's bound before every product state, truncating no bound to finish.
+- The dispatcher shall settle a `refinement` claim `incomplete` when the exploration reaches the request's bound before every product state, or when FSL's step view of either protocol stopped (more states than the view's limit, a cut or undetermined state, a refused read), truncating no bound to finish. A system whose step view stopped, or reported an unsupported construct, holds no steps and is not explored, so it yields no counterexample.
+- The library shall derive each side's transition system from FSL's read-only protocol step view (`ix://agent-ix/filament-spec-language/FR-578`), never from a system the caller states. A step is observable when it is a `send` or a `receive` on a channel of the claim's fragment, labelled by that channel's checked node; every other step of the view (controls, forks, joins, memory and `finish` steps, and communication on a channel outside the fragment) is internal. A view with several initial states gets one internal start state that steps to each. The system's assumptions are the directly required temporal clauses of the view, as checked nodes; the protocol's own scheduler and memory fairness are not claim assumptions.
 - The dispatcher shall not treat an `unsupported` or `incomplete` settlement as a hold, a blocker or a refusal error.
 - The dispatcher shall leave the independent global conformance result and every other claim's disposition unchanged (FR-029).
 - The dispatcher shall not carry the complete-global-conformance premise set as evidence for a refinement disposition's own success, as `ix://agent-ix/filament-specification/FR-290`-AC-3 requires of every non-global claim.
 - When a refinement disposition would be `refines` or `refuted` without a source identity, the dispatcher shall refuse it (FR-030).
 
-This requirement reverses the dispatch FR-301 stated before ADR-010 Decision 7. FSL still owns atomic and temporal obligations and model-level refinement (`ix://agent-ix/filament-specification/FR-147`: a model that refines a protocol is never kind `refinement`); neither is evaluated here. The transition systems are this library's own small type. Deriving one from a linked protocol needs FSL's compile and link call (S2); until then a caller supplies the systems, and the procedure decides nothing about a construct the supplier could not step.
+This requirement reverses the dispatch FR-301 stated before ADR-010 Decision 7. FSL still owns atomic and temporal obligations and model-level refinement (`ix://agent-ix/filament-specification/FR-147`: a model that refines a protocol is never kind `refinement`); neither is evaluated here. The transition system is this library's own small type, built from FSL's step view by `TransitionSystem::from_view` and `step_system`; the procedure decides nothing about a construct the view does not step. A replicated role, an `activation on each` clause and a construct `fsl-eval` refuses to step come back from the view as unsteppable and settle `unsupported`.
 
 ## Acceptance Criteria
 
@@ -81,6 +84,7 @@ This requirement reverses the dispatch FR-301 stated before ADR-010 Decision 7. 
 | FR-301-AC-4 | A refinement whose exploration reaches the request's bound settles `incomplete` with execution `resource-incomplete`, truth `unavailable` and basis `unavailable`, never `refines`, and a counterexample found before the bound still refutes it. | Test (TC-147) |
 | FR-301-AC-5 | A refinement disposition retains its exact fragment, systems, assumptions and sources, and removing or substituting the fragment, a protocol node, an assumption, a source or an observable label one at a time refuses only that disposition, naming the node (FR-030). | Test (TC-147) |
 | FR-301-AC-6 | A nondeterministic specification, and internal steps on either side, are judged by observable traces: an implementation that follows one branch of the specification refines it, and hidden steps change no verdict. | Test (TC-147) |
+| FR-301-AC-7 | The transition systems come from FSL's step view over handoff-compiled protocols: a protocol refines itself, an implementation sending a message the specification lacks is `refuted` by an extra trace, a message that can be lost where the specification's cannot is `refuted` by a deadlock, a protocol with a replicated role settles `unsupported` with no invented counterexample, and a protocol past the view's state limit settles `incomplete`; only sends and receives on the fragment's channels are observable, labelled by the channel's node. | Test (TC-147) |
 
 ## Adopted vocabulary
 

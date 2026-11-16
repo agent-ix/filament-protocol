@@ -26,21 +26,27 @@
 //! the verdict, and the findings depend on neither the order of the transitions
 //! nor the order of any list.
 //!
-//! The transition system is this library's own small type. Nothing in the
-//! linked protocol (`link.rs`, `declarations.rs`) or in FSL's read view steps a
-//! protocol into labelled states: FSL's `ProtocolSystem` is an exploration
-//! semantics over a model subject, not a read view of the checked package.
-//! The builder that derives a [`TransitionSystem`] from a linked protocol is
-//! the FSL compile and link call (S2); until then a caller supplies the
-//! systems. Atomic and temporal obligations stay FSL's and are not evaluated
+//! The transition system is this library's own small type, derived from FSL's
+//! read-only protocol step view (FSL FR-578) by [`TransitionSystem::from_view`]
+//! and [`step_system`]. Which steps are observable is this library's to define
+//! (FR-301): a `send` or `receive` on a channel of the claim's fragment is
+//! observable, labelled by the channel's checked node; every other step is
+//! hidden. Atomic and temporal obligations stay FSL's and are not evaluated
 //! here.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use filament_contract_model::CheckedNodeId;
-use fsl_eval::simulation::protocol::Unsupported;
+use filament_contract_model::{CheckedNodeId, CheckedPackageV2};
+use fsl_analyze::protocol_analysis::protocol_step_view;
+use fsl_eval::model_subject::ProtocolSubject;
+use fsl_eval::simulation::protocol::StepKind;
 use fsl_package::RoleReplication;
-use fsl_replay::{SettlementBasis, Truth};
+use fsl_replay::protocol_analysis::AssessedRoot;
+use fsl_replay::{
+    ProtocolStepView, ProtocolSteps, RefinementWitness, RefinementWitnessError, SettlementBasis,
+    StateIndex, Truth, UnsteppedConstruct,
+};
+use fsl_semantics::check::wire_id::WireGraph;
 
 use crate::assume_guarantee::{bind_fragment, owner};
 use crate::closure::AssessmentExecution;
@@ -84,7 +90,138 @@ pub struct TransitionSystem {
     /// The assumptions the system's behaviour rests on.
     pub assumptions: Vec<CheckedNodeId>,
     /// The constructs the builder could not step, as FSL names them.
-    pub unsupported: Vec<Unsupported>,
+    pub unsupported: Vec<UnsteppedConstruct>,
+    /// Why the builder produced no system when FSL's view stopped (a bound, an
+    /// undetermined state, a refused read); `None` for a built system. A
+    /// system with a reason holds no steps and is never explored.
+    pub incomplete: Option<String>,
+}
+
+impl TransitionSystem {
+    /// The system of FSL's step view `view` of the protocol in `package`, with
+    /// the steps observable that send or receive on a channel in `observed`
+    /// (FR-301). Every other step is internal.
+    ///
+    /// A view that holds unsupported constructs gives a system that names
+    /// them and has no step. A multi-state initial set gets one extra
+    /// internal start state that steps to each. The assumptions are the
+    /// directly required temporal clauses; the protocol's own scheduler and
+    /// memory fairness are not claim assumptions.
+    #[must_use]
+    pub fn from_view(
+        package: &CheckedPackageV2,
+        view: ProtocolStepView,
+        observed: &[CheckedNodeId],
+    ) -> Self {
+        let held = |unsupported, incomplete| Self {
+            initial: StateId(0),
+            final_states: Vec::new(),
+            transitions: Vec::new(),
+            assumptions: Vec::new(),
+            unsupported,
+            incomplete,
+        };
+        match view {
+            ProtocolStepView::Unsupported(found) => held(found, None),
+            ProtocolStepView::Steps(steps) => Self::from_steps(package, &steps, observed)
+                .unwrap_or_else(|why| held(Vec::new(), Some(why.to_owned()))),
+        }
+    }
+
+    fn from_steps(
+        package: &CheckedPackageV2,
+        steps: &ProtocolSteps,
+        observed: &[CheckedNodeId],
+    ) -> Result<Self, &'static str> {
+        let id = |at: StateIndex| {
+            u32::try_from(at.0)
+                .map(StateId)
+                .map_err(|_| "a state index is beyond a state id")
+        };
+        let mut transitions = Vec::with_capacity(steps.steps.len());
+        for step in &steps.steps {
+            let communicates = matches!(step.kind, StepKind::Send | StepKind::Receive);
+            let label = match &step.channel {
+                Some(channel) if communicates && observed.contains(channel) => {
+                    Label::Observable(channel.clone())
+                }
+                _ => Label::Internal,
+            };
+            transitions.push(Transition {
+                from: id(step.from)?,
+                label,
+                to: id(step.to)?,
+            });
+        }
+        let initial = match steps.initial.as_slice() {
+            [only] => id(*only)?,
+            many => {
+                let origin = id(StateIndex(steps.states))?;
+                for at in many {
+                    transitions.push(Transition {
+                        from: origin,
+                        label: Label::Internal,
+                        to: id(*at)?,
+                    });
+                }
+                origin
+            }
+        };
+        let mut assumptions = Vec::new();
+        let nodes = &package.resolved_graph().nodes;
+        for required in steps
+            .assumptions
+            .iter()
+            .filter_map(|held| held.required_temporal.as_ref())
+        {
+            let graph = WireGraph::new(nodes.iter().map(|node| &node.node_id))
+                .map_err(|_| "the package has no wire identities")?;
+            let clause = nodes
+                .iter()
+                .map(|node| &node.node_id)
+                .find(|node| graph.key(node).is_ok_and(|key| key == required.clause))
+                .ok_or("a required temporal clause names no node")?;
+            assumptions.push(clause.clone());
+        }
+        Ok(Self {
+            initial,
+            final_states: steps
+                .final_states
+                .iter()
+                .map(|at| id(*at))
+                .collect::<Result<_, _>>()?,
+            transitions,
+            assumptions,
+            unsupported: Vec::new(),
+            incomplete: None,
+        })
+    }
+}
+
+/// FSL's step view of the protocol clause `protocol` of `package` over
+/// `subject`, as a [`TransitionSystem`] observing the channels of `fragment`
+/// (FR-301). FSL's refusal, including more than `max_states` states, gives a
+/// system that records why and is never explored: the claim settles
+/// `incomplete`, never `refines`.
+#[must_use]
+pub fn step_system(
+    package: &CheckedPackageV2,
+    protocol: &CheckedNodeId,
+    subject: &ProtocolSubject<'_>,
+    fragment: &Fragment,
+    max_states: usize,
+) -> TransitionSystem {
+    match protocol_step_view(package, protocol, subject, max_states) {
+        Ok(view) => TransitionSystem::from_view(package, view, &fragment.channels),
+        Err(refusal) => TransitionSystem {
+            initial: StateId(0),
+            final_states: Vec::new(),
+            transitions: Vec::new(),
+            assumptions: Vec::new(),
+            unsupported: Vec::new(),
+            incomplete: Some(refusal.to_string()),
+        },
+    }
 }
 
 /// One protocol of a refinement: its checked node and its system.
@@ -131,7 +268,7 @@ pub enum Undecidable {
     /// The fragment holds a channel with a symbolic capacity (unbounded).
     UnboundedQueue(CheckedNodeId),
     /// A system's builder could not step this construct.
-    Construct(Party, Unsupported),
+    Construct(Party, UnsteppedConstruct),
 }
 
 /// The side of a counterexample that says what the specification can do.
@@ -265,6 +402,53 @@ impl Refinement {
             Verdict::Refuted => SettlementBasis::DecisiveCounterexample,
             Verdict::Incomplete | Verdict::Unsupported => SettlementBasis::Unavailable,
         }
+    }
+}
+
+impl Refinement {
+    /// The FR-302 trace-position witness of a refuted claim, as FSL's FR-351
+    /// record built by [`RefinementWitness::new`] under the claim's assessed
+    /// `root`; `None` for any other verdict. Never recomputed from the bytes:
+    /// the carried record is FSL's own writer's.
+    ///
+    /// The deciding element and position come from the shortest
+    /// counterexample (ties by the counterexample's own order), so they
+    /// depend on neither the order of the transitions nor of any list:
+    /// an extra trace is decided by the offending action's channel node at
+    /// the offending step's zero-based position in the implementation run; a
+    /// deadlock or divergence by the implementation protocol's node at the
+    /// run's length. A refutation by a stronger assumption alone is decided
+    /// by that assumption at position zero.
+    ///
+    /// # Errors
+    ///
+    /// [`RefinementWitnessError`] when FSL cannot write the record.
+    pub fn witness(
+        &self,
+        root: &AssessedRoot,
+    ) -> Result<Option<RefinementWitness>, RefinementWitnessError> {
+        if self.verdict() != Verdict::Refuted {
+            return Ok(None);
+        }
+        let (deciding, position) = match self
+            .counterexamples
+            .iter()
+            .min_by_key(|found| (found.implementation.len(), *found))
+        {
+            Some(Counterexample {
+                fault: Fault::ExtraTrace { action },
+                implementation,
+                ..
+            }) => (action, implementation.len().saturating_sub(1)),
+            Some(Counterexample { implementation, .. }) => {
+                (&self.request.implementation.node, implementation.len())
+            }
+            None => match self.stronger_assumptions.first() {
+                Some(stronger) => (&stronger.assumption, 0),
+                None => return Ok(None),
+            },
+        };
+        RefinementWitness::new(root, deciding, position).map(Some)
     }
 }
 
@@ -644,6 +828,25 @@ pub fn bind(
     Ok(())
 }
 
+/// The order findings about unstepped constructs are kept in, whatever the
+/// order the view listed them.
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
+enum ConstructRank {
+    Activation(CheckedNodeId),
+    Role(CheckedNodeId),
+    Construct(&'static str),
+    Refused(String),
+}
+
+fn construct_rank(construct: &UnsteppedConstruct) -> ConstructRank {
+    match construct {
+        UnsteppedConstruct::ActivationOnEach(node) => ConstructRank::Activation(node.clone()),
+        UnsteppedConstruct::ReplicatedRole(node) => ConstructRank::Role(node.clone()),
+        UnsteppedConstruct::Construct(construct) => ConstructRank::Construct(construct.construct()),
+        UnsteppedConstruct::Refused(refusal) => ConstructRank::Refused(refusal.to_string()),
+    }
+}
+
 /// What the fragment's declarations and the two systems say the procedure
 /// cannot decide.
 fn undecidable(components: &[&Declarations], request: &RefinementRequest) -> Vec<Undecidable> {
@@ -664,14 +867,19 @@ fn undecidable(components: &[&Declarations], request: &RefinementRequest) -> Vec
             found.push(Undecidable::UnboundedQueue(node.clone()));
         }
     }
-    let mut constructs: Vec<(Party, Unsupported)> = [
+    let mut constructs: Vec<(Party, UnsteppedConstruct)> = [
         (Party::Implementation, &request.implementation),
         (Party::Specification, &request.specification),
     ]
     .into_iter()
-    .flat_map(|(party, side)| side.system.unsupported.iter().map(move |u| (party, *u)))
+    .flat_map(|(party, side)| {
+        side.system
+            .unsupported
+            .iter()
+            .map(move |u| (party, u.clone()))
+    })
     .collect();
-    constructs.sort_by_key(|(party, construct)| (*party, construct.construct()));
+    constructs.sort_by_cached_key(|(party, construct)| (*party, construct_rank(construct)));
     constructs.dedup();
     found.extend(
         constructs
@@ -688,11 +896,28 @@ pub fn decide(components: &[&Declarations], request: &RefinementRequest) -> Refi
     if let Err(refusal) = bind(components, request) {
         return RefinementOutcome::Refused(refusal);
     }
-    let explored = explore(
-        &Graph::new(&request.implementation.system),
-        &Graph::new(&request.specification.system),
-        request.max_states,
-    );
+    let sides = [
+        &request.implementation.system,
+        &request.specification.system,
+    ];
+    // A system with no steps because its builder could not step the protocol,
+    // or stopped, is not the protocol: exploring it would invent faults.
+    let steppable = sides
+        .iter()
+        .all(|system| system.unsupported.is_empty() && system.incomplete.is_none());
+    let explored = if steppable {
+        explore(
+            &Graph::new(&request.implementation.system),
+            &Graph::new(&request.specification.system),
+            request.max_states,
+        )
+    } else {
+        Explored {
+            findings: BTreeSet::new(),
+            states: 0,
+            complete: sides.iter().all(|system| system.incomplete.is_none()),
+        }
+    };
     let offered: BTreeSet<&CheckedNodeId> = request.assumptions.iter().collect();
     let stronger_assumptions: BTreeSet<StrongerAssumption> = [
         (Party::Implementation, &request.implementation),
