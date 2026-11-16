@@ -88,7 +88,7 @@ Assurance producer, license, implementation plan, and retained corpus remain
 explicit gates.
 
 The repository carries 70 functional requirements, 8 non-functional
-requirements, 3 integration tests and 41 test cases, and 487 acceptance criteria
+requirements, 3 integration tests and 50 test cases, and 487 acceptance criteria
 across the 70 FRs and the 8 NFRs. The functional set divides into 9 aggregate or
 behavioural parents (FR-001..FR-009), 9 object requirements (FR-010..FR-018),
 24 atomic behavioural parts (FR-019..FR-042) that the parents aggregate
@@ -396,8 +396,8 @@ does not measure binding.
 | Domain object requirement rows | 9 | 3 | 0 | 0 | 3 | 3 |
 | Non-functional requirement rows | 8 | 3 | 0 | 0 | 4 | 1 |
 | Integration rows | 4 | 0 | 0 | 1 | 0 | 3 |
-| Test case rows | 41 | 10 | 0 | 0 | 23 | 8 |
-| Overall | 123 | 27 | 0 | 1 | 61 | 34 |
+| Test case rows | 50 | 34 | 0 | 0 | 8 | 8 |
+| Overall | 132 | 51 | 0 | 1 | 46 | 34 |
 
 The Integration count is four because IT-001 carries a separate version 1 and version 2
 row; the two contracts may not substitute for each other, so one row cannot

@@ -169,6 +169,10 @@ pub struct Realizability {
     initial: Vec<DocumentRef>,
     clause: CheckedNodeId,
     linked: LinkedProtocol,
+    /// The protocol's declared name.
+    protocol: String,
+    /// The realizability request's depth bound.
+    depth: u64,
 }
 
 impl Realizability {
@@ -179,12 +183,36 @@ impl Realizability {
 
     /// `worked`, with `extra` member declarations (channels) added.
     pub fn worked_with(extra: &str, ship: &str, cancel: &str) -> Self {
-        Self::delivering("exactly-once-premise", "", extra, ship, cancel)
+        Self::worked_as("Flow", extra, ship, cancel)
+    }
+
+    /// `worked_with`, over a protocol declared as `protocol`, so that its
+    /// clause node differs from another component's.
+    pub fn worked_as(protocol: &str, extra: &str, ship: &str, cancel: &str) -> Self {
+        Self::delivering_as(protocol, "exactly-once-premise", "", extra, ship, cancel)
+    }
+
+    /// The same fixture with the realizability depth bound set to `depth`.
+    pub fn with_depth(mut self, depth: u64) -> Self {
+        self.depth = depth;
+        self
     }
 
     /// `worked`, over channels of the `delivery` mode, with the `Warehouse`
     /// declaration `warehouse` in place of its static one when it is not empty.
     pub fn delivering(
+        delivery: &str,
+        warehouse: &str,
+        extra: &str,
+        ship: &str,
+        cancel: &str,
+    ) -> Self {
+        Self::delivering_as("Flow", delivery, warehouse, extra, ship, cancel)
+    }
+
+    /// `delivering`, over a protocol declared as `protocol`.
+    pub fn delivering_as(
+        protocol: &str,
         delivery: &str,
         warehouse: &str,
         extra: &str,
@@ -199,7 +227,7 @@ impl Realizability {
             "language \"ix:native\" edition \"1-draft\";\n\
              profile pp = \"filament.protocol.finite-global/v1\";\n\
              model M = \"{PACKAGE}\";\n\
-             {RECORDS}protocol Flow using pp over (k: M::Workflow) on origin {{\n{members}{extra}\n\
+             {RECORDS}protocol {protocol} using pp over (k: M::Workflow) on origin {{\n{members}{extra}\n\
              run sequence Main {{\n\
              send Placed via Order as (placed: Ack) {{ true }};\n\
              receive Got via Order of Placed as (got: Ack) {{ true }};\n\
@@ -251,6 +279,8 @@ impl Realizability {
             }],
             clause,
             linked,
+            protocol: protocol.to_owned(),
+            depth: 64,
         }
     }
 
@@ -308,7 +338,7 @@ impl Realizability {
                 snapshots: &self.snapshots,
             },
             SubjectBindings {
-                protocol: "Flow".to_owned(),
+                protocol: self.protocol.clone(),
                 over: ModelInstance {
                     population: key("workflows"),
                     key: "w".to_owned(),
@@ -345,17 +375,17 @@ impl Realizability {
         .expect("the protocol subject is built")
     }
 
-    /// The realizability request over the protocol, bounded at depth 64.
+    /// The realizability request over the protocol, bounded at its depth (64 unless set).
     pub fn request(&self) -> RealizabilityRequest<'_> {
         RealizabilityRequest {
             protocol: self.clause.clone(),
             subject: self.subject(),
-            definition_key: Some("ix://test/Flow".to_owned()),
+            definition_key: Some(format!("ix://test/{}", self.protocol)),
             strategy_profile: Some("bounded-static".to_owned()),
             role_knowledge: Some(Some(BTreeSet::new())),
             environment: Some(Some(BTreeSet::new())),
             bounds: Some(BoundsDraft {
-                max_depth: Some(64),
+                max_depth: Some(self.depth),
                 max_history: Some(16),
             }),
             assessed_root: Some(assessed_root()),

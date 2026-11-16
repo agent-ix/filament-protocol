@@ -13,10 +13,11 @@ mod support {
     pub mod realizability;
 }
 
-use filament_protocol::assume_guarantee::{AssumeGuaranteeRequest, PremiseLists};
+use filament_protocol::assume_guarantee::{AssumeGuaranteeRequest, PremiseList, PremiseLists};
 use filament_protocol::closure::AssessmentExecution;
 use filament_protocol::composition::{
-    Composition, CompositionOutcome, Guarantee, Unavailable, Verdict as ComposedVerdict,
+    Composition, CompositionOutcome, Discharge, DischargedBy, Guarantee, PremiseRef, Unavailable,
+    Verdict as ComposedVerdict,
 };
 use filament_protocol::declarations::Declarations;
 use filament_protocol::dispatch::{dispatch_claims, BackendResult, ClaimDisposition, Fragment};
@@ -65,6 +66,13 @@ fn spinning() -> Realizability {
 fn replicated() -> Realizability {
     let pool = "role Warehouse each M::Depot from depots max 2 lifetime workflow;\n";
     Realizability::delivering("exactly-once-premise", pool, "", PICK, CANCELLED)
+}
+
+/// `wide` with a channel of symbolic capacity beside the others.
+fn symbolic() -> Realizability {
+    let sym = "channel Sym from Buyer to Seller carries Ack ordering unordered \
+               delivery exactly-once-premise capacity symbolic(Bound) overflow reject;\n";
+    Realizability::worked_with(sym, PICK, CANCELLED)
 }
 
 /// `Pick` and `Cancelled` sent from different roles into one channel, so that
@@ -147,7 +155,7 @@ struct RefinementCase {
     expect: Expect,
 }
 
-const REFINEMENT_CORPUS: [RefinementCase; 6] = [
+const REFINEMENT_CORPUS: [RefinementCase; 7] = [
     RefinementCase {
         name: "narrow refines wide",
         implementation: narrow,
@@ -194,6 +202,15 @@ const REFINEMENT_CORPUS: [RefinementCase; 6] = [
         expect: Expect::Unsupported,
     },
     RefinementCase {
+        name: "a channel of symbolic capacity in the fragment is unsupported",
+        implementation: symbolic,
+        specification: wide,
+        channels: &["Order", "Pick", "Cancelled", "Sym"],
+        role: None,
+        max_states: None,
+        expect: Expect::Unsupported,
+    },
+    RefinementCase {
         name: "a bound below the explored states is incomplete",
         implementation: wide,
         specification: wide,
@@ -203,6 +220,14 @@ const REFINEMENT_CORPUS: [RefinementCase; 6] = [
         expect: Expect::Incomplete,
     },
 ];
+
+/// The corpus case called `name`.
+fn case_named(name: &str) -> &'static RefinementCase {
+    REFINEMENT_CORPUS
+        .iter()
+        .find(|case| case.name == name)
+        .unwrap_or_else(|| panic!("no refinement case {name}"))
+}
 
 /// A case built into its two real protocols and its request.
 fn built(case: &RefinementCase) -> (Realizability, Realizability, RefinementRequest) {
@@ -313,7 +338,7 @@ fn each_refinement_case_of_the_reference_workflow_family_is_decided_alike_by_dec
 #[test]
 #[trace("TC-173", "FR-202-AC-1")]
 fn the_extra_trace_case_carries_a_replayable_pair_of_runs() {
-    let case = &REFINEMENT_CORPUS[1];
+    let case = case_named("wide has an extra trace over narrow");
     let (implementation, specification, request) = built(case);
     let found = decided(&implementation, &specification, &request);
     assert!(has_fault(&found, |f| matches!(f, Fault::ExtraTrace { .. })));
@@ -331,7 +356,9 @@ fn the_extra_trace_case_carries_a_replayable_pair_of_runs() {
 #[test]
 #[trace("TC-173", "FR-202-AC-2")]
 fn the_deadlock_case_carries_a_replayable_pair_of_runs() {
-    let (implementation, specification, request) = built(&REFINEMENT_CORPUS[2]);
+    let (implementation, specification, request) = built(case_named(
+        "lossy at-most-once deadlocks where wide continues",
+    ));
     let found = decided(&implementation, &specification, &request);
     assert!(has_fault(&found, |f| *f == Fault::Deadlock), "{found:?}");
     for counter in found
@@ -346,7 +373,8 @@ fn the_deadlock_case_carries_a_replayable_pair_of_runs() {
 #[test]
 #[trace("TC-173", "FR-202-AC-3")]
 fn the_divergence_case_carries_a_replayable_lasso_of_hidden_steps() {
-    let (implementation, specification, request) = built(&REFINEMENT_CORPUS[3]);
+    let (implementation, specification, request) =
+        built(case_named("a hidden loop diverges where narrow stops"));
     let found = decided(&implementation, &specification, &request);
     let [counter] = found.counterexamples.as_slice() else {
         panic!("one counterexample: {:?}", found.counterexamples);
@@ -361,7 +389,9 @@ fn the_divergence_case_carries_a_replayable_lasso_of_hidden_steps() {
 #[test]
 #[trace("TC-173", "FR-301-AC-2")]
 fn the_unsupported_case_names_the_replicated_role_and_invents_no_counterexample() {
-    let (implementation, specification, request) = built(&REFINEMENT_CORPUS[4]);
+    let (implementation, specification, request) = built(case_named(
+        "a replicated role in the fragment is unsupported",
+    ));
     let warehouse = implementation.named("role", "Warehouse");
     let found = decided(&implementation, &specification, &request);
     assert_eq!(
@@ -378,9 +408,35 @@ fn the_unsupported_case_names_the_replicated_role_and_invents_no_counterexample(
 }
 
 #[test]
+#[trace("TC-173", "FR-301-AC-2")]
+fn the_symbolic_capacity_case_names_the_channel_and_invents_no_counterexample() {
+    let (implementation, specification, request) = built(case_named(
+        "a channel of symbolic capacity in the fragment is unsupported",
+    ));
+    let found = decided(&implementation, &specification, &request);
+    assert!(found.undecidable.contains(&Undecidable::UnboundedQueue(
+        implementation.named("channel", "Sym")
+    )));
+    assert!(found.counterexamples.is_empty());
+}
+
+#[test]
+#[trace("TC-173", "FR-301-AC-4")]
+fn a_counterexample_found_before_the_bound_still_refutes() {
+    let (implementation, specification, mut request) =
+        built(case_named("wide has an extra trace over narrow"));
+    let full = decided(&implementation, &specification, &request);
+    assert!(full.complete);
+    request.max_states = full.explored - 4;
+    let cut = decided(&implementation, &specification, &request);
+    assert!(!cut.complete);
+    assert_eq!(cut.verdict(), Verdict::Refuted);
+}
+
+#[test]
 #[trace("TC-173", "FR-301-AC-4")]
 fn the_incomplete_case_refines_once_its_bound_is_lifted() {
-    let case = &REFINEMENT_CORPUS[5];
+    let case = case_named("a bound below the explored states is incomplete");
     let (implementation, specification, mut request) = built(case);
     assert_eq!(
         decided(&implementation, &specification, &request).verdict(),
@@ -400,6 +456,9 @@ struct RealizabilityCase {
     fixture: fn() -> Realizability,
     truth: Truth,
     basis: SettlementBasis,
+    /// Whether the refutation is the lossy channels' environment defeat
+    /// rather than indistinguishable histories.
+    environment_defeat: bool,
 }
 
 const REALIZABILITY_CORPUS: [RealizabilityCase; 4] = [
@@ -408,24 +467,28 @@ const REALIZABILITY_CORPUS: [RealizabilityCase; 4] = [
         fixture: wide,
         truth: Truth::Satisfied,
         basis: SettlementBasis::ClosedScope,
+        environment_defeat: false,
     },
     RealizabilityCase {
         name: "lossy delivery defeats realizability",
         fixture: lossy,
         truth: Truth::Violated,
         basis: SettlementBasis::DecisiveCounterexample,
+        environment_defeat: true,
     },
     RealizabilityCase {
         name: "a hidden choice is violated",
         fixture: || Realizability::worked(PICK, ""),
         truth: Truth::Violated,
         basis: SettlementBasis::DecisiveCounterexample,
+        environment_defeat: false,
     },
     RealizabilityCase {
         name: "an incompatible merge is violated",
         fixture: incompatible_merge,
         truth: Truth::Violated,
         basis: SettlementBasis::DecisiveCounterexample,
+        environment_defeat: false,
     },
 ];
 
@@ -447,23 +510,27 @@ fn each_realizability_case_settles_on_the_real_engine_and_carries_the_witness_un
         let Some(ProtocolAnalysisArtifact::Realizability(found)) = result.artifact() else {
             panic!("{}: a realizability result", case.name);
         };
-        match (&found.outcome, case.truth) {
-            (AnalysisOutcome::Proved(_), Truth::Satisfied) => {
+        match (&found.outcome, case.truth, case.environment_defeat) {
+            (AnalysisOutcome::Proved(_), Truth::Satisfied, _) => {
                 assert!(result.witness().is_none(), "{}", case.name);
             }
             (
-                AnalysisOutcome::Refuted(
-                    RealizabilityCounterexample::IndistinguishableHistories {
-                        separating_witness,
-                        ..
-                    }
-                    | RealizabilityCounterexample::EnvironmentDefeat {
-                        separating_witness, ..
-                    },
-                ),
+                AnalysisOutcome::Refuted(RealizabilityCounterexample::EnvironmentDefeat {
+                    separating_witness,
+                    ..
+                }),
                 Truth::Violated,
+                true,
+            )
+            | (
+                AnalysisOutcome::Refuted(RealizabilityCounterexample::IndistinguishableHistories {
+                    separating_witness,
+                    ..
+                }),
+                Truth::Violated,
+                false,
             ) => assert_eq!(result.witness(), Some(separating_witness), "{}", case.name),
-            (other, _) => panic!("{}: unexpected outcome {other:?}", case.name),
+            (other, _, _) => panic!("{}: unexpected outcome {other:?}", case.name),
         }
     }
 }
@@ -477,8 +544,8 @@ fn label_of(fixture: &Realizability) -> ItemLabel {
     ItemLabel::of(&realize(fixture).settlement().value)
 }
 
-/// Three real components, each compiled by FSL's writer into its own package
-/// and linked, each declaring channels of its own that serve as guarantee and
+/// Three real components, each a protocol of its own name (`FlowA`, `FlowB`,
+/// `FlowC`) compiled by FSL's writer and linked, so their clause nodes differ, each declaring channels of its own that serve as guarantee and
 /// assumption identities. A and B are realizable; C hides a choice.
 struct Components {
     a: Realizability,
@@ -495,9 +562,9 @@ fn extra(names: &[&str]) -> String {
 
 fn components_of_three() -> Components {
     Components {
-        a: Realizability::worked_with(&extra(&["GuaranteeA", "EnvA"]), PICK, CANCELLED),
-        b: Realizability::worked_with(&extra(&["GuaranteeB", "FairB"]), PICK, CANCELLED),
-        c: Realizability::worked_with(&extra(&["GuaranteeC", "Stronger"]), PICK, ""),
+        a: Realizability::worked_as("FlowA", &extra(&["GuaranteeA", "EnvA"]), PICK, CANCELLED),
+        b: Realizability::worked_as("FlowB", &extra(&["GuaranteeB", "FairB"]), PICK, CANCELLED),
+        c: Realizability::worked_as("FlowC", &extra(&["GuaranteeC", "Stronger"]), PICK, ""),
     }
 }
 
@@ -586,7 +653,31 @@ fn real_components_whose_premises_are_all_discharged_compose_to_proved() {
     let asked = parts.request();
     let found = parts.compose(&asked);
     assert_eq!(found.verdict(), ComposedVerdict::Proved, "{found:?}");
-    assert_eq!(found.discharges.len(), 4);
+    let discharge = |list, by| Discharge {
+        premise: PremiseRef { list, index: 0 },
+        by,
+    };
+    assert_eq!(
+        found.discharges,
+        vec![
+            discharge(
+                PremiseList::Environment,
+                DischargedBy::Assumption(parts.node("EnvA"))
+            ),
+            discharge(
+                PremiseList::Relies,
+                DischargedBy::Guarantee(parts.node("GuaranteeA"))
+            ),
+            discharge(
+                PremiseList::LivenessDependencies,
+                DischargedBy::Guarantee(parts.node("GuaranteeB"))
+            ),
+            discharge(
+                PremiseList::Fairness,
+                DischargedBy::Assumption(parts.node("FairB"))
+            ),
+        ]
+    );
     assert!(found.undischarged.is_empty());
     assert!(found.counterexamples.is_empty());
     assert_eq!(found.binding.request, asked);
@@ -594,21 +685,32 @@ fn real_components_whose_premises_are_all_discharged_compose_to_proved() {
 
 #[test]
 #[trace("TC-173", "FR-200-AC-6")]
-fn a_premise_relying_on_a_guarantee_the_engine_refuted_leaves_the_composition_unproved() {
+fn a_relied_on_guarantee_whose_real_label_is_not_proved_leaves_the_composition_unproved() {
     let parts = components_of_three();
-    let mut asked = parts.request();
-    asked.premises.relies = vec![parts.node("GuaranteeC")];
-    asked.guarantees = vec![
-        parts.guarantee("GuaranteeC", ClauseForm::Safety, &["EnvA"]),
-        parts.guarantee("GuaranteeB", ClauseForm::Liveness, &["FairB"]),
+    // Each label is the one FSL's engine settles for a real component.
+    let labels = [
+        (
+            label_of(&Realizability::worked(PICK, "")),
+            ItemLabel::Refuted,
+        ),
+        (label_of(&replicated()), ItemLabel::Unsupported),
+        (label_of(&wide().with_depth(1)), ItemLabel::Inconclusive),
     ];
-    let found = parts.compose(&asked);
-    assert_eq!(found.verdict(), ComposedVerdict::Unproved);
-    assert_ne!(found.truth(), Truth::Satisfied);
-    assert!(found
-        .undischarged
-        .iter()
-        .any(|u| u.why == Unavailable::NotProved(ItemLabel::Refuted)));
+    for (label, expected) in labels {
+        assert_eq!(label, expected);
+        let mut asked = parts.request();
+        asked.guarantees[0].label = label;
+        let found = parts.compose(&asked);
+        assert_eq!(found.verdict(), ComposedVerdict::Unproved, "{expected:?}");
+        assert_ne!(found.truth(), Truth::Satisfied);
+        assert!(
+            found
+                .undischarged
+                .iter()
+                .any(|u| u.why == Unavailable::NotProved(expected)),
+            "{expected:?}: {found:?}"
+        );
+    }
 }
 
 #[test]
@@ -616,7 +718,6 @@ fn a_premise_relying_on_a_guarantee_the_engine_refuted_leaves_the_composition_un
 fn real_components_that_prove_each_other_in_a_cycle_compose_to_circular() {
     let parts = components_of_three();
     let mut asked = parts.request();
-    asked.assumptions = vec![parts.node("EnvA"), parts.node("FairB")];
     asked.guarantees = vec![
         parts.guarantee("GuaranteeA", ClauseForm::Safety, &["GuaranteeB"]),
         parts.guarantee("GuaranteeB", ClauseForm::Liveness, &["GuaranteeA"]),
@@ -624,6 +725,17 @@ fn real_components_that_prove_each_other_in_a_cycle_compose_to_circular() {
     let found = parts.compose(&asked);
     assert_eq!(found.verdict(), ComposedVerdict::Circular, "{found:?}");
     assert_ne!(found.truth(), Truth::Satisfied);
+    // One cycle of the two, in node order.
+    let mut members = vec![parts.node("GuaranteeA"), parts.node("GuaranteeB")];
+    members.sort();
+    assert_eq!(found.cycles, vec![members]);
+
+    // A guarantee that uses itself is a cycle of one.
+    let mut own = parts.request();
+    own.guarantees[0].uses.push(parts.node("GuaranteeA"));
+    let found = parts.compose(&own);
+    assert_eq!(found.verdict(), ComposedVerdict::Circular, "{found:?}");
+    assert_eq!(found.cycles, vec![vec![parts.node("GuaranteeA")]]);
 }
 
 #[test]
@@ -667,6 +779,7 @@ fn the_verdict_and_counterexample_do_not_depend_on_the_order_of_guarantees_or_co
     for guarantee in &mut reversed.guarantees {
         guarantee.uses.reverse();
     }
+    assert_ne!(reversed.subjects, asked.subjects);
     let again = parts.compose(&reversed);
     assert_eq!(again.verdict(), found.verdict());
     assert_eq!(again.counterexamples, found.counterexamples);
@@ -675,4 +788,35 @@ fn the_verdict_and_counterexample_do_not_depend_on_the_order_of_guarantees_or_co
     let mut shuffled = proved.clone();
     shuffled.guarantees.reverse();
     assert_eq!(parts.compose(&shuffled).verdict(), ComposedVerdict::Proved);
+}
+
+#[test]
+#[trace("TC-173", "FR-204-AC-11")]
+fn a_counterexample_is_still_found_through_an_unproved_or_cycle_member_guarantee() {
+    let parts = components_of_three();
+    let mut asked = parts.request();
+    asked.guarantees[0].uses.push(parts.node("Stronger"));
+    let found = parts.compose(&asked);
+    assert_eq!(found.verdict(), ComposedVerdict::Incompatible);
+
+    // The relied-on guarantee is not proved.
+    let mut unproved = asked.clone();
+    unproved.guarantees[0].label = label_of(&wide().with_depth(1));
+    assert_ne!(unproved.guarantees[0].label, ItemLabel::Proved);
+    let again = parts.compose(&unproved);
+    assert_eq!(again.verdict(), ComposedVerdict::Incompatible, "{again:?}");
+    assert_eq!(again.counterexamples, found.counterexamples);
+
+    // The relied-on guarantee is a cycle member: B uses A, A now uses B.
+    let mut cyclic = asked.clone();
+    cyclic.guarantees[0].uses.push(parts.node("GuaranteeB"));
+    let again = parts.compose(&cyclic);
+    // The cycle reads as circular, and the counterexample is kept beside it.
+    assert!(!again.cycles.is_empty(), "{again:?}");
+    assert_eq!(again.verdict(), ComposedVerdict::Circular, "{again:?}");
+    assert!(!again.counterexamples.is_empty());
+    for counter in &again.counterexamples {
+        assert_eq!(counter.unoffered(), Some(&parts.node("Stronger")));
+        assert!(counter.replay(&cyclic));
+    }
 }
