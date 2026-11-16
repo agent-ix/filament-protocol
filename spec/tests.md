@@ -88,7 +88,7 @@ Assurance producer, license, implementation plan, and retained corpus remain
 explicit gates.
 
 The repository carries 70 functional requirements, 8 non-functional
-requirements, 3 integration tests and 40 test cases, and 487 acceptance criteria
+requirements, 3 integration tests and 50 test cases, and 487 acceptance criteria
 across the 70 FRs and the 8 NFRs. The functional set divides into 9 aggregate or
 behavioural parents (FR-001..FR-009), 9 object requirements (FR-010..FR-018),
 24 atomic behavioural parts (FR-019..FR-042) that the parents aggregate
@@ -332,6 +332,7 @@ a coverage claim in this matrix.
 | TC-170 | Run the timed-refund and compensated fan-out reference workflows end to end | Integration | P0 | FR-023, FR-100 | ✅ Implemented — one end-to-end run of each workflow; IT-005 is its procedure. |
 | TC-171 | Refuse a package whose choice owner or channel sender is unreadable | Property | P0 | FR-051, FR-052 | ✅ Implemented — its tests carry FR-051-AC-5 and FR-052-AC-5. |
 | TC-172 | Decide realizability over a subject built from a checked-handoff directory alone | Property | P0 | FR-150 | ✅ Implemented — its tests carry FR-150-AC-18. |
+| TC-173 | Run the composition, refinement and realizability corpora over real compiled protocols | Property | P0 | FR-150, FR-200, FR-202, FR-203, FR-204, FR-301 | ✅ Implemented — table-driven corpora of IT-005 over handoff-compiled protocols (`tests/tc_173_composition_refinement_realizability_corpora.rs`); it adds no criterion of its own. |
 | TC-200 | Decide composition claims in this library | Property | P0 | FR-200 | ✅ Implemented — its tests carry every FR-200 criterion (AC-1..AC-7, AC-9); the composition is decided in `src/composition.rs`, no backend is called. |
 | TC-201 | Bind composition dispositions to their premise lists and component subjects | Property | P0 | FR-201 | ✅ Implemented — its tests carry every FR-201 criterion (AC-1..AC-6). |
 | TC-202 | Report refinement counterexamples and read verdicts into the axes | Property | P0 | FR-202 | ✅ Implemented — its tests carry every FR-202 criterion (AC-1..AC-7), over handoff-compiled protocols. |
@@ -371,9 +372,9 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-025 finite replay | TC-167; TC-008 | Partial: a rebuilt history gives the same dynamic-axis result; no test replays a serialized trace, and the whole-result replay is retired with FR-006 |
 | V1-PROT-026 global conformance | passthrough only (TC-165 AC-15) | Blocked: FR-004 composes FR-026, FR-027, FR-028 and FR-041, all retired with the evaluator (FSL-1549) and with no successor requirement, so nothing here produces a global-conformance result to test |
 | V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on FSL's engine |
-| V1-PROT-028 realizability | FR-150 (TC-166, TC-172) | Backed on FSL's engine; witness carrier FR-302 is batch D |
-| V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204) | Decided in `src/composition.rs`; no backend |
-| V1-PROT-030 refinement | FR-202, FR-204; FR-301 (TC-147) | Decided in `src/refinement.rs` over systems built from FSL's protocol step view (FSL FR-578) |
+| V1-PROT-028 realizability | FR-150 (TC-166, TC-172, TC-173) | Backed on FSL's engine; the witness is carried unchanged (FR-302) |
+| V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204, TC-173) | Decided in `src/composition.rs`; no backend. TC-173 runs the corpus over three separately compiled protocols, guarantee labels taken from FSL's realizability results; the stronger-assumption refinement criteria (FR-204 AC-4..AC-7) wait on FSL |
+| V1-PROT-030 refinement | FR-202, FR-204; FR-301 (TC-147, TC-173) | Decided in `src/refinement.rs` over systems built from FSL's protocol step view (FSL FR-578) |
 | V1-PROT-031 no external effects | FR-025 (TC-003, TC-009) | Backed |
 | V1-RUN-003 protocol replay | TC-167; TC-050..TC-055 | Partial: the dynamic axes only |
 | V1-RUN-005, V1-RUN-006 independent axes | FR-014 (TC-011); TC-055, TC-154, TC-163 | Partial, and blocked for publication. Quoin #519 is closed and its intake (`quoin.protocol-scenario-intake/v1`, quoin-evidence) accepts a scenario record for IT-001..IT-003, but the canonical result (FR-006, FR-007) and the scenario record (FR-017) it carries are retired here with no successor, so there is no Protocol value to hand over |
@@ -395,8 +396,8 @@ does not measure binding.
 | Domain object requirement rows | 9 | 3 | 0 | 0 | 3 | 3 |
 | Non-functional requirement rows | 8 | 3 | 0 | 0 | 4 | 1 |
 | Integration rows | 4 | 0 | 0 | 1 | 0 | 3 |
-| Test case rows | 40 | 10 | 0 | 0 | 22 | 8 |
-| Overall | 122 | 27 | 0 | 1 | 60 | 34 |
+| Test case rows | 50 | 34 | 0 | 0 | 8 | 8 |
+| Overall | 132 | 51 | 0 | 1 | 46 | 34 |
 
 The Integration count is four because IT-001 carries a separate version 1 and version 2
 row; the two contracts may not substitute for each other, so one row cannot
