@@ -13,7 +13,10 @@ use std::path::Path;
 
 use filament_contract_model::CheckedPackageReadLimits;
 use filament_eval::CallFailure;
-use filament_exact::{FieldValue, LimitKind, Meter, NodeKey, Value, ValueType};
+use filament_exact::{
+    from_admitted, CardinalityBound, CollectionKind, CollectionType, FieldValue, Integer,
+    LimitKind, Meter, NodeKey, Quantity, Rational, Value, ValueType,
+};
 use filament_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
 use filament_protocol::compensation::algebra::{
     AttemptAdmission, AttemptFact, AttemptLedger, AttemptOutcome, Definition, ForwardFact,
@@ -195,7 +198,10 @@ fn retry(
     let bare = bare(admitted);
     let node = compensation_key(admitted, name);
     let values = [
-        (format!("target{name}"), Some(int(target))),
+        (
+            format!("target{name}"),
+            Some(total(&bare, &node, name, target)),
+        ),
         (format!("activated{name}"), Some(Value::Boolean(false))),
         (
             format!("earlier{name}"),
@@ -214,6 +220,12 @@ fn retry(
     evaluate(&bare, &slot, &supply, &mut Meter::new(UNLIMITED)).expect("retry evaluates")
 }
 
+/// A `Total` of `amount` for the retry relation of the compensation `name`.
+fn total(bare: &BarePackage<'_>, node: &NodeKey, name: &str, amount: i64) -> Value {
+    let unit = unit_of(bare, node, "retry.relation", &format!("target{name}"));
+    quantity(&unit, amount)
+}
+
 fn holds(evaluation: &SlotEvaluation) -> bool {
     match &evaluation.outcome {
         SlotOutcome::Holds => true,
@@ -225,7 +237,8 @@ fn holds(evaluation: &SlotEvaluation) -> bool {
 /// FR-045-AC-1: the outcome-map rows over R's `Full` and `Partial`
 /// compensations that evaluate today: true and false `trigger.guard` and
 /// `retry.relation`, an unavailable binder, a wrongly typed value and a meter
-/// one below measured usage. R's `recovery.predicate` rows are owed: FSL's bare projection faults on its comprehension binder.
+/// one below measured usage. R's `recovery.predicate` rows are in
+/// `the_recovery_predicate_rows_have_their_successor_outcomes`.
 #[test]
 #[trace("FR-045-AC-1", "TC-151")]
 fn every_outcome_row_has_its_successor_outcome() {
@@ -319,7 +332,8 @@ fn every_outcome_row_has_its_successor_outcome() {
 
 /// FR-045-AC-3 (the part that runs today): an unavailable binder of the retry
 /// relation is never a true result, and no source converts an evaluation to
-/// `bool`. The recovery supplies of the criterion are owed (the same FSL projection fault).
+/// `bool`. The recovery supplies are in
+/// `a_recovery_supply_that_is_not_complete_never_yields_a_true_recovery`.
 #[test]
 #[trace("FR-045-AC-3", "TC-151")]
 fn an_unavailable_binder_is_never_a_true_result() {
@@ -328,7 +342,7 @@ fn an_unavailable_binder_is_never_a_true_result() {
     let node = compensation_key(&admitted, "Full");
     for missing in ["targetFull", "activatedFull", "earlierFull", "laterFull"] {
         let values = [
-            ("targetFull", int(5)),
+            ("targetFull", total(&bare, &node, "Full", 5)),
             ("activatedFull", Value::Boolean(false)),
             ("earlierFull", attempt(&bare, &node, "Full", 0)),
             ("laterFull", attempt(&bare, &node, "Full", 1)),
@@ -481,7 +495,7 @@ fn the_charge_log_attributes_each_binder_read() {
     let bare = bare(&admitted);
     let node = compensation_key(&admitted, "Full");
     let values = vec![
-        ("targetFull", Some(int(5))),
+        ("targetFull", Some(total(&bare, &node, "Full", 5))),
         ("activatedFull", Some(Value::Boolean(false))),
         ("earlierFull", Some(attempt(&bare, &node, "Full", 0))),
         ("laterFull", Some(attempt(&bare, &node, "Full", 1))),
@@ -704,8 +718,7 @@ fn a_bound_that_is_absent_or_malformed_is_read_exactly() {
 /// consults the relation. The relation holds between consecutive attempts, does
 /// not hold for a skipped tally, and is Unavailable (never a Boolean) when a
 /// binder is missing; the bound read from `attempts maximum` ends the
-/// admissions. (FR-045-AC-2's recovery
-/// assertions stay owed: the recovery slots do not evaluate yet.)
+/// admissions.
 #[test]
 #[trace("FR-045-AC-4", "TC-151")]
 fn the_retry_and_bound_behaviors_hold_on_the_outcome_map() {
@@ -730,7 +743,7 @@ fn the_retry_and_bound_behaviors_hold_on_the_outcome_map() {
 
     let relation = |earlier: i64, later: i64, supplied: bool| {
         let values = vec![
-            ("targetFull", Some(int(5))),
+            ("targetFull", Some(total(&bare, &node, "Full", 5))),
             ("activatedFull", Some(Value::Boolean(false))),
             ("earlierFull", Some(attempt(&bare, &node, "Full", earlier))),
             (
@@ -1026,7 +1039,7 @@ fn attribution_is_supported_and_no_zero_entry_stands_in_for_a_missing_binder() {
 
     // The same log is carried whole on a completed result.
     let values = vec![
-        ("targetFull", Some(int(5))),
+        ("targetFull", Some(total(&bare, &node, "Full", 5))),
         ("activatedFull", Some(Value::Boolean(false))),
         ("earlierFull", Some(attempt(&bare, &node, "Full", 0))),
         ("laterFull", Some(attempt(&bare, &node, "Full", 1))),
@@ -1057,4 +1070,219 @@ fn the_import_scan_expands_brace_groups() {
         paths,
         ["std::fs::File", "std::io::Write", "std", "std::env"]
     );
+}
+
+// ---------------------------------------------------------------------------
+// The recovery slot (FR-045-AC-1, AC-2, AC-3)
+// ---------------------------------------------------------------------------
+
+/// The unit of the quantity binder `binder` of the slot `member`.
+fn unit_of(
+    bare: &BarePackage<'_>,
+    node: &NodeKey,
+    member: &str,
+    binder: &str,
+) -> filament_exact::UnitId {
+    let selected = bare
+        .select_protocol_slot(&ProtocolSlotDescriptor::new(node.clone(), member, None))
+        .expect("slot selects");
+    let source = selected
+        .sources()
+        .iter()
+        .find(|source| source.name() == binder)
+        .expect("binder");
+    let ValueType::Quantity(unit) = source.value_type() else {
+        panic!("{binder} is a quantity");
+    };
+    unit.clone()
+}
+
+fn quantity(unit: &filament_exact::UnitId, amount: i64) -> Value {
+    Value::Quantity(Quantity::new(
+        Rational::from_integer(Integer::from(amount)),
+        unit.clone(),
+    ))
+}
+
+/// A `Recovery` record whose `receipts` are the quantities `amounts`.
+fn recovery(bare: &BarePackage<'_>, node: &NodeKey, name: &str, amounts: &[i64]) -> Value {
+    let member = "recovery.predicate";
+    let unit = unit_of(bare, node, member, &format!("target{name}"));
+    let key = record_key(bare, node, member, &format!("recovered{name}"));
+    let receipts = from_admitted(
+        CollectionType::new(
+            CollectionKind::Sequence,
+            ValueType::Quantity(unit.clone()),
+            Some(CardinalityBound::at_most(5)),
+        ),
+        amounts
+            .iter()
+            .map(|amount| quantity(&unit, *amount))
+            .collect(),
+    );
+    bare.world()
+        .expect("world")
+        .types()
+        .record(key, vec![("receipts", FieldValue::Present(receipts))])
+        .expect("Recovery")
+}
+
+/// The recovery relation of `name` over a target, an activation capture and the
+/// achieved receipts; `None` supplies the binder as unavailable.
+fn recovers(
+    admitted: &AdmittedHandoff,
+    name: &str,
+    target: Option<i64>,
+    activated: Option<bool>,
+    receipts: Option<&[i64]>,
+) -> SlotEvaluation {
+    let bare = bare(admitted);
+    let node = compensation_key(admitted, name);
+    let unit = unit_of(&bare, &node, "recovery.predicate", &format!("target{name}"));
+    let values = [
+        (
+            format!("target{name}"),
+            target.map(|amount| quantity(&unit, amount)),
+        ),
+        (format!("activated{name}"), activated.map(Value::Boolean)),
+        (
+            format!("recovered{name}"),
+            receipts.map(|amounts| recovery(&bare, &node, name, amounts)),
+        ),
+    ];
+    let values = values
+        .iter()
+        .map(|(n, v)| (n.as_str(), v.clone()))
+        .collect();
+    let (slot, supply) = call(&bare, &node, "recovery.predicate", values);
+    evaluate(&bare, &slot, &supply, &mut Meter::new(UNLIMITED)).expect("recovery evaluates")
+}
+
+/// FR-045-AC-1, the recovery-predicate rows: `Full` holds for receipts that sum
+/// to the captured target and not otherwise; `Partial` holds for a positive sum
+/// below it. The slot is the one FSL selects (`recovery.predicate`, the `sum`
+/// query bound inside it), evaluated through the same call as every other row.
+#[test]
+#[trace("FR-045-AC-1", "TC-151")]
+fn the_recovery_predicate_rows_have_their_successor_outcomes() {
+    let admitted = handoff();
+    let full = |receipts: &[i64], activated| {
+        holds(&recovers(
+            &admitted,
+            "Full",
+            Some(5),
+            Some(activated),
+            Some(receipts),
+        ))
+    };
+    assert!(full(&[2, 3], false), "receipts summing to the target");
+    assert!(!full(&[2, 2], false), "receipts short of the target");
+    assert!(!full(&[2, 3, 1], false), "receipts above the target");
+    assert!(!full(&[2, 3], true), "an activated capture withdraws it");
+    let partial = |receipts: &[i64]| {
+        holds(&recovers(
+            &admitted,
+            "Partial",
+            Some(5),
+            Some(false),
+            Some(receipts),
+        ))
+    };
+    assert!(partial(&[2]), "a positive sum below the target");
+    assert!(partial(&[1, 3]), "the sum, not a receipt, is compared");
+    assert!(!partial(&[]), "no receipts is not positive");
+    assert!(!partial(&[5]), "a sum equal to the target is not below it");
+}
+
+/// FR-045-AC-2, the recovery assertions of `tc_003` (FR-024-AC-1 to AC-6)
+/// restated on the outcome map.
+#[test]
+#[trace("FR-045-AC-2", "TC-151")]
+fn the_recovery_behaviors_of_tc_003_hold_on_the_outcome_map() {
+    let admitted = handoff();
+    let outcome = |name: &str, target, receipts: &[i64]| {
+        holds(&recovers(
+            &admitted,
+            name,
+            Some(target),
+            Some(false),
+            Some(receipts),
+        ))
+    };
+    // FR-024-AC-1: one achieved state satisfies the partial relation and fails
+    // the full one over the same captured target, and neither ranks above.
+    assert!(outcome("Partial", 5, &[2]));
+    assert!(!outcome("Full", 5, &[2]));
+    assert!(outcome("Full", 5, &[2, 3]));
+    assert!(!outcome("Partial", 5, &[2, 3]));
+    // FR-024-AC-2: the exact relation, target and achieved state; varying any
+    // one withdraws the success.
+    assert!(outcome("Full", 5, &[2, 3]));
+    assert!(!outcome("Full", 6, &[2, 3]), "another target");
+    assert!(!outcome("Full", 5, &[2, 2]), "another achieved state");
+    assert!(!outcome("Partial", 5, &[2, 3]), "another relation");
+    // FR-024-AC-3: the aggregate is exact arithmetic over the whole population.
+    assert!(outcome("Full", 12, &[5, 4, 3]));
+    assert!(!outcome("Full", 12, &[5, 4, 2]));
+    // FR-024-AC-4: a missing target or achieved state is Unavailable, never a
+    // recovery success.
+    let missing_target = recovers(&admitted, "Full", None, Some(false), Some(&[2, 3]));
+    let missing_achieved = recovers(&admitted, "Full", Some(5), Some(false), None);
+    for found in [&missing_target, &missing_achieved] {
+        assert!(
+            matches!(found.outcome, SlotOutcome::Unavailable { .. }),
+            "{:?}",
+            found.outcome
+        );
+    }
+    // FR-024-AC-5 and AC-6: the slot reads its three binders and no attempt
+    // outcome or callback, and nothing converts an outcome to a Boolean.
+    let bare = bare(&admitted);
+    let node = compensation_key(&admitted, "Full");
+    let selected = bare
+        .select_protocol_slot(&ProtocolSlotDescriptor::new(
+            node,
+            "recovery.predicate",
+            None,
+        ))
+        .expect("slot selects");
+    let mut names: Vec<_> = selected
+        .sources()
+        .iter()
+        .map(|s| s.name().to_owned())
+        .collect();
+    names.sort();
+    assert_eq!(names, ["activatedFull", "recoveredFull", "targetFull"]);
+}
+
+/// FR-045-AC-3, the recovery supplies: an incomplete population, a missing
+/// target state, a missing achieved state or an unavailable binder never
+/// yields a true recovery.
+#[test]
+#[trace("FR-045-AC-3", "TC-151")]
+fn a_recovery_supply_that_is_not_complete_never_yields_a_true_recovery() {
+    let admitted = handoff();
+    for (target, activated, receipts) in [
+        (None, Some(false), Some(&[2_i64, 3][..])),
+        (Some(5), None, Some(&[2, 3][..])),
+        (Some(5), Some(false), None),
+    ] {
+        let found = recovers(&admitted, "Full", target, activated, receipts);
+        assert!(
+            matches!(found.outcome, SlotOutcome::Unavailable { .. }),
+            "{target:?} {activated:?} {receipts:?}: {:?}",
+            found.outcome
+        );
+    }
+    // An incomplete population: a `Recovery` without its required `receipts`
+    // cannot be built, so no such supply reaches the slot.
+    let bare = bare(&admitted);
+    let node = compensation_key(&admitted, "Full");
+    let key = record_key(&bare, &node, "recovery.predicate", "recoveredFull");
+    let absent = bare
+        .world()
+        .expect("world")
+        .types()
+        .record(key, vec![("receipts", FieldValue::Absent)]);
+    assert!(absent.is_err());
 }

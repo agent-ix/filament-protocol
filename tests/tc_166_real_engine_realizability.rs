@@ -77,3 +77,47 @@ fn an_incompatible_merge_is_refuted_by_the_real_engine_and_its_witness_carried_u
     assert_ne!(action_a, action_b, "the branches need different actions");
     assert_eq!(result.witness(), Some(separating_witness));
 }
+
+#[test]
+#[trace("TC-164", "FR-150-AC-19")]
+fn a_request_of_another_kind_than_the_claim_is_refused_with_fsls_inapplicable_kind() {
+    use filament_protocol::dispatch::{
+        dispatch, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
+    };
+    use filament_protocol::disposition::{ClaimSettlement, Disposition};
+    use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, FslEngine};
+    use fsl_route::ProviderOrigin;
+    use support::projection::{claim_of, Asked};
+
+    let fixture = Realizability::worked(PICK, CANCELLED);
+    let mut boundary: ProviderBoundary<'_, Asked, EngineResult> = ProviderBoundary::new();
+    // The claim projects; the supplied request is a realizability request.
+    let engine = FslEngine::new(fixture.package(), |_: &Binding<()>| {
+        EngineRequest::Realizability(Box::new(fixture.request()))
+    })
+    .expect("FSL's linked engines register");
+    boundary
+        .register(
+            engine_descriptor(ProviderOrigin::Linked).expect("FSL's own descriptor"),
+            engine,
+        )
+        .expect("the registration is accepted");
+    let asked = claim_of(
+        ProtocolClaimKind::LocalProjection,
+        fixture.linked(),
+        fixture.clause(),
+        |form, name| fixture.named(form, name),
+    );
+    let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::Refused(refused))) =
+        dispatch(&mut boundary, fixture.linked().declarations(), &asked)
+    else {
+        panic!("a refusal");
+    };
+    assert_eq!(
+        refused.code,
+        filament_semantic_value::catalog::CatalogCode::new(
+            "invalid_capability",
+            "inapplicable-kind"
+        )
+    );
+}

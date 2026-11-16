@@ -63,6 +63,28 @@ fn key(suffix: &str) -> DeclarationKey {
 /// per role's object type.
 fn model() -> Vec<u8> {
     let mut model: Json = serde_json::from_slice(&super::dynamic::model()).expect("model JSON");
+    // The checker explores the subject and needs every root bounded; FSL's
+    // `Amount` and `Total` are quantities of a unit whose domain it does not
+    // bound, so they are read here as the bounded integers their own
+    // `min`/`max` constraints state. This rewrites FSL's model in memory; no
+    // file of FSL's is copied.
+    for declared in model["types"].as_array_mut().expect("types") {
+        let is_unit = declared["target"]
+            .as_str()
+            .is_some_and(|target| target.starts_with("ix://filament/unit/"));
+        if is_unit {
+            let object = declared.as_object_mut().expect("a type");
+            object.remove("target");
+            object.insert(
+                "kind".to_owned(),
+                json!({"module": PACKAGE, "name": "value_type"}),
+            );
+            object.insert("scalar".to_owned(), json!("integer"));
+            for constraint in object["constraints"].as_array_mut().expect("constraints") {
+                constraint["appliesTo"] = json!("ix://filament/native/Integer");
+            }
+        }
+    }
     let populations = model["populations"].as_array_mut().expect("populations");
     for (name, member) in [("workflows", "Workflow"), ("depots", "Depot")] {
         populations.push(json!({

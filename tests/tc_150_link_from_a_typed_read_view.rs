@@ -863,9 +863,7 @@ fn zero_maximum_repeat_is_refused_at_its_control() {
 #[test]
 #[trace("TC-150", "FR-044-AC-3")]
 fn conflicting_channel_premises_are_refused_at_both_nodes() {
-    let source_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/checked-handoff/unit-event-position.native");
-    let source = std::fs::read_to_string(source_path).expect("recipe R source");
+    let source = support::handoff::unit_text("unit-event-position.native");
     let declaration = "channel Decisions from Provider to Service carries M::Notice\n        ordering unordered delivery at-least-once capacity 4 overflow reject;";
     let source = source.replace(
         declaration,

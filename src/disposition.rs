@@ -15,11 +15,12 @@
 
 use filament_contract_model::{CheckedNodeId, CheckedPackageV2, CheckedSourceMapEntry};
 use filament_semantic_value::catalog::CatalogCode;
+use fsl_analyze::analyze::DispositionKind;
 use fsl_eval::simulation::protocol::Unsupported;
 use fsl_eval::simulation::RequiresBound;
 use fsl_foundation::bound::{DomainKey, DomainKind};
 use fsl_foundation::BackendId;
-use fsl_replay::{SettlementBasis, Truth};
+use fsl_replay::{SettlementBasis, TerminalValue, Truth};
 use fsl_semantics::check::Capability;
 
 use crate::closure::AssessmentExecution;
@@ -225,12 +226,36 @@ pub struct RefusedDisposition<P> {
     pub premises: P,
 }
 
-/// A selected backend's failure for one claim, with the diagnostic it
-/// reported when it reported one.
+/// Why a selected backend failed for one claim, in FSL's own vocabulary where
+/// FSL publishes one. No failure is reported without a cause.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum FailureCause {
+    /// The backend reported this diagnostic code.
+    Diagnostic(CatalogCode),
+    /// FSL settled the item with this terminal value and wrote no diagnostic
+    /// for it.
+    SettledWithoutDiagnostic(Box<TerminalValue>),
+    /// FSL disposed of the item with this disposition and wrote no
+    /// diagnostic for it.
+    DisposedWithoutDiagnostic(DispositionKind),
+    /// FSL returned no record for the item it was asked to run.
+    NoRecord,
+    /// FSL returned a record for the item with no protocol-analysis artifact.
+    NoArtifact,
+    /// FSL's artifact could not be written as its `native-run-result/2`
+    /// record (FSpec FR-352), which no settled result is meant to do. FSL's
+    /// error text.
+    RunRecordRefused(String),
+    /// EN-1 refused the item. FSL maps the refusal to a code in a crate-private
+    /// function (ADR-010 G9), so only the refusal's text is carried.
+    CheckerRefused(String),
+}
+
+/// A selected backend's failure for one claim, with its cause.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FailedDisposition<P> {
-    /// The backend's diagnostic code.
-    pub diagnostic: Option<CatalogCode>,
+    /// Why the backend failed.
+    pub cause: FailureCause,
     /// The exact premises the request carried, unchanged.
     pub premises: P,
 }
@@ -257,7 +282,7 @@ pub enum FslReport<R> {
     /// FSL's backend returned a refusal, by its catalog code.
     Refusal(CatalogCode),
     /// The selected backend failed.
-    Failed(Option<CatalogCode>),
+    Failed(FailureCause),
 }
 
 impl<R> FslReport<R> {
@@ -270,7 +295,7 @@ impl<R> FslReport<R> {
                 FslReport::RequiresBound { outcome, construct }
             }
             Self::Refusal(code) => FslReport::Refusal(code),
-            Self::Failed(diagnostic) => FslReport::Failed(diagnostic),
+            Self::Failed(cause) => FslReport::Failed(cause),
         }
     }
 }
@@ -323,11 +348,8 @@ pub fn settle_claim<C, R, P>(
                 premises,
             }))
         }
-        FslReport::Failed(diagnostic) => {
-            ClaimSettlement::Disposition(Disposition::Failed(FailedDisposition {
-                diagnostic,
-                premises,
-            }))
+        FslReport::Failed(cause) => {
+            ClaimSettlement::Disposition(Disposition::Failed(FailedDisposition { cause, premises }))
         }
         FslReport::RequiresBound { outcome, construct } => {
             ClaimSettlement::Disposition(Disposition::RequiresBound(RequiresBoundDisposition {

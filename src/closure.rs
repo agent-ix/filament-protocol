@@ -687,12 +687,25 @@ impl ClosureState {
 /// Proof that complete global conformance was established.
 ///
 /// This type has no public constructor. The only way to obtain one is
-/// [`ProtocolAssessment::complete_global_conformance`], so no caller can
-/// promote a non-completing execution state or an unclosed axis into complete
-/// global success:
+/// [`crate::history::settle_global`], which issues it only for a history whose
+/// dynamic axes are all conformant and whose closure is established
+/// ([`ProtocolAssessment::closure_established`]), so no caller can promote a
+/// non-completing execution state, an unclosed axis or a non-conformant history
+/// into complete global success:
 ///
 /// ```compile_fail
 /// let _ = filament_protocol::closure::CompleteGlobalConformance {};
+/// ```
+///
+/// Closure alone does not issue it: the closure-only proof cannot be turned
+/// into it outside the crate, so a closed record cannot stand for a conformant
+/// history:
+///
+/// ```compile_fail
+/// use filament_protocol::closure::{ClosureEstablished, CompleteGlobalConformance};
+/// fn forge(proof: ClosureEstablished) -> CompleteGlobalConformance {
+///     CompleteGlobalConformance::of(proof)
+/// }
 /// ```
 ///
 /// Nor can one axis's state be substituted for another's. `FR-284` requires
@@ -705,6 +718,24 @@ impl ClosureState {
 /// ```
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct CompleteGlobalConformance {
+    /// Private field: blocks construction outside this module.
+    witness: (),
+}
+
+impl CompleteGlobalConformance {
+    /// Issue the witness from what the closure alone established. The caller
+    /// (`history`) owes the conformance of the dynamic axes.
+    pub(crate) const fn of(_closure: ClosureEstablished) -> Self {
+        Self { witness: () }
+    }
+}
+
+/// Proof that the five closure axes are established and the assessment
+/// execution completed. It says nothing of the history: it is not complete
+/// global conformance and converts to it only inside this crate, beside a
+/// conformant history.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct ClosureEstablished {
     /// Private field: blocks construction outside this module.
     witness: (),
 }
@@ -736,13 +767,13 @@ impl ProtocolAssessment {
         refusals
     }
 
-    /// Establish complete global conformance, or refuse with every reason.
-    pub fn complete_global_conformance(
-        self,
-    ) -> Result<CompleteGlobalConformance, Vec<ClosureRefusal>> {
+    /// Establish the closure half of complete global conformance, or refuse
+    /// with every reason. This proves nothing of the history; complete global
+    /// conformance is issued by [`crate::history::settle_global`] alone.
+    pub fn closure_established(self) -> Result<ClosureEstablished, Vec<ClosureRefusal>> {
         let refusals = self.refusals();
         if refusals.is_empty() {
-            Ok(CompleteGlobalConformance { witness: () })
+            Ok(ClosureEstablished { witness: () })
         } else {
             Err(refusals)
         }

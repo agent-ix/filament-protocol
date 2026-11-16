@@ -3,12 +3,14 @@ language "ix:native" edition "1-draft";
 profile t = "filament.temporal.event-position.false-extension/v1";
 import "agent-ix/checked-handoff-library" as L;
 model M = "agent-ix/checked-handoff";
+dimension Money;
+unit U : Money = rational(1, 1);
 
 // An `on each` clause with a capture. The atom reads `view`, the `over`
 // binder; it is instance-bound because the clause is `on each`, so FSL values
 // it per trigger instance (FR-046-AC-7). The atom does not read the capture
 // or the `on each` binder `q`.
 temporal Settle using t over (view: M::Workflow) clock "events" on each (q: M::Workflow) when (q.ready) {
-    capture amount: Int[0, 1000] = q.total;
+    capture amount: Int[0, 1000] = q.tally;
     eventually[0, 3] holds(L::Ready(view.ready) and amount >= 0)
 }

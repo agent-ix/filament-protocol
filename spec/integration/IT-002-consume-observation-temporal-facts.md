@@ -60,8 +60,9 @@ or withdrawn temporal anchors.
    - IT-002-SC-01: each reachable FSL outcome maps to its declared compensation
      successor; non-Boolean outcomes never become Boolean truth. R has no input
      for the unsupported-construct outcome, so this integration makes no such
-     claim. R's recovery-predicate rows remain unexecutable while FSL's bare
-     projection refuses their comprehension binder.
+     claim. R's recovery-predicate rows evaluate through the same call: `Full` holds
+     for receipts summing to the captured target, `Partial` for a positive sum
+     below it.
 2. For each retry relation in R, use a declared attempts maximum of `n` and
    exercise `n` attempts followed by attempt `n + 1`.
    - IT-002-SC-02: exactly `n` attempts are admitted, including the initial
