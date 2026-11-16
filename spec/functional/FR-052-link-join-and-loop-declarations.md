@@ -35,6 +35,9 @@ Per join: the control identity, the policy (`all`, `any`, `quorum(n)` or `predic
 - The library shall carry a join with no `outstanding` rule as having none.
 - The library shall carry a choice's owner and visible nodes as FSL's `choice_visibility` reads them.
 - The library shall not evaluate a choice's visible nodes.
+- The library shall not enforce a choice's visibility per affected role. Whether each affected role can tell the branches apart is FSL's `realizability` decision (an indistinguishable-histories or incompatible-merge refutation), which the library carries unchanged (FR-150-AC-17).
+- The library shall link a choice composed with other controls (inside a branch, a loop body or another choice's case) as it links a top-level choice.
+- The library shall not evaluate a case guard.
 - A package whose choice owner is no reference is refused by Contract IR's reader at admission (FR-043), so it is never linked; the link carries FSL's view refusal for the same case as a typed error.
 
 ## Acceptance Criteria
@@ -47,6 +50,7 @@ Per join: the control identity, the policy (`all`, `any`, `quorum(n)` or `predic
 | FR-052-AC-4 | Over a `choice` control, the linked representation carries its control identity, the owner node and the visible `expression` nodes in the order FSL's `choice_visibility` reads them, without evaluating them. | Test (TC-168) |
 | FR-052-AC-5 | Given a package whose choice `owner` is a text literal instead of a role reference, Contract IR's reader refuses it as a malformed wire, so no choice with unreadable evidence is linked. | Test (TC-171) |
 | FR-052-AC-6 | Over a `choice` control, FSL's control reader gives one case per authored branch label in label order, and each case body is a control of the linked protocol. | Test (TC-175) |
+| FR-052-AC-7 | Given a choice inside a `parallel` branch, a choice inside a `repeat` body and a choice inside another choice's case, each is linked with its own owner, its own visible set as FSL's `choice_visibility` reads it and its own branch labels, no choice's declaration is merged with or shadowed by another's, and a case whose guard can never hold is still a linked branch. | Test (TC-177) |
 
 ## Dependencies
 

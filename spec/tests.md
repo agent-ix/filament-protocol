@@ -95,8 +95,8 @@ Assurance producer, license, implementation plan, and retained corpus remain
 explicit gates.
 
 The repository carries 77 functional requirements, 8 non-functional
-requirements, 5 integration tests and 55 test cases, and 557 acceptance criteria
-across the 77 FRs (504) and the 8 NFRs (53); `quire matrix` lists 600 rows because it adds the 43 non-functional measure rows. The functional set divides into 9 aggregate or
+requirements, 5 integration tests and 56 test cases, and 558 acceptance criteria
+across the 77 FRs (505) and the 8 NFRs (53); `quire matrix` lists 601 rows because it adds the 43 non-functional measure rows. The functional set divides into 9 aggregate or
 behavioural parents (FR-001..FR-009), 9 object requirements (FR-010..FR-018),
 24 atomic behavioural parts (FR-019..FR-042) that the parents aggregate
 through `contains`, 2 independent behavioural requirements (FR-301, FR-302)
@@ -219,7 +219,7 @@ in Domain Object Coverage instead.
 | FR-047 | FR-047-AC-1..AC-4 | TC-153 (AC-1, AC-2, AC-4); no living test for AC-3 | 🚧 In progress — 3 of 4 criteria have a living traced test: no `filament_spec_language::number`, no `handoff-writer` feature or retired format identity in source, and no checksum, seal or `ArtifactRef` (the planner ruled for removal). AC-3 is owed: IT-001 and IT-002 are still the retired procedures, and their scenarios have no counterpart table against recipe R yet. |
 | FR-050 | FR-050-AC-1..AC-4 | TC-050 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests over a package compiled by FSL's writer: roles are read through FSL's occurrence schema (lifetime kinds, `max`, static role without a bound). |
 | FR-051 | FR-051-AC-1..AC-7 | TC-050 (AC-1..AC-3); TC-168 (AC-4); TC-171 (AC-5); TC-175 (AC-6, AC-7) | ✅ Implemented — AC-4 carries each channel's sender, receiver and message type; AC-6 binds each end to a declared role and has the reader refuse an end repointed at a non-role; AC-7 gives each send and receive payload binder the channel's type; all 3 other criteria have living traced tests: delivery and capacity equal FSL's accessors, a symbolic capacity stays its name, every channel carries an authored overflow policy. |
-| FR-052 | FR-052-AC-1..AC-6 | TC-050 (AC-1..AC-3); TC-168 (AC-4); TC-171 (AC-5); TC-175 (AC-6) | ✅ Implemented — AC-4 carries a choice's owner and visible set; AC-6 reads one declared branch per authored label; the 3 other criteria have living traced tests: each join policy, a predicate join and unruled joins, and a loop's invariant and variant by node. |
+| FR-052 | FR-052-AC-1..AC-7 | TC-050 (AC-1..AC-3); TC-168 (AC-4); TC-171 (AC-5); TC-175 (AC-6); TC-177 (AC-7) | ✅ Implemented — AC-4 carries a choice's owner and visible set; AC-6 reads one declared branch per authored label; AC-7 links a choice inside a parallel branch, a loop body and another choice with its own structure; the 3 other criteria have living traced tests: each join policy, a predicate join and unruled joins, and a loop's invariant and variant by node. |
 | FR-053 | FR-053-AC-1..AC-11 | TC-051 (AC-1..AC-11) | ✅ Implemented — all 11 criteria have living traced tests over the library's `RoleFact` input. |
 | FR-054 | FR-054-AC-1..AC-10 | TC-052 (AC-1..AC-10) | ✅ Implemented — all 10 criteria have living traced tests over the library's `ChannelFact` input; a loss is judged against the queue; AC-10 carries a symbolic capacity unchanged through link and dispatch. |
 | FR-055 | FR-055-AC-1..AC-10 | TC-053 (AC-1..AC-10) | ✅ Implemented — all 10 criteria have living traced tests over the library's `JoinFact` input, one occurrence per workflow and repeat ordinals. |
@@ -246,7 +246,7 @@ in Domain Object Coverage instead.
 | FR-210 | FR-210-AC-1..AC-6 | TC-208 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests over the live closure algebra. Succeeds FR-028. |
 | FR-211 | FR-211-AC-1..AC-4 | TC-208 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests, with prefixes that cut inside every axis. Both paths use one assessment, so AC-3 tests the refusal on assessments that differ. Succeeds FR-041. |
 
-Behavioural totals across these 68 rows: 441 acceptance criteria, of which 311 carry a living traced test (the criteria `quire matrix` computes as tagged). `quire matrix` computes no retired or planned split, so none is stated.
+Behavioural totals across these 68 rows: 442 acceptance criteria, of which 312 carry a living traced test (the criteria `quire matrix` computes as tagged). `quire matrix` computes no retired or planned split, so none is stated.
 
 ## Domain Object Coverage
 
@@ -357,6 +357,7 @@ a coverage claim in this matrix.
 | TC-174 | Keep send, receipt, message, delivery and attempt identities distinct | Property | P0 | FR-023 | ✅ Implemented — one test carries FR-023-AC-3 and FR-023-AC-4 over the five identities and the effect identity (V1-PROT-006). |
 | TC-175 | Link channel endpoint roles, message payload types and choice branch labels | Property | P0 | FR-051, FR-052 | ✅ Implemented — four tests carry FR-051-AC-6, FR-051-AC-7 and FR-052-AC-6 over the reference protocol (V1-PROT-003, V1-PROT-004, V1-PROT-009). |
 | TC-176 | Declare a population of related effects for duplicate detection | Property | P0 | FR-023 | ✅ Implemented — its tests carry FR-023-AC-7. |
+| TC-177 | Link a choice composed with other controls | Property | P0 | FR-052 | ✅ Implemented — its tests carry FR-052-AC-7 over a protocol with a choice in a parallel branch, a loop body and another choice. |
 | TC-200 | Decide composition claims in this library | Property | P0 | FR-200 | ✅ Implemented — its tests carry every FR-200 criterion (AC-1..AC-7, AC-9); the composition is decided in `src/composition.rs`, no backend is called. |
 | TC-201 | Bind composition dispositions to their premise lists and component subjects | Property | P0 | FR-201 | ✅ Implemented — its tests carry every FR-201 criterion (AC-1..AC-6). |
 | TC-202 | Report refinement counterexamples and read verdicts into the axes | Property | P0 | FR-202 | ✅ Implemented — its tests carry every FR-202 criterion (AC-1..AC-7), over handoff-compiled protocols. |
@@ -379,14 +380,14 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-006 send, receipt, message, delivery, attempt identities | FR-023-AC-3, AC-4 (TC-174); FR-023 (TC-003); FR-054 (TC-052); FR-018 (TC-017) | Backed: one test keeps the five identities distinct from each other and from the effect |
 | V1-PROT-007 business correlation | filament-observation TC-005 (`tests/admission.rs`): resolved, missing, conflicting and ambiguous relationships; the link here needs the whole FR-287 subject key (TC-154) | Backed across repositories; correlation is FSpec's FR-111, implemented in filament-observation |
 | V1-PROT-008 sequence | FR-044 (TC-150) | Backed |
-| V1-PROT-009 choice | FR-052-AC-4 (TC-168); FR-052-AC-6 (TC-175) | Partial: owner, visible set and branch labels are backed; the composition of a choice with other controls has no living test |
+| V1-PROT-009 choice | FR-052-AC-4 (TC-168); FR-052-AC-6 (TC-175); FR-052-AC-7 (TC-177) | Backed: owner, visible set and branch labels, and a choice inside a parallel branch, a loop body and another choice's case, each linked with its own structure and no guard evaluated |
 | V1-PROT-010 parallel and join | FR-052, FR-055 (TC-050, TC-053, TC-167) | Backed |
 | V1-PROT-011 bounded iteration | FR-056 (TC-054, TC-167) | Backed |
 | V1-PROT-012 dynamic roles | FR-053 (TC-051, TC-167) | Backed |
 | V1-PROT-013 queues | FR-054 (TC-052, TC-167) | Backed: finite capacity is assessed; a symbolic capacity is carried through link and dispatch (FR-054-AC-10) and settles as the typed `SymbolicCapacity` unsupported disposition (TC-052, TC-055), never stepped (undecidable for all N; FSL FR-530) |
-| V1-PROT-014 invariants and termination | FR-058, FR-059 (TC-054, TC-055) | Partial: undischarged and requires-bound carried; FSL owns the proof |
+| V1-PROT-014 invariants and termination | FR-058, FR-059 (TC-054, TC-055) | Backed as carried: FSL owns the proof; FR-059-AC-1..AC-4 (TC-054) show a loop's invariant and variant reported `undischarged` and never proved, and FR-058-AC-1..AC-3 (TC-055) carry a requires-bound outcome unchanged through the dispatch path. TC-055 drives the dispatch path with a stand-in at the provider boundary; no test makes FSL's real engine return a requires-bound, because the realizability fixture bounds quantity roots in memory (FSL FR-120) |
 | V1-PROT-015 causal edges | FR-044 (TC-150); FR-021 (TC-003) | Backed |
-| V1-PROT-016 choice visibility | FR-052-AC-4 (TC-168); FR-019-AC-2 (TC-003); FR-151 (TC-161) | Partial: the visible set is carried, not enforced per affected role; role internality is the binding's exact `internal`/`external` (FR-151-AC-9, TC-161) |
+| V1-PROT-016 choice visibility | FR-052-AC-4 (TC-168); FR-150-AC-17 (TC-166, TC-173); FR-151 (TC-161) | Backed on FSL's engine: enforcement per affected role is FSL's `realizability` decision, not the library's; a choice a role cannot tell apart settles `violated` with FSL's separating witness carried unchanged (hidden choice and incompatible merge, TC-166), and the choice's visible set is carried as linked (TC-168); role internality is the binding's exact `internal`/`external` (FR-151-AC-9, TC-161) |
 | V1-PROT-017 delivery premises | FR-051, FR-054 (TC-050, TC-052); FR-151 (TC-161) | Backed |
 | V1-PROT-018 state guards, temporal obligations | FR-045 (TC-151), FR-046 (TC-152) | Backed: all 8 criteria of FR-045, recovery rows included, and all 7 of FR-046 are traced |
 | V1-PROT-019 captures, timeout branches | FR-100, FR-101 (TC-154) | Backed |
@@ -399,8 +400,8 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-026 global conformance | FR-205 (TC-205); FR-208..FR-211 (TC-208); passthrough (TC-165 AC-15) | Backed: FSL's EN-1 checker decides whether every behaviour is deadlock-free and the library carries its record (FR-205); the library decides the history questions of retired FR-004 itself over the live axes (FR-208 order invariance, FR-209 adverse observations by axis, FR-210 closure axes, FR-211 batch against incremental). FSL advertises no `global-conformance` kind and the `refuted` settlement of the protocol check needs a replay a handoff cannot supply (ADR-010 G8, G9) |
 | V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on FSL's engine |
 | V1-PROT-028 realizability | FR-150 (TC-166, TC-172, TC-173) | Backed on FSL's engine; the witness is carried unchanged (FR-302) |
-| V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204, TC-173) | Decided in `src/composition.rs`; no backend. TC-173 runs the corpus over three separately compiled protocols, guarantee labels taken from FSL's realizability results; the stronger-assumption refinement criteria (FR-204 AC-1..AC-7) are tested over protocols that require a temporal clause (TC-204) |
-| V1-PROT-030 refinement | FR-202, FR-204; FR-301 (TC-147, TC-173) | Decided in `src/refinement.rs` over systems built from FSL's protocol step view (FSL FR-578) |
+| V1-PROT-029 composition | FR-200..FR-204 (TC-200..TC-204, TC-173) | Backed: decided in `src/composition.rs`, no backend. TC-173 runs the corpus over three separately compiled protocols, guarantee labels taken from FSL's realizability results; the stronger-assumption criteria are all traced, refinement (FR-204-AC-1..AC-7) over protocols that require a temporal clause (`tests/tc_204_refine_under_stronger_assumptions.rs`) and composition (FR-204-AC-8..AC-12, TC-200) |
+| V1-PROT-030 refinement | FR-202, FR-204-AC-1..AC-7; FR-301 (TC-147, TC-173, TC-204) | Backed: decided in `src/refinement.rs` over systems built from FSL's protocol step view (FSL FR-578); all FR-202 criteria and the stronger-assumption refinement criteria are traced |
 | V1-PROT-031 no external effects | FR-025 (TC-003, TC-009) | Backed |
 | V1-RUN-003 protocol replay | TC-167; TC-050..TC-055 | Partial: the dynamic axes only |
 | V1-RUN-005, V1-RUN-006 independent axes | FR-014 (TC-011); TC-055, TC-154, TC-163; FR-206 | Partial, and the publication half is blocked. Quoin's intake (`quoin.protocol-scenario-intake/v1`, `quoin-evidence` FR-130) accepts a scenario record for IT-001..IT-003, and the dispositions it would be composed from are live (FR-029); FR-206 composes the value from them but needs `quoin-evidence` as a dependency, which cannot resolve beside `filament-observation` (`serde` exact-pin conflict, ADR-010 G11) |

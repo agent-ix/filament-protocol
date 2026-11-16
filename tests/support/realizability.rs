@@ -63,11 +63,14 @@ fn key(suffix: &str) -> DeclarationKey {
 /// per role's object type.
 fn model() -> Vec<u8> {
     let mut model: Json = serde_json::from_slice(&super::dynamic::model()).expect("model JSON");
-    // The checker explores the subject and needs every root bounded; FSL's
-    // `Amount` and `Total` are quantities of a unit whose domain it does not
-    // bound, so they are read here as the bounded integers their own
-    // `min`/`max` constraints state. This rewrites FSL's model in memory; no
-    // file of FSL's is copied.
+    // A deliberate fixture-side substitute, not a workaround for a defect.
+    // FSL FR-120 ("Bounds") lists only Boolean, Int[lo,hi], Option, Reference,
+    // bounded sequences, enums and records as finite domains; a quantity is an
+    // unbounded domain, and realizability supplies no bounds. FSL's EN-1
+    // therefore INTENDEDLY requires a bound on a quantity root. `Amount` and
+    // `Total` are read here as the bounded integers their own `min`/`max`
+    // constraints state. This rewrites FSL's model in memory; no file of
+    // FSL's is copied.
     for declared in model["types"].as_array_mut().expect("types") {
         let is_unit = declared["target"]
             .as_str()
