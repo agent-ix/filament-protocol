@@ -64,10 +64,11 @@ fn key(suffix: &str) -> DeclarationKey {
 fn model() -> Vec<u8> {
     let mut model: Json = serde_json::from_slice(&super::dynamic::model()).expect("model JSON");
     // A deliberate fixture-side substitute, not a workaround for a defect.
-    // FSL FR-120 ("Bounds") lists only Boolean, Int[lo,hi], Option, Reference,
-    // bounded sequences, enums and records as finite domains; a quantity is an
-    // unbounded domain, and realizability supplies no bounds. FSL's EN-1
-    // therefore INTENDEDLY requires a bound on a quantity root. `Amount` and
+    // A quantity is not a finite value domain (FSL FR-120 lists the finite
+    // domains: Boolean, bounded integers, Option, Reference, bounded
+    // sequences, enums, model-variant unions, records, tuples, sets and
+    // bags), so FSL's EN-1 INTENDEDLY raises RequiresBound for an unbounded
+    // quantity root, and realizability supplies no bounds. `Amount` and
     // `Total` are read here as the bounded integers their own `min`/`max`
     // constraints state. This rewrites FSL's model in memory; no file of
     // FSL's is copied.

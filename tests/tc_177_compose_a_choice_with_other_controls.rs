@@ -18,12 +18,16 @@ use fsl_package::protocol_view::{choice_visibility, control_body, ControlBody, E
 use ix_trace_rs::trace;
 use support::dynamic::Dynamic;
 use support::handoff::MONEY_UNIT;
-use support::projection::{MEMBERS, RECORDS};
+use support::projection::{MEMBERS, PICK, RECORDS};
 
-/// `Seller` owns four choices: `InBranch` in a `parallel` branch, `InLoop` in
-/// a `repeat` body, and `Outer` with `Inner` in its `right` case. The guards
-/// of `Inner` and `InLoop` are contradictory on purpose: a library that
-/// evaluated them would drop a branch.
+/// Four choices: `InBranch` in a `parallel` branch, owned by `Warehouse`
+/// and seeing `not q.ok`; `InLoop` in a `repeat` body, and `Outer` with `Inner`
+/// in its `right` case, each owned by `Seller` and seeing `got.ok`. The
+/// owners and visible nodes differ, so a library that reused one choice's
+/// owner or visible set for another would fail. Only the `again` case of
+/// `InLoop` has a guard that can never hold (`got.ok and not got.ok`): a
+/// library that evaluated guards would drop that branch. `Inner`'s guards are
+/// complementary.
 fn composed() -> Dynamic {
     Dynamic::from_source(&format!(
         "language \"ix:native\" edition \"1-draft\";\n\
@@ -33,11 +37,12 @@ fn composed() -> Dynamic {
          run sequence Main {{\n\
          send Placed via Order as (placed: Ack) {{ true }};\n\
          receive Got via Order of Placed as (got: Ack) {{ true }};\n\
+         {PICK}\n\
          parallel Fan memory sc {{\n\
            branch a sequence BranchA {{\n\
-             choice InBranch by Seller visible (got.ok) {{\n\
-               case alpha when {{ got.ok }} sequence AlphaBody {{ }}\n\
-               case beta when {{ not got.ok }} sequence BetaBody {{ }}\n\
+             choice InBranch by Warehouse visible (not q.ok) {{\n\
+               case alpha when {{ not q.ok }} sequence AlphaBody {{ }}\n\
+               case beta when {{ not (not q.ok) }} sequence BetaBody {{ }}\n\
              }} }}\n\
            branch b sequence BranchB {{ }}\n\
          }} join all [a,b];\n\
@@ -151,15 +156,18 @@ fn a_choice_inside_a_parallel_branch_a_loop_body_and_a_choice_is_linked_with_its
         nests(&dynamic, "Outer", "Inner"),
         "in another choice's case"
     );
-    let seller = dynamic.named("role", "Seller");
-    for (name, expected) in [
-        ("InBranch", vec!["alpha", "beta"]),
-        ("InLoop", vec!["again", "stop"]),
-        ("Outer", vec!["left", "right"]),
-        ("Inner", vec!["no", "yes"]),
+    for (name, owner, expected) in [
+        ("InBranch", "Warehouse", vec!["alpha", "beta"]),
+        ("InLoop", "Seller", vec!["again", "stop"]),
+        ("Outer", "Seller", vec!["left", "right"]),
+        ("Inner", "Seller", vec!["no", "yes"]),
     ] {
         let choice = choice_named(&dynamic, name);
-        assert_eq!(choice.owner, seller, "{name}: the owner");
+        assert_eq!(
+            choice.owner,
+            dynamic.named("role", owner),
+            "{name}: the owner"
+        );
         assert_eq!(labels(&dynamic, choice), expected, "{name}: branch labels");
         // The visible set is what FSL's `choice_visibility` reads, per choice.
         let node = dynamic
@@ -178,9 +186,19 @@ fn a_choice_inside_a_parallel_branch_a_loop_body_and_a_choice_is_linked_with_its
         );
         assert_eq!(choice.key, dynamic.key(&choice.control), "{name}: the key");
     }
-    // Four distinct controls: the composition merges and shadows none. (FSL
-    // shares the one `got.ok` node among them; the visible set is carried as
-    // FSL reads it, asserted per choice above.)
+    // `InBranch` has its own owner and its own visible node: neither is
+    // merged with or shadowed by the `Seller` choices'. FSL shares the one
+    // `got.ok` node among the others.
+    let branch = choice_named(&dynamic, "InBranch");
+    let outer = choice_named(&dynamic, "Outer");
+    assert_ne!(branch.owner, outer.owner);
+    assert_ne!(branch.visible, outer.visible);
+    assert_eq!(
+        choice_named(&dynamic, "Inner").visible,
+        outer.visible,
+        "choices that name the same fact see the same node"
+    );
+    // Four distinct controls: the composition merges and shadows none.
     let controls: std::collections::BTreeSet<_> = declarations
         .choices()
         .iter()
