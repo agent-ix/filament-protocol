@@ -426,10 +426,11 @@ affected identity or refuses.
   tickets are closed. Task-007 remains blocked until the owner reconciles that
   contradiction and asserts the exact accepted revision; tracked by
   `agent-ix/filament-verification#32`.
-- **Quoin owner — immediate:** Quoin now has a Rust workspace and evidence
-  storage, but no structured operation can carry FR-017's complete protocol-
-  scenario record. Task-018/Task-011 remain blocked on that exact intake
-  contract; tracked by `agent-ix/quoin#519`.
+- **Quoin owner — resolved:** Quoin's intake `quoin.protocol-scenario-intake/v1`
+  (`quoin-evidence` FR-130, `agent-ix/quoin#519`, closed) carries the complete
+  protocol-scenario record, and FR-206 composes it from live dispositions
+  (TC-179). The claim-row identity inside that record has no owner yet
+  (ADR-010 G12).
 - **Compensation authority — immediate:** FSpec FR-236 publishes five outcome
   labels but does not partition them between per-attempt and aggregate recovery
   facts. The affected Task-003 mapping cases remain blocked on an accepted owner

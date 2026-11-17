@@ -10,7 +10,9 @@
 //! execution, truth and settlement-basis axes. Nothing is stored or read back
 //! here: the value is handed to Quoin's `write_scenario_evidence`.
 
+use filament_semantic_value::catalog::CatalogCode;
 use fsl_replay::{SettlementBasis, Truth};
+use fsl_semantics::check::Capability;
 use quoin_evidence::scenario::{
     BudgetFigure, CausingEntry, ClaimOutcome, Integration, PinnedEntry, ResolutionState,
     ScenarioEvidence, TraceBinding, TypedOutcome, ValueOwner, INTAKE_CONTRACT,
@@ -19,7 +21,9 @@ use quoin_evidence::scenario::{
 use crate::bounds::inventory::{Budget, BudgetDimension, Usage};
 use crate::closure::{AssessmentExecution, TruthDisposition};
 use crate::composition::CompositionOutcome;
-use crate::dispatch::{BackendResult, ClaimDisposition, ProtocolOutcome};
+use crate::dispatch::{
+    decided_truth, BackendResult, ClaimDisposition, ClaimRequest, ProtocolOutcome,
+};
 use crate::disposition::{ClaimSettlement, Disposition};
 use crate::outcome::OperationOutcome;
 use crate::version_lock::{EntryKey, EntryStatus, ExactBytes, ManifestEntry, VersionLockManifest};
@@ -58,9 +62,48 @@ pub enum Unexecuted {
     /// A consumed value names an entry that is absent from the reached
     /// manifest or not pinned.
     ValueOwnerUnresolved(String),
-    /// A budget grant does not fit the record's figure.
+    /// A budget figure does not fit the record's figure.
     FigureUnrepresentable(&'static str),
+    /// The dispositions are not one per requested claim (FR-029).
+    DispositionsNotPerRequest {
+        /// How many claims were requested.
+        requested: usize,
+        /// How many dispositions came back.
+        returned: usize,
+    },
 }
+
+impl core::fmt::Display for Unexecuted {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::NoResolution => formatter.write_str("the manifest holds no entry"),
+            Self::NotText(component) => {
+                write!(
+                    formatter,
+                    "the {component} is not text and cannot be recorded"
+                )
+            }
+            Self::NoRevision => formatter.write_str("a pinned entry carries no revision"),
+            Self::ValueOwnerUnresolved(value) => write!(
+                formatter,
+                "the value {value:?} resolves through no pinned entry of the reached manifest"
+            ),
+            Self::FigureUnrepresentable(dimension) => write!(
+                formatter,
+                "the {dimension} budget figure does not fit the record"
+            ),
+            Self::DispositionsNotPerRequest {
+                requested,
+                returned,
+            } => write!(
+                formatter,
+                "{returned} dispositions were returned for {requested} requested claims"
+            ),
+        }
+    }
+}
+
+impl std::error::Error for Unexecuted {}
 
 fn text(bytes: &ExactBytes, component: &'static str) -> Result<String, Unexecuted> {
     String::from_utf8(bytes.as_bytes().to_vec()).map_err(|_| Unexecuted::NotText(component))
@@ -123,16 +166,27 @@ fn truth_label(truth: Truth) -> &'static str {
     .label()
 }
 
-/// One row: the claim kind and its three independent axes.
+/// The claim an identity is composed for: its position in the request list
+/// (FR-029 returns dispositions in request order) and the FR-290 kind label of
+/// the request.
+#[derive(Clone, Copy)]
+struct Claim {
+    position: usize,
+    kind: &'static str,
+}
+
+/// One row: the claim's position and kind, and its three independent axes.
 fn row(
-    kind: &str,
+    claim: Claim,
     execution: AssessmentExecution,
     truth: Truth,
     basis: SettlementBasis,
 ) -> ClaimOutcome {
     ClaimOutcome::Row {
         identity: format!(
-            "{kind}:{}:{}:{}",
+            "{}/{}:{}:{}:{}",
+            claim.position,
+            claim.kind,
             execution.label(),
             truth_label(truth),
             basis.as_str()
@@ -140,120 +194,120 @@ fn row(
     }
 }
 
-fn refusal(kind: &str, cause: &str) -> ClaimOutcome {
+fn refusal(claim: Claim, cause: &str) -> ClaimOutcome {
     ClaimOutcome::Refusal {
-        identity: format!("{kind}:{}:{cause}", AssessmentExecution::Refused.label()),
+        identity: format!(
+            "{}/{}:{}:{cause}",
+            claim.position,
+            claim.kind,
+            AssessmentExecution::Refused.label()
+        ),
     }
 }
 
-/// A refusal's variant name, which carries the cause without its payload.
-fn variant(debug: &impl core::fmt::Debug) -> String {
-    format!("{debug:?}")
-        .split(|c: char| !(c.is_alphanumeric() || c == '_'))
-        .next()
-        .unwrap_or_default()
-        .to_owned()
+fn catalog(code: &CatalogCode) -> String {
+    format!("{}.{}", code.code(), code.cause())
 }
 
-fn protocol_claim<R: BackendResult, B: ClaimKind>(outcome: &ProtocolOutcome<R, B>) -> ClaimOutcome {
+fn protocol_claim<R: BackendResult, B>(
+    claim: Claim,
+    outcome: &ProtocolOutcome<R, B>,
+) -> ClaimOutcome {
+    let unrun = |execution| {
+        row(
+            claim,
+            execution,
+            Truth::Unavailable,
+            SettlementBasis::Unavailable,
+        )
+    };
     match outcome {
-        ProtocolOutcome::Settled(ClaimSettlement::Result { result, premises }) => row(
-            premises.kind(),
+        ProtocolOutcome::Settled(ClaimSettlement::Result { result, .. }) => row(
+            claim,
             AssessmentExecution::Completed,
-            outcome.truth(),
+            decided_truth(result),
             result.basis(),
         ),
         ProtocolOutcome::Settled(ClaimSettlement::Disposition(disposition)) => match disposition {
-            Disposition::Unsupported(d) => row(
-                d.premises.kind(),
-                AssessmentExecution::Unsupported,
-                Truth::Unavailable,
-                SettlementBasis::Unavailable,
-            ),
-            Disposition::Failed(d) => row(
-                d.premises.kind(),
-                AssessmentExecution::Failed,
-                Truth::Unavailable,
-                SettlementBasis::Unavailable,
-            ),
-            Disposition::Refused(d) => refusal(
-                d.premises.kind(),
-                &format!("{}.{}", d.code.code(), d.code.cause()),
-            ),
-            Disposition::RequiresBound(d) => refusal(d.premises.kind(), "requires-bound"),
+            Disposition::Unsupported(_) => unrun(AssessmentExecution::Unsupported),
+            Disposition::Failed(_) => unrun(AssessmentExecution::Failed),
+            Disposition::Refused(d) => refusal(claim, &catalog(&d.code)),
+            Disposition::RequiresBound(_) => refusal(claim, "requires-bound"),
         },
-        ProtocolOutcome::InvalidRequest { code, binding, .. } => {
-            refusal(binding.kind(), &format!("{}.{}", code.code(), code.cause()))
-        }
-        ProtocolOutcome::Refused(refused) => refusal("protocol", &variant(refused)),
+        ProtocolOutcome::InvalidRequest { code, .. } => refusal(claim, &catalog(code)),
+        ProtocolOutcome::Refused(refused) => refusal(claim, refused.code()),
     }
 }
 
-/// The FR-290 label of the claim a binding was requested for.
-pub trait ClaimKind {
-    /// The label.
-    fn kind(&self) -> &'static str;
-}
-
-impl<A> ClaimKind for crate::dispatch::Binding<A> {
-    fn kind(&self) -> &'static str {
-        self.request.kind.capability().to_wire()
+/// The FR-290 label of the claim a request asks for.
+fn kind_of<G, A, T>(request: &ClaimRequest<G, A, T>) -> &'static str {
+    match request {
+        ClaimRequest::GlobalConformance(_) => Capability::GlobalConformance,
+        ClaimRequest::Protocol(request) => request.kind.capability(),
+        ClaimRequest::Composition(_) => Capability::Composition,
+        ClaimRequest::Refinement(_) => Capability::Refinement,
     }
+    .to_wire()
 }
 
-fn claim<G, A, T, P>(
-    disposition: &ClaimDisposition<G, A, T, P>,
-    global: &impl Fn(&G) -> (Truth, SettlementBasis),
-) -> ClaimOutcome
+fn claim<G, A, T, P>(claim: Claim, disposition: &ClaimDisposition<G, A, T, P>) -> ClaimOutcome
 where
+    G: BackendResult,
     P: BackendResult,
 {
     match disposition {
-        ClaimDisposition::GlobalConformance(result) => {
-            let (truth, basis) = global(result);
-            row(
-                fsl_semantics::check::Capability::GlobalConformance.to_wire(),
-                AssessmentExecution::Completed,
-                truth,
-                basis,
-            )
+        ClaimDisposition::GlobalConformance(result) => row(
+            claim,
+            AssessmentExecution::Completed,
+            decided_truth(result),
+            result.basis(),
+        ),
+        ClaimDisposition::Protocol(outcome) => protocol_claim(claim, outcome),
+        ClaimDisposition::Composition(CompositionOutcome::Decided(c)) => {
+            row(claim, c.execution(), c.truth(), c.basis())
         }
-        ClaimDisposition::Protocol(outcome) => protocol_claim(outcome),
-        ClaimDisposition::Composition(CompositionOutcome::Decided(c)) => row(
-            fsl_semantics::check::Capability::Composition.to_wire(),
-            c.execution(),
-            c.truth(),
-            c.basis(),
-        ),
-        ClaimDisposition::Composition(CompositionOutcome::Refused(r)) => refusal(
-            fsl_semantics::check::Capability::Composition.to_wire(),
-            &variant(r),
-        ),
-        ClaimDisposition::Refinement(RefinementOutcome::Decided(r)) => row(
-            fsl_semantics::check::Capability::Refinement.to_wire(),
-            r.execution(),
-            r.truth(),
-            r.basis(),
-        ),
-        ClaimDisposition::Refinement(RefinementOutcome::Refused(r)) => refusal(
-            fsl_semantics::check::Capability::Refinement.to_wire(),
-            &variant(r),
-        ),
+        ClaimDisposition::Composition(CompositionOutcome::Refused(r)) => refusal(claim, r.code()),
+        ClaimDisposition::Refinement(RefinementOutcome::Decided(r)) => {
+            row(claim, r.execution(), r.truth(), r.basis())
+        }
+        ClaimDisposition::Refinement(RefinementOutcome::Refused(r)) => refusal(claim, r.code()),
     }
 }
 
 fn outcome<G, A, T, P>(
+    requests: &[ClaimRequest<G, A, T>],
     operation: &OperationOutcome<Vec<ClaimDisposition<G, A, T, P>>>,
-    global: &impl Fn(&G) -> (Truth, SettlementBasis),
 ) -> Result<TypedOutcome, Unexecuted>
 where
+    G: BackendResult,
     P: BackendResult,
 {
     Ok(match operation {
-        OperationOutcome::Completed(dispositions) => TypedOutcome {
-            operation: AssessmentExecution::Completed.label().to_owned(),
-            claims: dispositions.iter().map(|d| claim(d, global)).collect(),
-        },
+        OperationOutcome::Completed(dispositions) => {
+            if dispositions.len() != requests.len() {
+                return Err(Unexecuted::DispositionsNotPerRequest {
+                    requested: requests.len(),
+                    returned: dispositions.len(),
+                });
+            }
+            TypedOutcome {
+                operation: AssessmentExecution::Completed.label().to_owned(),
+                claims: requests
+                    .iter()
+                    .zip(dispositions)
+                    .enumerate()
+                    .map(|(position, (request, disposition))| {
+                        claim(
+                            Claim {
+                                position,
+                                kind: kind_of(request),
+                            },
+                            disposition,
+                        )
+                    })
+                    .collect(),
+            }
+        }
         OperationOutcome::Refused(refusal) => TypedOutcome {
             operation: String::from_utf8(refusal.axis().as_bytes().to_vec())
                 .map_err(|_| Unexecuted::NotText("refusal axis"))?,
@@ -288,21 +342,24 @@ fn budget(budget: &Budget, usage: Usage) -> Result<Vec<BudgetFigure>, Unexecuted
 }
 
 /// Compose the record of `scenario` from the live `operation` outcome and the
-/// dispositions of the claims it returned (FR-206).
+/// dispositions of the claims it returned, one per entry of `requests` in
+/// request order (FR-029, FR-206).
+///
+/// A claim is identified in the record by its position in `requests`, the
+/// FR-290 label of its kind and its axes. That composition is this library's
+/// interim one: no owner publishes a canonical claim-row identity (ADR-010 G12).
 ///
 /// # Errors
 ///
 /// [`Unexecuted`] when a component cannot be retained: the scenario is then
 /// reported unexecuted, never as passing.
-///
-/// `global` reads the truth and settlement basis of a passed-through
-/// `global-conformance` result, whose type the caller owns.
 pub fn compose<G, A, T, P>(
     scenario: &Scenario<'_>,
+    requests: &[ClaimRequest<G, A, T>],
     operation: &OperationOutcome<Vec<ClaimDisposition<G, A, T, P>>>,
-    global: impl Fn(&G) -> (Truth, SettlementBasis),
 ) -> Result<ScenarioEvidence, Unexecuted>
 where
+    G: BackendResult,
     P: BackendResult,
 {
     let (resolution, reached) = resolution(scenario.manifest)?;
@@ -333,7 +390,7 @@ where
         scenario: scenario.scenario.to_owned(),
         resolution,
         value_owners,
-        outcome: outcome(operation, &global)?,
+        outcome: outcome(requests, operation)?,
         budget: budget(scenario.budget, scenario.usage)?,
         trace_binding: TraceBinding {
             criterion: scenario.criterion.to_owned(),
