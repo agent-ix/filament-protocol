@@ -21,6 +21,7 @@ discharges.
 | `filament-verification-contracts` | `agent-ix/filament-verification-contracts`, `main` | `AGPL-3.0-or-later` | E02 owner types. `build.rs` reads the commit Cargo selected from `Cargo.lock`. |
 | `engineering-assurance` | `agent-ix/engineering-assurance`, `main`, `=0.7.1`, feature `claim-strength` only | `AGPL-3.0-or-later` | Owner of the claim-strength vocabulary (EA FR-022). This crate declares no strength enum of its own. |
 | `sha2` | crates.io `=0.10.9` | `MIT OR Apache-2.0` | Carrier of the exact-byte SHA-256 of the FR-009 and FR-015 content digests. It supplies no schema, parser or authority. |
+| `quoin-evidence` | `agent-ix/quoin`, `main` | `AGPL-3.0-or-later` | The scenario record and intake Quoin owns (FR-206). |
 | `serde`, `serde_json`, `jsonschema` | crates.io | `MIT OR Apache-2.0` | Serialisation and closed-schema validation carriers. |
 | `ix-trace-rs` | `agent-ix/ix-trace-rs`, `main` | `AGPL-3.0-or-later` | Test-only trace attributes binding tests to acceptance criteria. |
 | `tempfile` | crates.io | `MIT OR Apache-2.0` | Test-only temporary directories for the handoff the tests write. |

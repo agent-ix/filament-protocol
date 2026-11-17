@@ -35,11 +35,14 @@ filament-semantic-value = { git = "https://github.com/agent-ix/filament-semantic
 # Contract IR's checked-package reader (FR-043); the one reader of the format.
 filament-contract-model = { git = "https://github.com/agent-ix/filament-contract-ir", branch = "main" }
 filament-observation = { git = "https://github.com/agent-ix/filament-observation", branch = "main" }
+# Owner of the scenario record Quoin's intake takes (FR-206): `ScenarioEvidence`
+# and `write_scenario_evidence`. Default features only; `schema` stays off.
+quoin-evidence = { git = "https://github.com/agent-ix/quoin", branch = "main" }
 filament-verification-contracts = { git = "https://github.com/agent-ix/filament-verification-contracts", branch = "main" }
 # Owner of the claim-strength vocabulary (EA FR-022). Only the serde-only
 # `claim-strength` feature: no serde_json, no arbitrary_precision.
 engineering-assurance = { version = "=0.7.1", git = "https://github.com/agent-ix/engineering-assurance", branch = "main", default-features = false, features = ["claim-strength"] }
-serde = { version = "=1.0.228", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive"] }
 jsonschema = { version = "=0.17.1", default-features = false, features = ["draft202012"] }
 sha2 = "=0.10.9"
 

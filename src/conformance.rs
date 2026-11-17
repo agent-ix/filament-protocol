@@ -32,7 +32,7 @@ use crate::dispatch::{BackendResult, Binding};
 use crate::disposition::{FailureCause, FslBoundary, FslReport};
 
 /// FSL's settled record of one protocol check, unchanged.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ConformanceResult {
     record: ModelCheckRecord<ProtocolTransition>,
 }

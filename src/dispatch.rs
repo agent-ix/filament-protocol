@@ -216,6 +216,37 @@ pub enum DispositionRefusal {
 }
 
 impl DispositionRefusal {
+    /// The refusal's stable wire code, a closed vocabulary independent of the
+    /// variant's name or payload: renaming a variant must not change its code.
+    /// FR-206 identifies a refused claim by this code.
+    #[must_use]
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::UndeclaredChannel(_) => "undeclared-channel",
+            Self::UndeclaredRole(_) => "undeclared-role",
+            Self::AbsentChannelPremise(_) => "absent-channel-premise",
+            Self::AbsentRoleInternality(_) => "absent-role-internality",
+            Self::NoSourceIdentity => "no-source-identity",
+            Self::SubstitutedChannelPremise(_) => "substituted-channel-premise",
+            Self::DecisiveWithoutWitness => "decisive-without-witness",
+            Self::WitnessWithoutDecisiveBasis => "witness-without-decisive-basis",
+            Self::WitnessNotTheRecords => "witness-not-the-records",
+            Self::RecordNotTheResults => "record-not-the-results",
+            Self::ReplayWithoutItsRecord => "replay-without-its-record",
+            Self::NoProvider(_) => "no-provider",
+            Self::NoSubjects => "no-subjects",
+            Self::NoFragment => "no-fragment",
+            Self::UndeclaredSubject(_) => "undeclared-subject",
+            Self::UndeclaredAssumption(_) => "undeclared-assumption",
+            Self::UndeclaredSource(_) => "undeclared-source",
+            Self::CycleGuaranteeAsAssumption(_) => "cycle-guarantee-as-assumption",
+            Self::UndeclaredGuarantee(_) => "undeclared-guarantee",
+            Self::UndeclaredPremise(_) => "undeclared-premise",
+            Self::DuplicateGuarantee(_) => "duplicate-guarantee",
+            Self::UndeclaredLabel(_) => "undeclared-label",
+        }
+    }
+
     /// The FR-008 cause this refusal is raised under, where the closed
     /// vocabulary names one: the two exact identities that must agree
     /// differ.
@@ -279,21 +310,21 @@ impl<R: BackendResult, B> ProtocolOutcome<R, B> {
     #[must_use]
     pub fn truth(&self) -> Truth {
         match self {
-            Self::Settled(ClaimSettlement::Result { result, .. }) => {
-                match result.truth() {
-                    // A decided truth cannot accompany an `Inconclusive`
-                    // verdict; the backend's `pending` and `unavailable` are
-                    // carried as it states them.
-                    Truth::Satisfied | Truth::Violated if result.inconclusive().is_some() => {
-                        Truth::Unavailable
-                    }
-                    truth => truth,
-                }
-            }
+            Self::Settled(ClaimSettlement::Result { result, .. }) => decided_truth(result),
             Self::Settled(ClaimSettlement::Disposition(_))
             | Self::InvalidRequest { .. }
             | Self::Refused(_) => Truth::Unavailable,
         }
+    }
+}
+
+/// The truth of a settled result. A decided truth cannot accompany an
+/// `Inconclusive` verdict; the backend's `pending` and `unavailable` are
+/// carried as it states them.
+pub(crate) fn decided_truth<R: BackendResult>(result: &R) -> Truth {
+    match result.truth() {
+        Truth::Satisfied | Truth::Violated if result.inconclusive().is_some() => Truth::Unavailable,
+        truth => truth,
     }
 }
 
