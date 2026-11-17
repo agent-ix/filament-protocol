@@ -2328,7 +2328,7 @@ checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
 [[package]]
 name = "tl-mltl"
 version = "0.4.0"
-source = "git+https://github.com/agent-ix/tl-mltl?branch=main#eede964c7effd340dd7784454af72e096157460b"
+source = "git+https://github.com/agent-ix/tl-mltl?branch=main#2f3141523bd90e6fee5ba2ec87a3308311dae11c"
 dependencies = [
  "serde",
  "serde_json",

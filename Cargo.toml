@@ -12,9 +12,6 @@ publish = false
 # `checked_handoff` (FSL FR-517), which publishes `Selection` (the admission
 # compares an admitted package with it) and the in-process handoff writer the
 # tests call.
-# BLOCKED upstream: `fsl-command` brings `tl-mltl`, which requires `serde =1.0.228`,
-# while `quoin-evidence` and `engineering-assurance` require `=1.0.229`. The lock
-# resolves only once `tl-mltl` relaxes its `serde` requirement; delete this note then.
 fsl-command = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
 fsl-foundation = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
 # The bytes-only identity and equality files (FSL FR-531, FR-533).
