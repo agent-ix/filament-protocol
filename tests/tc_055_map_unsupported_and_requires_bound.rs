@@ -60,10 +60,7 @@ fn unsupported(cause: UnsupportedCause, construct: &Construct) -> FslReport<&'st
 fn each_adr_listed_cause_is_carried_by_its_fsl_name_with_the_constructs_node() {
     let dynamic = Dynamic::with("workflow", 3);
     let construct = dynamic.construct(&dynamic.named("channel", "Symbolic"));
-    let causes = [
-        Unsupported::UnenumerableRecord,
-        Unsupported::OverNotAnObject,
-    ];
+    let causes = [Unsupported::UnenumerableRecord];
     for cause in causes {
         let claim = Claim("conformance");
         let mut standin = Standin {

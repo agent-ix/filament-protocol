@@ -31,6 +31,7 @@ filament-eval = { git = "https://github.com/agent-ix/filament-eval", branch = "m
 filament-exact = { git = "https://github.com/agent-ix/filament-exact", branch = "main" }
 filament-semantic-value = { git = "https://github.com/agent-ix/filament-semantic-value", branch = "main" }
 # Contract IR's checked-package reader (FR-043); the one reader of the format.
+# The tag follows FSL main's own pin so the types unify.
 filament-contract-model = { git = "https://github.com/agent-ix/filament-contract-ir", tag = "v0.1.0" }
 filament-observation = { git = "https://github.com/agent-ix/filament-observation", branch = "main" }
 # Owner of the scenario record Quoin's intake takes (FR-206): `ScenarioEvidence`

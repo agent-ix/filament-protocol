@@ -150,6 +150,32 @@ fn an_unbound_symbolic_capacity_is_requires_bound_with_fsls_list_carried_unchang
 }
 
 #[test]
+#[trace("TC-209", "FR-058-AC-4")]
+fn beside_an_unbounded_root_fsls_requires_bound_names_the_capacity_with_the_domains() {
+    // The recipe model as FSL ships it (unbounded `Total` and `Amount`) with a
+    // symbolic channel added and no binding for it.
+    let extra = channel("Cap", "Seller", "Warehouse", "PickMsg").replace(
+        "capacity 4 overflow reject",
+        "capacity symbolic(Bound) overflow block",
+    );
+    let fixture = Realizability::unbounded_with(&extra);
+    let Err(ModelCheckRefusal::RequiresBound(direct)) = direct(&fixture) else {
+        panic!("the checker reports a requires-bound outcome");
+    };
+    assert!(!direct.capacities.is_empty());
+    assert!(direct.domains.iter().next().is_some());
+    let outcome = conformance(&fixture);
+    assert_eq!(outcome.truth(), Truth::Unavailable);
+    let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::RequiresBound(found))) =
+        outcome
+    else {
+        panic!("the typed requires-bound disposition (FR-058): {outcome:?}");
+    };
+    assert_eq!(found.outcome, direct);
+    assert_eq!(found.outcome.capacities, unbound_bound());
+}
+
+#[test]
 #[trace("TC-209", "FR-205-AC-7")]
 fn a_bound_symbolic_capacity_is_decided_by_fsl_with_the_bound_and_its_record_carried_unchanged() {
     // At capacity one the second send waits forever; at two the run finishes.
@@ -188,9 +214,7 @@ fn a_bound_symbolic_capacity_is_decided_by_fsl_with_the_bound_and_its_record_car
         &Cancel::new(),
         direct_item.replay,
     );
-    assert_eq!(result.record().value, settled.value);
-    assert_eq!(result.record().truth, settled.truth);
-    assert_eq!(result.record().basis, settled.basis);
+    assert_eq!(*result.record(), settled);
 }
 
 #[test]

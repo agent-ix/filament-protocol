@@ -350,7 +350,7 @@ fn an_unsupported_axis_is_unavailable_and_a_violation_outranks_it() {
 }
 
 #[test]
-#[trace("TC-208", "FR-209-AC-4")]
+#[trace("TC-208", "FR-209-AC-4", "FR-058-AC-5")]
 fn a_channel_of_symbolic_capacity_is_requires_bound_not_unsupported() {
     // Only the channel of symbolic capacity is left unjudged: its bound is a
     // subject binding FSL admits, which a history assessment is not given.
@@ -364,6 +364,14 @@ fn a_channel_of_symbolic_capacity_is_requires_bound_not_unsupported() {
         assert_eq!(result.verdict(axis), AxisVerdict::Conformant);
     }
     assert_eq!(result.truth(), Truth::Unavailable);
+    // The outcome names the channel and the authored capacity.
+    let Ok(outcomes) = result.channels() else {
+        panic!("the channels are reported");
+    };
+    assert!(outcomes.iter().any(|outcome| matches!(
+        outcome,
+        ChannelOutcome::RequiresBound { capacity, .. } if !capacity.is_empty()
+    )));
     // A violation on another axis outranks it.
     let breached = judge(&dynamic, &history(&dynamic, 4, 2, &["a", "b", "c"], 3));
     assert_eq!(

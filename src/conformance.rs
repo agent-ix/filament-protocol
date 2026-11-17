@@ -147,10 +147,7 @@ where
             // A binding defect is FSL's `invalid_runtime_input` refusal; FSL
             // publishes its code and cause on the refusal itself.
             Err(ModelCheckRefusal::Protocol(ProtocolRefusal::Capacity(refusal))) => {
-                FslReport::Refusal(CatalogCode::new(
-                    Code::as_str(refusal.code()),
-                    refusal.cause(),
-                ))
+                FslReport::Refusal(CatalogCode::new(refusal.code().as_str(), refusal.cause()))
             }
             Err(refusal) => FslReport::Failed(FailureCause::CheckerRefused(refusal.to_string())),
         }
