@@ -249,6 +249,10 @@ pub enum FailureCause {
     /// EN-1 refused the item. FSL maps the refusal to a code in a crate-private
     /// function (ADR-010 G9), so only the refusal's text is carried.
     CheckerRefused(String),
+    /// FSL's `analyze` entry refused the request before running its item
+    /// (an unadmitted subject binding or an unprovisioned source). FSL's
+    /// refusal text.
+    AnalyzeRefused(String),
 }
 
 /// A selected backend's failure for one claim, with its cause.

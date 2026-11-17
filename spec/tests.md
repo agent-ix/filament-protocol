@@ -78,6 +78,7 @@ relationships:
   - { target: ix://agent-ix/filament-protocol/FR-209, type: references }
   - { target: ix://agent-ix/filament-protocol/FR-210, type: references }
   - { target: ix://agent-ix/filament-protocol/FR-211, type: references }
+  - { target: ix://agent-ix/filament-protocol/FR-303, type: references }
   - { target: ix://agent-ix/filament-protocol/NFR-001, type: references }
   - { target: ix://agent-ix/filament-protocol/NFR-002, type: references }
   - { target: ix://agent-ix/filament-protocol/NFR-003, type: references }
@@ -94,12 +95,12 @@ paths and work that remains planned or blocked. The accepted frozen source basel
 Assurance producer, license, implementation plan, and retained corpus remain
 explicit gates.
 
-The repository carries 77 functional requirements, 8 non-functional
-requirements, 5 integration tests and 56 test cases, and 558 acceptance criteria
-across the 77 FRs (505) and the 8 NFRs (53); `quire matrix` lists 601 rows because it adds the 43 non-functional measure rows. The functional set divides into 9 aggregate or
+The repository carries 78 functional requirements, 8 non-functional
+requirements, 5 integration tests and 57 test cases, and 566 acceptance criteria
+across the 78 FRs (513) and the 8 NFRs (53); `quire matrix` lists 609 rows because it adds the 43 non-functional measure rows. The functional set divides into 9 aggregate or
 behavioural parents (FR-001..FR-009), 9 object requirements (FR-010..FR-018),
 24 atomic behavioural parts (FR-019..FR-042) that the parents aggregate
-through `contains`, 2 independent behavioural requirements (FR-301, FR-302)
+through `contains`, 3 independent behavioural requirements (FR-301, FR-302, FR-303)
 that extend FR-005 and FR-006's claim dispatch and result-wire obligations
 rather than being decomposed from them, 5 checked-package requirements
 (FR-043..FR-047), 10 extension requirements for dynamic roles, queues, joins and
@@ -164,7 +165,7 @@ temporal evidence route return as FR-044, FR-045 and FR-046. Global conformance
 returns as FR-205 (the protocol check FSL decides) and FR-208 to FR-211 (the
 history questions this library decides: order invariance, adverse observations,
 closure axes, batch against incremental), the scenario record as FR-206 and
-serialized replay as FR-207; FR-206 and FR-207 are blocked on owners. The
+serialized replay as FR-207; FR-206 and FR-207 are blocked on owners, except FR-207's supplied-protocol-trace criterion, which FR-303 backs through FSL's `finite-replay` engine. The
 canonical result and its strict reader (FR-006, FR-031 to FR-033, FR-042) and the
 E02 projection (FR-007, FR-034, FR-035) have no successor requirement of their
 own: FR-206 composes the scenario record from live dispositions and does not
@@ -212,6 +213,7 @@ in Domain Object Coverage instead.
 | FR-042 | FR-042-AC-1..AC-6 | no living test for AC-1..AC-6 | ⛔ Retired — every test of this row's 6 criteria was deleted in FSL-1549 stage 1 with the implementation it exercised. |
 | FR-301 | FR-301-AC-1..AC-7 | TC-147 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_147_decide_protocol_refinement.rs`), every one over the systems of handoff-compiled protocols: a `TransitionSystem` is obtainable only from FSL's protocol step view (FSL FR-578), its observable labels carry send or receive, and a label outside the fragment is refused. The refinement is decided in `src/refinement.rs`. |
 | FR-302 | FR-302-AC-1..AC-5 | TC-148 (AC-1..AC-5) | ✅ Implemented for `realizability` and, for `refinement`, as the FSL `RefinementWitness` record carried in `Refinement::witness` and refused when a refuted claim lacks it (AC-1, AC-2 in `tests/tc_147_decide_protocol_refinement.rs`) — all 5 criteria have living traced tests: a decisive `realizability` result carries exactly the witness its `native-run-result/2` protocol-analysis record holds (FSL's engine, FSpec FR-352), any other basis carries none, a changed witness is refused, a backend that writes no record settles `unsupported` with a warning, and a witness-bearing result is produced under `filament.protocol.result/v1-draft.2`. |
+| FR-303 | FR-303-AC-1..AC-6 | TC-178 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests (`tests/tc_178_replay_a_supplied_finite_trace.rs`). A finite protocol trace taken from FSL's own protocol system over a handoff-compiled protocol is replayed by FSL's real `finite-replay` engine (FSL FR-636, agent-ix/filament-spec-language#2785) behind the provider boundary: the whole trace settles `satisfied` on `closed-scope` with FSL's `proved` terminal record carried unchanged (AC-1), a stale or malformed trace is refused with FSL's `invalid_runtime_input` code (AC-2, AC-3), a request of another kind is refused `inapplicable-kind` (AC-4), an empty registry settles `unsupported` (AC-5), and a result without a coherent terminal record is `unsupported` or refused (AC-6). The library maps no observation record to a role, channel, join or loop fact. |
 | FR-043 | FR-043-AC-1..AC-9 | TC-149 (AC-1..AC-8); AC-9 by Inspection (TC-149) | ✅ Implemented — AC-9 verifies by Inspection of the production dispatch match, so it carries no traced test; TC-149's eight tests admit the three packages of recipe R, replay the 30-case standard mutation corpus, and carry the reader's, the selection's and the identity and equality files' refusals unchanged. |
 | FR-044 | FR-044-AC-1..AC-7 | TC-150 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests. AC-1 compares lists and edges with `protocol_view`/`causal_relation`; AC-2 forbids local edge construction; AC-3 checks the consumer-owned refusals with their node ids and loci and that the linker builds no owner refusal; AC-4 checks absent, carrier and non-protocol refusals; AC-5 checks the checked-package signature and retired types; AC-6 checks the linker names no window view and links without a window package member; AC-7 checks, over recipe R, distinct concurrent branch identities and join edges, unordered branches that all reach the join, no new edge from reordered clock-selection input, and the retained selected clock binding. |
 | FR-045 | FR-045-AC-1..AC-8 | TC-151 (AC-1..AC-8) | ✅ Implemented — all 8 criteria have a living traced test over `BarePackage`'s slot call (FSL FR-531, FR-533): AC-1 covers the guard, retry and `recovery.predicate` rows (the `sum` query bound inside the recovery slot evaluates: `Full` holds for receipts summing to the target, `Partial` for a positive sum below it), the unavailable binder, the wrongly typed value and the meter one below usage; AC-2 the recovery assertions of `tc_003` (FR-024-AC-1 to AC-6) restated on the outcome map; AC-3 the unavailable retry and recovery binders, the value-asserted mappings of every non-Boolean owner outcome and the absence of Boolean coercion; AC-4 the `attempts maximum` bound of 3 admitting three attempts and refusing the fourth, with the `retry.relation` slot checked separately (`AttemptLedger::admit` does not consult it); AC-5 the compensation modules and slot mapping naming no I/O path (a per-segment scan of their `use` trees) and the crate's own normal dependencies (`cargo metadata`) holding no I/O crate; AC-6 the retired names; AC-7 the charge log carried whole on a completed and on an unavailable result, the unavailable binder with its own entry and no zero entry for an unread one; AC-8 the per-binder charge log. An unsupported-construct row has no input in R. The retry bound is read from the node's `attempts` argument directly because FSL's `protocol_view` has no accessor for it. An earlier revision of this row said FSL's bare projection faults on the `sum(receipt in ...)` binder (`reader-expression-binder-is-admitted`); that does not occur at FSL main or at the locked revision. |
@@ -238,9 +240,9 @@ in Domain Object Coverage instead.
 | FR-202 | FR-202-AC-1..AC-7 | TC-202 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests over handoff-compiled protocols (`tests/tc_147_decide_protocol_refinement.rs`); the divergence is a hidden loop of `Pick` sends and receives. |
 | FR-203 | FR-203-AC-1..AC-7 | TC-203 (AC-1..AC-7) | ✅ Implemented — all 7 criteria have living traced tests (`tests/tc_200_decide_composition.rs`). |
 | FR-204 | FR-204-AC-1..AC-12 | TC-204 (AC-1..AC-12) | ✅ Implemented — AC-8..AC-12 (composition) have living traced tests in `tests/tc_200_decide_composition.rs`. AC-1..AC-7 (refinement) have living traced tests in `tests/tc_204_refine_under_stronger_assumptions.rs` over protocols written by FSL's checked-handoff writer that require an `infinite-trace` temporal clause (with its fairness row), link, and give `step_system` a system whose assumption is that clause; AC-1, AC-2 and AC-3 also keep their unit tests over plain values in `src/refinement.rs`. |
-| FR-205 | FR-205-AC-1..AC-4 | TC-205 (AC-1..AC-4) | ✅ Implemented — all 4 criteria have living traced tests (`tests/tc_205_decide_global_conformance.rs`) over handoff-compiled protocols and FSL's EN-1 checker. The protocol-check half of V1-PROT-026 (every behaviour is deadlock-free); the history half is FR-208 to FR-211. The `refuted` settlement is not tested: FSL's replay of an EN-1 counterexample needs source a handoff does not carry (ADR-010 G9), so AC-3 asserts the refused replay is never read as `violated`. |
+| FR-205 | FR-205-AC-1..AC-5 | TC-205 (AC-1..AC-5) | ✅ Implemented — all 5 criteria have living traced tests (`tests/tc_205_decide_global_conformance.rs`) over handoff-compiled protocols and FSL's EN-1 checker. The protocol-check half of V1-PROT-026 (every behaviour is deadlock-free); the history half is FR-208 to FR-211. The `refuted` settlement is not tested: FSL's replay of an EN-1 counterexample needs source a handoff does not carry (ADR-010 G9), so AC-3 asserts the refused replay is never read as `violated`. AC-5 dispatches the recipe model as FSL ships it, with its unbounded quantity roots and no bounding rewrite, to the real checker and asserts the requires-bound refusal is carried unchanged (V1-PROT-014). |
 | FR-206 | FR-206-AC-1..AC-3 | no living test for AC-1..AC-3 | ⛔ Blocked — `quoin-evidence` (owner of the intake's `ScenarioEvidence`) cannot join this manifest: it pins `serde =1.0.229` and `filament-observation` pins `serde =1.0.228` (ADR-010 G11). Succeeds FR-006, FR-007 and FR-017. |
-| FR-207 | FR-207-AC-1..AC-2 | no living test for AC-1..AC-2 | ⛔ Blocked — no owner publishes a serialized observed history or a reader of one (ADR-010 G10). Succeeds the replay half of FR-006. |
+| FR-207 | FR-207-AC-1..AC-3 | TC-178 (AC-3); no living test for AC-1..AC-2 | ⛔ Blocked for AC-1..AC-2, backed for AC-3 — a supplied finite protocol trace is replayed by FSL's `finite-replay` engine and its record carried unchanged (AC-3, FR-303, TC-178). The serialized observed-history reader and assessor (FSL FR-737) are not published and wait on QSL-2210, and no owner defines how an observation record becomes a role, channel, join or loop fact (ADR-010 G10), so AC-1..AC-2 stay untested. Succeeds the replay half of FR-006. |
 | FR-208 | FR-208-AC-1..AC-4 | TC-208 (AC-1..AC-3) | ✅ Implemented — AC-1..AC-3 have living traced tests (`tests/tc_208_assess_history_conformance.rs`); AC-4 verifies by Inspection. Succeeds FR-026. |
 | FR-209 | FR-209-AC-1..AC-6 | TC-208 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests. Succeeds FR-027. |
 | FR-210 | FR-210-AC-1..AC-6 | TC-208 (AC-1..AC-6) | ✅ Implemented — all 6 criteria have living traced tests over the live closure algebra. Succeeds FR-028. |
@@ -358,12 +360,13 @@ a coverage claim in this matrix.
 | TC-175 | Link channel endpoint roles, message payload types and choice branch labels | Property | P0 | FR-051, FR-052 | ✅ Implemented — four tests carry FR-051-AC-6, FR-051-AC-7 and FR-052-AC-6 over the reference protocol (V1-PROT-003, V1-PROT-004, V1-PROT-009). |
 | TC-176 | Declare a population of related effects for duplicate detection | Property | P0 | FR-023 | ✅ Implemented — its tests carry FR-023-AC-7. |
 | TC-177 | Link a choice composed with other controls | Property | P0 | FR-052 | ✅ Implemented — its tests carry FR-052-AC-7 over a protocol with a choice in a parallel branch, a loop body and another choice. |
+| TC-178 | Replay a supplied finite trace through FSL's finite-replay engine | Property | P0 | FR-303, FR-207 | ✅ Implemented — its six tests carry FR-303-AC-1..AC-6, and the first also FR-207-AC-3. |
 | TC-200 | Decide composition claims in this library | Property | P0 | FR-200 | ✅ Implemented — its tests carry every FR-200 criterion (AC-1..AC-7, AC-9); the composition is decided in `src/composition.rs`, no backend is called. |
 | TC-201 | Bind composition dispositions to their premise lists and component subjects | Property | P0 | FR-201 | ✅ Implemented — its tests carry every FR-201 criterion (AC-1..AC-6). |
 | TC-202 | Report refinement counterexamples and read verdicts into the axes | Property | P0 | FR-202 | ✅ Implemented — its tests carry every FR-202 criterion (AC-1..AC-7), over handoff-compiled protocols. |
 | TC-203 | Refuse circular guarantee dependencies as self-justifying | Property | P0 | FR-203 | ✅ Implemented — its tests carry every FR-203 criterion (AC-1..AC-7). |
 | TC-204 | Refuse a claim established under assumptions stronger than the request's | Property | P0 | FR-204 | ✅ Implemented — composition AC-8..AC-12 in `tests/tc_200_decide_composition.rs`; refinement AC-1..AC-7 in `tests/tc_204_refine_under_stronger_assumptions.rs` over real protocols that require a temporal clause. |
-| TC-205 | Decide finite global conformance with FSL's protocol checker over compiled protocols | Property | P0 | FR-205 | ✅ Implemented — four tests carry FR-205-AC-1..AC-4 over handoff-compiled protocols (`tests/tc_205_decide_global_conformance.rs`). |
+| TC-205 | Decide finite global conformance with FSL's protocol checker over compiled protocols | Property | P0 | FR-205 | ✅ Implemented — five tests carry FR-205-AC-1..AC-5 over handoff-compiled protocols (`tests/tc_205_decide_global_conformance.rs`). |
 | TC-208 | Assess an observed history for finite global conformance over a compiled choreography | Property | P0 | FR-208, FR-209, FR-210, FR-211 | ✅ Implemented — nineteen tests carry FR-208-AC-1..AC-3, FR-209-AC-1..AC-6, FR-210-AC-1..AC-6 and FR-211-AC-1..AC-4 over the TC-167 choreography (`tests/tc_208_assess_history_conformance.rs`). |
 
 ## V1-PROT inventory
@@ -385,7 +388,7 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-011 bounded iteration | FR-056 (TC-054, TC-167) | Backed |
 | V1-PROT-012 dynamic roles | FR-053 (TC-051, TC-167) | Backed |
 | V1-PROT-013 queues | FR-054 (TC-052, TC-167) | Backed: finite capacity is assessed; a symbolic capacity is carried through link and dispatch (FR-054-AC-10) and settles as the typed `SymbolicCapacity` unsupported disposition (TC-052, TC-055), never stepped (undecidable for all N; FSL FR-530) |
-| V1-PROT-014 invariants and termination | FR-058, FR-059 (TC-054, TC-055) | Backed as carried: FSL owns the proof; FR-059-AC-1..AC-4 (TC-054) show a loop's invariant and variant reported `undischarged` and never proved, and FR-058-AC-1..AC-3 (TC-055) carry a requires-bound outcome unchanged through the dispatch path. TC-055 drives the dispatch path with a stand-in at the provider boundary; no test makes FSL's real engine return a requires-bound, because the realizability fixture bounds quantity roots in memory (FSL FR-120) |
+| V1-PROT-014 invariants and termination | FR-058, FR-059 (TC-054, TC-055); FR-205-AC-5 (TC-205) | Backed as carried: FSL owns the proof; FR-059-AC-1..AC-4 (TC-054) show a loop's invariant and variant reported `undischarged` and never proved, and FR-058-AC-1..AC-3 (TC-055) carry a requires-bound outcome unchanged through the dispatch path. TC-055 drives the dispatch path with a stand-in at the provider boundary and is not the evidence for FSL's own report. FSL's real EN-1 checker is the evidence: FR-205-AC-5 (TC-205) dispatches the recipe model as FSL ships it, with its unbounded `Total` and `Amount` (FSL FR-120) and no bounding rewrite, and asserts the checker's requires-bound refusal is carried unchanged as the backend's failure, with no record and no truth. The in-memory bounding of the other fixtures is a fixture-side substitute for the tests that need EN-1 to decide |
 | V1-PROT-015 causal edges | FR-044 (TC-150); FR-021 (TC-003) | Backed |
 | V1-PROT-016 choice visibility | FR-052-AC-4 (TC-168); FR-019-AC-2 (TC-003); FR-150-AC-17 (TC-166, TC-173); FR-151 (TC-161); FSL FR-218 | Backed in two halves, neither enforced by this library. Deciding role: FSL's checker refuses a choice guard or `visible` entry the owner cannot observe (FSL FR-218, cross-repository evidence; no test of it here), the library carries the owner and visible set as FSL reads them (TC-168, TC-177) and refuses substituted choice-visibility evidence (FR-019-AC-2, TC-003). Affected role: FSL's `realizability` decision; a choice a role cannot tell apart settles `violated` with FSL's separating witness carried unchanged (hidden choice and incompatible merge, TC-166). Role internality is the binding's exact `internal`/`external` (FR-151-AC-9, TC-161) |
 | V1-PROT-017 delivery premises | FR-051, FR-054 (TC-050, TC-052); FR-151 (TC-161) | Backed |
@@ -396,7 +399,7 @@ Each Protocol-owned cell of `filament-specification/docs/v1-capability-inventory
 | V1-PROT-022 commit and recovery | FR-021 (TC-003) | Backed |
 | V1-PROT-023 outcome distinctions | FR-023 (TC-003) | Backed |
 | V1-PROT-024 duplicate business effects | FR-023-AC-6 (TC-169); FR-023-AC-7 (TC-176) | Backed: a singleton effect, and a declared population of related effects whose distinct members are not duplicates and whose non-members are recorded as outside the population |
-| V1-PROT-025 finite replay | TC-167; TC-008; FR-207 | Partial, and the serialized half is blocked: a rebuilt history gives the same dynamic-axis result (TC-167); no test replays a serialized trace because no owner publishes a serialization of an observed history or a reader of one (FR-207, ADR-010 G10). The whole-result replay is retired with FR-006 |
+| V1-PROT-025 finite replay | TC-167; TC-178; TC-008; FR-303; FR-207 | Partial. Backed: a rebuilt history gives the same dynamic-axis result (TC-167), and a supplied finite protocol trace is replayed by FSL's real `finite-replay` engine with FSL's terminal record carried unchanged (FR-303, FR-207-AC-3, TC-178). Blocked: the serialized observed-history half (FR-207-AC-1, FR-207-AC-2) waits on QSL-2210, the reader and assessor of a serialized observed history (FSL FR-737), and no owner defines how an observation record becomes a role, channel, join or loop fact (ADR-010 G10). The whole-result replay is retired with FR-006 |
 | V1-PROT-026 global conformance | FR-205 (TC-205); FR-208..FR-211 (TC-208); passthrough (TC-165 AC-15) | Backed: FSL's EN-1 checker decides whether every behaviour is deadlock-free and the library carries its record (FR-205); the library decides the history questions of retired FR-004 itself over the live axes (FR-208 order invariance, FR-209 adverse observations by axis, FR-210 closure axes, FR-211 batch against incremental). FSL advertises no `global-conformance` kind and the `refuted` settlement of the protocol check needs a replay a handoff cannot supply (ADR-010 G8, G9) |
 | V1-PROT-027 projection | FR-150 (TC-164, TC-165) | Backed on FSL's engine |
 | V1-PROT-028 realizability | FR-150 (TC-166, TC-172, TC-173) | Backed on FSL's engine; the witness is carried unchanged (FR-302) |
@@ -419,12 +422,12 @@ does not measure binding.
 
 | Category | Total | Passed | Failed | Blocked | Planned | Retired |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Functional requirement rows | 68 | 38 | 0 | 2 | 9 | 19 |
+| Functional requirement rows | 69 | 39 | 0 | 2 | 9 | 19 |
 | Domain object requirement rows | 9 | 3 | 0 | 0 | 3 | 3 |
 | Non-functional requirement rows | 8 | 3 | 0 | 0 | 4 | 1 |
 | Integration rows | 6 | 2 | 0 | 1 | 0 | 3 |
-| Test case rows | 56 | 44 | 0 | 0 | 4 | 8 |
-| Overall | 147 | 90 | 0 | 3 | 20 | 34 |
+| Test case rows | 57 | 45 | 0 | 0 | 4 | 8 |
+| Overall | 149 | 92 | 0 | 3 | 20 | 34 |
 
 The Integration count is six because IT-001 carries a separate version 1 and version 2
 row and IT-004 and IT-005 are implemented; the two contracts may not substitute for each other, so one row cannot
@@ -440,7 +443,7 @@ criterion is a zero inside it rather than a row removed from it.
 
 | Category | Total | Passed | Failed | Blocked |
 | --- | ---: | ---: | ---: | ---: |
-| Overall owed criteria | 601 | 359 | 0 | 5 |
+| Overall owed criteria | 609 | 367 | 0 | 5 |
 
 Passed means the criterion carries a living traced test in the current tree
-(359 of 601, the rows `quire matrix` lists and computes as tagged, recounted with quire 0.38.3: 505 functional-requirement criteria and 96 non-functional rows, which are the 53 non-functional criteria and 43 measure rows). Blocked is the 5 criteria of FR-206 and FR-207, which wait on owners (ADR-010 G10, G11) and match the 2 Blocked functional rows above; no other criterion is blocked: FSL delivered the evaluation entries that FR-045 and FR-046 wait on. The criteria not counted as passed also include those that verify by Inspection or Analysis only (55 rows `quire matrix` lists as method-without-symbol) and FR-014-AC-6, which waits on IT-003's Quoin scenario-record handoff but is counted as owed, not blocked, because IT-003 is unexecutable as a whole; `quire matrix` computes no planned or retired split, so none is stated here.
+(367 of 609, the rows `quire matrix` lists and computes as tagged, recounted with quire 0.38.3: 513 functional-requirement criteria and 96 non-functional rows, which are the 53 non-functional criteria and 43 measure rows). Blocked is the 5 criteria of FR-206 and FR-207-AC-1, FR-207-AC-2, which wait on owners (ADR-010 G10, G11) and match the 2 Blocked functional rows above; no other criterion is blocked: FSL delivered the evaluation entries that FR-045 and FR-046 wait on. The criteria not counted as passed also include those that verify by Inspection or Analysis only (55 rows `quire matrix` lists as method-without-symbol) and FR-014-AC-6, which waits on IT-003's Quoin scenario-record handoff but is counted as owed, not blocked, because IT-003 is unexecutable as a whole; `quire matrix` computes no planned or retired split, so none is stated here.

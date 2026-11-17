@@ -49,6 +49,9 @@ ix-trace-rs = { git = "https://github.com/agent-ix/ix-trace-rs", branch = "main"
 fsl-cst = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
 fsl-forms = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
 filament-checked = { git = "https://github.com/agent-ix/filament-eval", branch = "main" }
+# The counterexample wire spells a state key as unpadded URL-safe base64 (FSpec
+# FR-433); the replay tests spell the keys FSL's own system computes.
+base64 = "0.22"
 serde_json = "=1.0.151"
 tempfile = "3"
 

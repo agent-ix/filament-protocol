@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-//! FR-150, FR-152, FR-153, FR-302: the provider that runs FSL's own
+//! FR-150, FR-152, FR-153, FR-302, FR-303: the provider that runs FSL's own
 //! `protocol-analysis` engine behind the dispatch boundary.
 //!
 //! The engine, its descriptor and its result are FSL's (ADR-036). This module
@@ -7,13 +7,16 @@
 //! request the caller supplies, runs it on FSL's linked engines, and returns
 //! the engine's record unchanged, so the dispatcher carries the witness as the
 //! engine wrote it. A report FSL gives no result for stays the typed
-//! `unsupported` path of FR-153.
+//! `unsupported` path of FR-153. A supplied finite trace (FR-303) is replayed
+//! by FSL's `finite-replay` item through FSL's `analyze` entry; this module
+//! replays no step.
 
 use filament_contract_model::CheckedPackageV2;
 use filament_exact::Cancel;
 use filament_semantic_value::catalog::CatalogCode;
 use fsl_analyze::analyze::{
-    analyze_items, AnalyzeRecord, Disposed, DispositionKind, Engines, Settlement,
+    analyze, analyze_items, AnalyzeLimits, AnalyzeRecord, AnalyzeRequest, Disposed,
+    DispositionKind, Engines, Settlement,
 };
 use fsl_analyze::protocol_analysis::manifest::descriptor;
 use fsl_analyze::protocol_analysis::{
@@ -21,14 +24,17 @@ use fsl_analyze::protocol_analysis::{
     RealizabilityRequest,
 };
 use fsl_foundation::RequestIndex;
+use fsl_package::CheckedPackage;
 use fsl_replay::protocol_analysis::{
     AnalysisOutcome, ProtocolAnalysisSettlement, RealizabilityCounterexample,
 };
 use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
-    InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TerminalValue, Truth,
+    InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TerminalRecord, TerminalValue,
+    Truth,
 };
 use fsl_route::{BackendDescriptor, ProviderOrigin, RegistrationRefusal};
+use fsl_semantics::check::Capability;
 
 use crate::dispatch::{BackendResult, Binding, ProtocolClaimKind};
 use crate::disposition::{FailureCause, FslBoundary, FslReport, UnsupportedCause};
@@ -41,6 +47,23 @@ pub enum EngineRequest<'p> {
     Projection(Box<ProjectionRequest>),
     /// A `realizability` request.
     Realizability(Box<RealizabilityRequest<'p>>),
+    /// A `finite-replay` request carrying a supplied finite trace (FR-303).
+    FiniteReplay(Box<FiniteReplayRequest<'p>>),
+}
+
+/// The request for a `finite-replay` claim, in FSL's own types: the arguments
+/// of FSL's `analyze` entry (FSL FR-621, FR-636). The one item of `request` is
+/// a `finite-replay` item whose `trace` names the supplied trace document, and
+/// that document's bytes are in `request.binding.snapshots` under that
+/// reference. The caller states the item and its disposition; FSL reads the
+/// trace and replays it.
+pub struct FiniteReplayRequest<'p> {
+    /// The checked package the item's claim is in.
+    pub package: &'p CheckedPackage,
+    /// FSL's analyze request: the subject binding and the one item.
+    pub request: AnalyzeRequest<'p>,
+    /// FSL's run limits.
+    pub limits: AnalyzeLimits,
 }
 
 /// FSL's engine descriptor, to register at the
@@ -54,11 +77,24 @@ pub fn engine_descriptor(origin: ProviderOrigin) -> Result<BackendDescriptor, Re
     descriptor(origin)
 }
 
-/// The result of a run of FSL's protocol analysis engine: FSL's `analyze`
-/// record, unchanged, and the FR-573 settlement read from its artifact.
+/// The result of a run of FSL's protocol analysis engine: for
+/// `local-projection` and `realizability`, FSL's `analyze` record, unchanged,
+/// and the FR-573 settlement read from its artifact; for `finite-replay`,
+/// FSL's FR-331 terminal record of the replay, unchanged (FR-303).
 #[derive(Debug)]
 pub struct EngineResult {
-    record: Box<AnalyzeRecord>,
+    body: Body,
+}
+
+#[derive(Debug)]
+enum Body {
+    Analysis(Box<Analysis>),
+    Replay(Box<TerminalRecord>),
+}
+
+#[derive(Debug)]
+struct Analysis {
+    record: AnalyzeRecord,
     settlement: ProtocolAnalysisSettlement,
     run_record: ProtocolAnalysisRecord,
 }
@@ -76,45 +112,66 @@ impl EngineResult {
             .record()
             .map_err(|error| FailureCause::RunRecordRefused(error.to_string()))?;
         Ok(Self {
-            record: Box::new(record),
-            settlement,
-            run_record,
+            body: Body::Analysis(Box::new(Analysis {
+                record,
+                settlement,
+                run_record,
+            })),
         })
     }
 
-    /// FSL's record, as the engine returned it.
+    /// FSL's `analyze` record of a `local-projection` or `realizability`
+    /// result, as the engine returned it; absent for a replay.
     #[must_use]
-    pub fn record(&self) -> &AnalyzeRecord {
-        &self.record
+    pub fn record(&self) -> Option<&AnalyzeRecord> {
+        match &self.body {
+            Body::Analysis(analysis) => Some(&analysis.record),
+            Body::Replay(_) => None,
+        }
     }
 
-    /// FSL's result artifact: the key and the outcome.
+    /// FSL's result artifact: the key and the outcome; absent for a replay.
     #[must_use]
     pub fn artifact(&self) -> Option<&ProtocolAnalysisArtifact> {
-        self.record.protocol_analysis.as_deref()
+        self.record()?.protocol_analysis.as_deref()
     }
 
-    /// FSL's `native-run-result/2` protocol-analysis record of the result
-    /// (FSpec FR-352), as the engine wrote it.
+    /// FSL's FR-573 settlement of a `local-projection` or `realizability`
+    /// result; absent for a replay.
     #[must_use]
-    pub const fn run_record(&self) -> &ProtocolAnalysisRecord {
-        &self.run_record
+    pub fn settlement(&self) -> Option<&ProtocolAnalysisSettlement> {
+        match &self.body {
+            Body::Analysis(analysis) => Some(&analysis.settlement),
+            Body::Replay(_) => None,
+        }
     }
 
-    /// FSL's FR-573 settlement of the result.
+    /// FSL's FR-331 terminal record of a `finite-replay` result, as the engine
+    /// returned it (FR-303); absent for the other kinds.
     #[must_use]
-    pub const fn settlement(&self) -> &ProtocolAnalysisSettlement {
-        &self.settlement
+    pub fn replay_record(&self) -> Option<&TerminalRecord> {
+        match &self.body {
+            Body::Replay(record) => Some(record),
+            Body::Analysis(_) => None,
+        }
     }
 }
 
 impl BackendResult for EngineResult {
+    /// A replay result exists only for a trace FSL proved (FSL FR-636): its
+    /// `proved` record with the replay depth as its basis.
     fn truth(&self) -> Truth {
-        self.settlement.truth
+        match &self.body {
+            Body::Analysis(analysis) => analysis.settlement.truth,
+            Body::Replay(_) => Truth::Satisfied,
+        }
     }
 
     fn basis(&self) -> SettlementBasis {
-        self.settlement.basis
+        match &self.body {
+            Body::Analysis(analysis) => analysis.settlement.basis,
+            Body::Replay(_) => SettlementBasis::ClosedScope,
+        }
     }
 
     fn witness(&self) -> Option<&SeparatingWitnessRecord> {
@@ -139,11 +196,18 @@ impl BackendResult for EngineResult {
     }
 
     fn run_record(&self) -> Option<&ProtocolAnalysisRecord> {
-        Some(&self.run_record)
+        match &self.body {
+            Body::Analysis(analysis) => Some(&analysis.run_record),
+            Body::Replay(_) => None,
+        }
+    }
+
+    fn terminal_record(&self) -> Option<&TerminalRecord> {
+        self.replay_record()
     }
 
     fn inconclusive(&self) -> Option<&InconclusiveCause> {
-        match &self.settlement.value {
+        match &self.settlement()?.value {
             TerminalValue::Inconclusive(cause) => Some(cause),
             _ => None,
         }
@@ -237,6 +301,50 @@ fn without_result<R>(record: &AnalyzeRecord) -> FslReport<R> {
     }
 }
 
+/// FSL's refusal of an item whose kind does not apply (FSL FR-507-AC-7). The
+/// code is spelled as FSL's spec spells it; its owner is to publish it
+/// (IR-1513).
+const INAPPLICABLE_KIND: CatalogCode = CatalogCode::new("invalid_capability", "inapplicable-kind");
+
+impl<S> FslEngine<'_, S> {
+    /// Run FSL's `finite-replay` item (FSL FR-636) and read what it returned:
+    /// a `proved` record is the result, a `declined` one FSL's refusal with its
+    /// code, and any other value a failure carrying FSL's diagnostic.
+    fn replay(&self, request: &FiniteReplayRequest<'_>) -> FslReport<EngineResult> {
+        let [negotiated] = request.request.items.as_slice() else {
+            return FslReport::Refusal(INAPPLICABLE_KIND);
+        };
+        if negotiated.item.kind != Capability::FiniteReplay {
+            return FslReport::Refusal(INAPPLICABLE_KIND);
+        }
+        let outcome = match analyze(
+            request.package,
+            &request.request,
+            &self.engines,
+            &request.limits,
+            &self.cancel,
+        ) {
+            Ok(staged) => staged.into_value(),
+            Err(refused) => {
+                return FslReport::Failed(FailureCause::AnalyzeRefused(format!("{refused:?}")))
+            }
+        };
+        let Some(record) = outcome.records.into_iter().next() else {
+            return FslReport::Failed(FailureCause::NoRecord);
+        };
+        match record.value() {
+            TerminalValue::Proved { .. } => FslReport::Result(EngineResult {
+                body: Body::Replay(Box::new(record)),
+            }),
+            TerminalValue::Declined { .. } => record.diagnostic().map_or_else(
+                || FslReport::Failed(settled_failure(record.value(), None)),
+                FslReport::Refusal,
+            ),
+            value => FslReport::Failed(settled_failure(value, record.diagnostic())),
+        }
+    }
+}
+
 impl<'p, A, S> FslBoundary<Binding<A>, EngineResult> for FslEngine<'p, S>
 where
     S: FnMut(&Binding<A>) -> EngineRequest<'p>,
@@ -245,22 +353,17 @@ where
         let index = RequestIndex::new(0);
         // The request the caller supplies must be the claim's own kind.
         let item = match ((self.supply)(binding), binding.request.kind) {
+            (EngineRequest::FiniteReplay(request), ProtocolClaimKind::FiniteReplay) => {
+                return self.replay(&request);
+            }
             (EngineRequest::Projection(request), ProtocolClaimKind::LocalProjection) => {
                 projection_item(index, self.package, *request)
             }
             (EngineRequest::Realizability(request), ProtocolClaimKind::Realizability) => {
                 realizability_item(index, self.package, *request)
             }
-            // The supplied request is another kind than the claim's: FSL's
-            // `inapplicable-kind` refusal of an item whose kind does not apply
-            // (FSL FR-507-AC-7). The code is spelled as FSL's spec spells it;
-            // its owner is to publish it (IR-1513).
-            _ => {
-                return FslReport::Refusal(CatalogCode::new(
-                    "invalid_capability",
-                    "inapplicable-kind",
-                ))
-            }
+            // The supplied request is another kind than the claim's.
+            _ => return FslReport::Refusal(INAPPLICABLE_KIND),
         };
         let mut records = analyze_items(&self.engines, vec![item], &self.cancel);
         let Some(record) = records.pop() else {

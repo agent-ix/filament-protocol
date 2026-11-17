@@ -55,6 +55,7 @@ FSL's `ModelCheckRecord` of the run (terminal value, label, settlement basis, tr
 | FR-205-AC-2 | Given the same protocol checked by the checker directly, the dispatched record equals the direct record in value, label, basis, truth and limits, so the dispatcher changed nothing. | Test (TC-205) |
 | FR-205-AC-3 | Given a protocol the checker finds deadlocked and a replay that cannot reproduce the counterexample, the dispatch holds neither truth `violated` nor a counterexample, and the record is FSL's refused settlement. | Test (TC-205) |
 | FR-205-AC-4 | Given an empty registry, a `global-conformance` claim settles `unsupported` with a warning naming the capability it selects on, and holds neither `satisfied` nor `violated`. | Test (TC-205) |
+| FR-205-AC-5 | Given the checked-handoff recipe model as FSL ships it, whose `Total` and `Amount` are unbounded quantity roots (FSL FR-120), with no bound supplied and none chosen by a rewrite of the model, the checker refuses the subject as requiring a bound, and the dispatch carries that refusal as the backend's failure, with the checker's own text unchanged, no record and neither truth `satisfied` nor `violated`. | Test (TC-205) |
 
 ## Adopted vocabulary
 

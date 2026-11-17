@@ -15,13 +15,28 @@ use filament_contract_model::{
     CheckedNodeId, CheckedPackageDispatchResult, CheckedPackageReadLimits, CheckedPackageV2,
 };
 use filament_exact::ScalarLimits;
+use filament_protocol::engine::FiniteReplayRequest;
 use filament_spec_language::checked_handoff::{compile, CompiledHandoff, Corpus};
+use fsl_analyze::analyze::{
+    AnalyzeLimits, AnalyzeRequest, ClaimItem, ItemOptions, NegotiatedItem, SourceProvision,
+    SubjectBinding,
+};
 use fsl_analyze::protocol_analysis::{
     protocol_subject, RealizabilityRequest, SubjectBindings, SubjectPackage,
 };
 use fsl_eval::model_subject::{ModelInstance, ProtocolSubject, RoleBinding};
+use fsl_eval::simulation::model::ModelSystem;
 use fsl_eval::simulation::model::{ExpansionLimits, PopulationUniverse};
+use fsl_eval::simulation::protocol::{
+    send_record_json, transition_json, ProtocolSystem, ProtocolTransition, Sc,
+};
+use fsl_eval::simulation::{SubjectSystem, TransitionSystem};
+use fsl_foundation::source::provenance::OccurrenceKey;
+use fsl_foundation::RequestIndex;
 use fsl_replay::protocol_analysis::{BoundsDraft, RunBudget};
+use fsl_route::request::ExtentClassification;
+use fsl_route::routing::Disposition;
+use fsl_semantics::check::Capability;
 use fsl_semantics::model::accounting::ModelNormalizationLimits;
 use fsl_semantics::model::observation::{
     document_reference, DocumentProvision, DocumentRef, ObservationLimits,
@@ -61,22 +76,26 @@ fn key(suffix: &str) -> DeclarationKey {
 
 /// The recipe model with the closed populations the subject simulates: one
 /// per role's object type.
-fn model() -> Vec<u8> {
+fn model(bounded: bool) -> Vec<u8> {
     let mut model: Json = serde_json::from_slice(&super::dynamic::model()).expect("model JSON");
-    // A deliberate fixture-side substitute, not a workaround for a defect.
-    // A quantity is not a finite value domain (FSL FR-120 lists the finite
-    // domains: Boolean, bounded integers, Option, Reference, bounded
-    // sequences, enums, model-variant unions, records, tuples, sets and
-    // bags), so FSL's EN-1 INTENDEDLY raises RequiresBound for an unbounded
-    // quantity root, and realizability supplies no bounds. `Amount` and
-    // `Total` are read here as the bounded integers their own `min`/`max`
-    // constraints state. This rewrites FSL's model in memory; no file of
-    // FSL's is copied.
+    // A deliberate fixture-side substitute for the bounded-domain tests
+    // only, not a workaround for a defect. A quantity is not a finite value
+    // domain (FSL FR-120 lists the finite domains: Boolean, bounded integers,
+    // Option, Reference, bounded sequences, enums, model-variant unions,
+    // records, tuples, sets and bags), so FSL's EN-1 INTENDEDLY refuses an
+    // unbounded quantity root as requiring a bound. The tests that need EN-1
+    // to decide read `Amount` and `Total` here as the bounded integers their
+    // own `min`/`max` constraints state. This rewrites FSL's model in memory;
+    // no file of FSL's is copied. The unrewritten model is
+    // [`Realizability::unbounded`]: TC-205's FR-205-AC-5 dispatches it to the
+    // real checker with no rewrite and asserts the requires-bound refusal is
+    // carried unchanged. That test, not this rewrite, is V1-PROT-014's
+    // evidence.
     for declared in model["types"].as_array_mut().expect("types") {
         let is_unit = declared["target"]
             .as_str()
             .is_some_and(|target| target.starts_with("ix://filament/unit/"));
-        if is_unit {
+        if is_unit && bounded {
             let object = declared.as_object_mut().expect("a type");
             object.remove("target");
             object.insert(
@@ -112,7 +131,21 @@ fn initial_value(document: &Json, field: &Json, object: &str) -> Json {
         .expect("types")
         .iter()
         .find(|found| found["identity"] == type_ref);
+    let unit = scalar
+        .and_then(|found| found["target"].as_str())
+        .and_then(|target| target.strip_prefix("ix://filament/unit/"));
     let one = match scalar.and_then(|found| found["scalar"].as_str()) {
+        // A quantity, at its own lower bound: the unit and an exact magnitude.
+        None if unit.is_some() => {
+            let minimum = scalar.expect("a type")["constraints"]
+                .as_array()
+                .and_then(|all| all.iter().find(|found| found["keyword"] == "min"))
+                .map_or("0", |found| {
+                    found["operands"]["value"].as_str().expect("a bound")
+                });
+            json!({"kind": "quantity", "unit": unit,
+                "magnitude": {"kind": "rational", "numerator": minimum, "denominator": "1"}})
+        }
         None => json!({"boolean": false}),
         Some("integer") => {
             let minimum = scalar.expect("a type")["constraints"]
@@ -199,6 +232,9 @@ pub struct Realizability {
     protocol: String,
     /// The realizability request's depth bound.
     depth: u64,
+    /// The text of the unit the handoff was written from, which a
+    /// `finite-replay` request provisions under the package's source label.
+    unit: String,
 }
 
 impl Realizability {
@@ -245,7 +281,24 @@ impl Realizability {
         ship: &str,
         cancel: &str,
     ) -> Self {
-        Self::build(protocol, delivery, warehouse, extra, ship, cancel, "")
+        Self::build(protocol, delivery, warehouse, extra, ship, cancel, "", true)
+    }
+
+    /// `worked`, over the recipe model as FSL ships it: `Amount` and `Total`
+    /// stay the unbounded quantities FSL FR-120 says they are, with no
+    /// in-memory bounding. FSL's explicit-state checker refuses such a root as
+    /// requiring a bound (V1-PROT-014, FR-205-AC-5).
+    pub fn unbounded() -> Self {
+        Self::build(
+            "Flow",
+            "exactly-once-premise",
+            "",
+            "",
+            super::projection::PICK,
+            super::projection::CANCELLED,
+            "",
+            false,
+        )
     }
 
     /// `worked_as`, with the temporal clause `Due` (a required clause of the
@@ -260,9 +313,11 @@ impl Realizability {
             super::projection::PICK,
             super::projection::CANCELLED,
             clause,
+            true,
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn build(
         protocol: &str,
         delivery: &str,
@@ -271,6 +326,7 @@ impl Realizability {
         ship: &str,
         cancel: &str,
         clause: &str,
+        bounded: bool,
     ) -> Self {
         let (profile, temporal) = if clause.is_empty() {
             (String::new(), String::new())
@@ -287,10 +343,17 @@ impl Realizability {
         if !warehouse.is_empty() {
             members = members.replace("role Warehouse on M::Depot;\n", warehouse);
         }
+        // The unbounded model's quantities are of the unit `U`, which the unit
+        // declares (the bounded model has no quantity).
+        let money = if bounded {
+            ""
+        } else {
+            super::handoff::MONEY_UNIT
+        };
         let text = format!(
             "language \"ix:native\" edition \"1-draft\";\n\
              profile pp = \"filament.protocol.finite-global/v1\";\n\
-             {profile}model M = \"{PACKAGE}\";\n\
+             {profile}model M = \"{PACKAGE}\";\n{money}\
              {temporal}{RECORDS}protocol {protocol} using pp over (k: M::Workflow) on origin {{\n{members}{extra}\n\
              run sequence Main {{\n\
              send Placed via Order as (placed: Ack) {{ true }};\n\
@@ -303,9 +366,9 @@ impl Realizability {
         );
         let inputs = tempfile::tempdir().expect("temporary directory");
         let model_path = inputs.path().join("model.semantic-ir.json");
-        std::fs::write(&model_path, model()).expect("model file");
+        std::fs::write(&model_path, model(bounded)).expect("model file");
         let source_path = inputs.path().join("unit.native");
-        std::fs::write(&source_path, text).expect("source file");
+        std::fs::write(&source_path, &text).expect("source file");
         let mut asked = request("event_position", Corpus::None);
         asked.emit.source = source_path;
         asked.emit.models = vec![model_path];
@@ -345,6 +408,7 @@ impl Realizability {
             linked,
             protocol: protocol.to_owned(),
             depth: 64,
+            unit: text,
         }
     }
 
@@ -364,6 +428,11 @@ impl Realizability {
     /// The admitted package, the request's own form.
     pub fn package(&self) -> &CheckedPackageV2 {
         self.compiled.admitted()
+    }
+
+    /// FSL's checked package of the compiled handoff.
+    pub fn checked(&self) -> &fsl_package::CheckedPackage {
+        self.compiled.checked()
     }
 
     /// The node of form `form` whose declared name ends in `last`.
@@ -454,6 +523,129 @@ impl Realizability {
             }),
             assessed_root: Some(assessed_root()),
             budget: RunBudget::default(),
+        }
+    }
+}
+
+impl Realizability {
+    /// The first `count` steps of a run of the protocol, taken from FSL's own
+    /// protocol system and spelled as FSpec FR-433 spells a counterexample's
+    /// steps: each step's transition identity, the key of its post-state and,
+    /// for a `send`, its send record. The first successor of each state is
+    /// taken, so the run is the same every time.
+    pub fn trace_steps(&self, count: usize) -> Vec<Json> {
+        use base64::Engine as _;
+        let subject = self.subject();
+        let model = ModelSystem::new(subject.model.simulation.clone()).expect("the subject admits");
+        let system = ProtocolSystem::new(model, &subject, Sc).expect("the protocol system builds");
+        let mut state = system.initial().remove(0);
+        let mut steps = Vec::new();
+        for _ in 0..count {
+            let (transition, post): (ProtocolTransition, _) = system
+                .successors(&state)
+                .expect("the state expands")
+                .successors
+                .into_iter()
+                .next()
+                .expect("the run has a next step");
+            let key = system.canonical_state_key(&post).expect("the key encodes");
+            let mut step = json!({
+                "transition": transition_json(&transition).expect("the identity is spelled"),
+                "post_state": {"key": base64::engine::general_purpose::URL_SAFE_NO_PAD
+                    .encode(key.as_bytes())},
+            });
+            if let Some(record) = transition.send_record() {
+                step["send_record"] = send_record_json(record).expect("the record is spelled");
+            }
+            steps.push(step);
+            state = post;
+        }
+        steps
+    }
+
+    /// The snapshots of this fixture with the trace document `steps` spell,
+    /// provisioned under the reference the document names itself by.
+    pub fn with_trace(&self, identity: &str, steps: &[Json]) -> (DocumentProvision, DocumentRef) {
+        let document = json!({
+            "format": "filament.protocol-trace/v1",
+            "identity": {"authority": "test", "identity": identity},
+            "prefix": steps,
+        })
+        .to_string()
+        .into_bytes();
+        let reference = document_reference(&document).expect("a document names itself");
+        let mut snapshots = self.snapshots.clone();
+        snapshots.insert(reference.clone(), document);
+        (snapshots, reference)
+    }
+
+    /// FSL's `analyze` request for the `finite-replay` item that replays the
+    /// document `trace` (provisioned in `snapshots`) over the protocol, with
+    /// the disposition FR-290 settles for it.
+    pub fn replay_request<'a>(
+        &'a self,
+        snapshots: &'a DocumentProvision,
+        trace: DocumentRef,
+    ) -> FiniteReplayRequest<'a> {
+        let package = self.compiled.checked();
+        let graph = package.graph();
+        let node = graph
+            .protocol_node_keys(&self.protocol)
+            .and_then(|keys| keys.clause.clone())
+            .expect("the protocol has a clause");
+        let (node_key, origin, _) = graph
+            .occurrences()
+            .find(|(candidate, _, _)| *candidate == node)
+            .expect("the clause occurs");
+        let mut item = ClaimItem::new(
+            package,
+            RequestIndex::new(0),
+            OccurrenceKey::new(node_key, origin),
+            Capability::FiniteReplay,
+            ExtentClassification::Bounded,
+        )
+        .expect("a finite-replay claim over a protocol");
+        item.options = ItemOptions {
+            required: true,
+            max_cases: None,
+            trace: Some(trace),
+        };
+        let descriptor =
+            filament_protocol::engine::engine_descriptor(fsl_route::ProviderOrigin::Linked)
+                .expect("FSL's own descriptor");
+        FiniteReplayRequest {
+            package,
+            request: AnalyzeRequest {
+                binding: SubjectBinding {
+                    packages: self.compiled.packages(),
+                    snapshots,
+                    initial: self.initial.clone(),
+                    universes: ["workflows", "workers", "depots"]
+                        .into_iter()
+                        .map(|name| PopulationUniverse {
+                            population: key(name),
+                            keys: if name == "workflows" {
+                                vec!["w".to_owned()]
+                            } else {
+                                Vec::new()
+                            },
+                        })
+                        .collect(),
+                },
+                items: vec![NegotiatedItem {
+                    item,
+                    disposition: Disposition::Supported(descriptor.candidate().clone()),
+                    diagnostic: None,
+                }],
+                provision: {
+                    let mut provision = SourceProvision::default();
+                    for source in graph.sources() {
+                        provision.insert(source, self.unit.clone().into_bytes());
+                    }
+                    provision
+                },
+            },
+            limits: AnalyzeLimits::unbounded(),
         }
     }
 }

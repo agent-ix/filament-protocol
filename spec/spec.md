@@ -46,7 +46,7 @@ repository owns its strict implementation and evidence-backed conformance.
 - Typed finite protocol representation and identity preservation.
 - Activation, compensation registration, commit, retry, and recovery assessment.
 - Finite global conformance decided by FSL's protocol checker and carried unchanged (FR-205); bounded finite replay of an observed history on the dynamic axes (FR-053..FR-056). Global conformance of an observed history (order invariance, adverse observations, closure axes, batch against incremental) is decided here over the live assessment axes (FR-208..FR-211); no FSL engine decides it.
-- Composition of the scenario record Quoin's intake takes (FR-206) and replay of a serialized observed history (FR-207), both blocked on owners (ADR-010 Decision 8).
+- Composition of the scenario record Quoin's intake takes (FR-206) and replay of a serialized observed history (FR-207), both blocked on owners (ADR-010 Decision 8). A supplied finite protocol trace is the half FSL's `finite-replay` engine serves (FR-303); the serialized observed-history reader and assessor wait on QSL-2210.
 - Independent claim dispositions without fallback promotion.
 - Canonical protocol result production, RFC 8785 identity, and strict reading.
 - Total source-bound projection into the selected E02 contract.
@@ -112,8 +112,8 @@ Each namespace is allocated without reuse. FR ids are allocated sequentially
 from `FR-001` to `FR-049`; `FR-050` to `FR-249` are reserved in blocks by
 [ADR-010](adr/ADR-010-consume-fsl-protocol-analysis-own-assessment-and-dispatch.md),
 and `FR-301` onward are allocated separately. The highest allocated identifiers
-are currently `StR-005`, `US-007`, `FR-047` (`FR-301` and `FR-302` in the
-separate range), `NFR-008`, `IT-003`, `TC-153`, `ADR-010`, `TM-001`, `AP-001`, and `AD-001`.
+are currently `StR-005`, `US-007`, `FR-047` (`FR-301`, `FR-302` and `FR-303` in the
+separate range), `NFR-008`, `IT-003`, `TC-153` (`TC-178` in the separate range), `ADR-010`, `TM-001`, `AP-001`, and `AD-001`.
 
 ## 7. Requirement Quality Policy
 

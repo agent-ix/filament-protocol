@@ -21,7 +21,8 @@ use fsl_foundation::witness::{
 use fsl_foundation::BackendId;
 use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
-    InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TracePosition, Truth,
+    InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TerminalRecord, TracePosition,
+    Truth,
 };
 use fsl_route::{BackendDescriptor, Candidate, Mode, ProviderOrigin};
 use fsl_semantics::check::Capability;
@@ -44,6 +45,7 @@ pub struct Sentinel {
     pub basis: SettlementBasis,
     pub witness: Option<SeparatingWitnessRecord>,
     pub record: Option<ProtocolAnalysisRecord>,
+    pub terminal: Option<TerminalRecord>,
     pub inconclusive: Option<InconclusiveCause>,
     pub artifact: Option<&'static str>,
 }
@@ -56,6 +58,7 @@ impl Sentinel {
             basis,
             witness: None,
             record: None,
+            terminal: None,
             inconclusive: None,
             artifact: None,
         }
@@ -74,6 +77,9 @@ impl BackendResult for Sentinel {
     }
     fn run_record(&self) -> Option<&ProtocolAnalysisRecord> {
         self.record.as_ref()
+    }
+    fn terminal_record(&self) -> Option<&TerminalRecord> {
+        self.terminal.as_ref()
     }
     fn inconclusive(&self) -> Option<&InconclusiveCause> {
         self.inconclusive.as_ref()
