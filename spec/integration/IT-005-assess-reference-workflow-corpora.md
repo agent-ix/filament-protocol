@@ -33,6 +33,8 @@ relationships:
     type: verifies
   - target: ix://agent-ix/filament-protocol/FR-205
     type: verifies
+  - target: ix://agent-ix/filament-protocol/FR-206
+    type: verifies
   - target: ix://agent-ix/filament-protocol/FR-211
     type: verifies
   - target: ix://agent-ix/filament-protocol/FR-210
@@ -85,4 +87,4 @@ Every corpus row passes. A cell with no row is a stated gap in the V1-PROT inven
 
 ## Dependencies
 
-The result-publication cells (V1-RUN-005, V1-RUN-006 as published) are blocked: Quoin #519 is closed and its intake takes a scenario record, which FR-206 composes, but `quoin-evidence` cannot join this manifest beside `filament-observation` (exact `serde` pins disagree, ADR-010 G11). Replay of a supplied finite protocol trace (V1-PROT-025) is FR-303 over FSL's `finite-replay` engine; replay of a serialized observed history stays blocked on QSL-2210 (FR-207, G10). Global conformance (V1-PROT-026) is FR-205 and FR-208..FR-211: FSL advertises no `global-conformance` kind, so it selects on `temporal-satisfaction`, and an EN-1 counterexample cannot be replayed in process (G8, G9). Composition and refinement are decided by this library; refinement over a linked protocol is built from FSL's step view. The `v1-draft.2` witness carrier (FR-302) is landed for realizability and refinement.
+The result-publication cells (V1-RUN-005, V1-RUN-006) are backed: Quoin's intake takes a scenario record, which FR-206 composes from the live dispositions of real engine claims and Quoin's `write_scenario_evidence` accepts (TC-179). The related-instance cell (V1-RUN-009) is backed by filament-observation's relationship test and TC-154's test over the same static bundle. Replay of a supplied finite protocol trace (V1-PROT-025) is FR-303 over FSL's `finite-replay` engine; replay of a serialized observed history stays blocked on QSL-2210 (FR-207, G10). Global conformance (V1-PROT-026) is FR-205 and FR-208..FR-211: FSL advertises no `global-conformance` kind, so it selects on `temporal-satisfaction`, and an EN-1 counterexample cannot be replayed in process (G8, G9). Composition and refinement are decided by this library; refinement over a linked protocol is built from FSL's step view. The `v1-draft.2` witness carrier (FR-302) is landed for realizability and refinement.

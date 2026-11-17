@@ -21,7 +21,10 @@ use std::sync::OnceLock;
 use filament_contract_model::{CheckedNodeId, CheckedNodePathSegment, CheckedPackageReadLimits};
 use filament_exact::{FieldValue, Integer, Meter, NodeKey, Value, ValueType};
 use filament_observation::authority::{observation, TemporalBoundary};
-use filament_observation::{Anchor, ClockRange, QualifiedSubject, SubjectIdentity, SubjectKind};
+use filament_observation::{
+    Anchor, ClockRange, QualifiedSubject, ReferenceRefusal, Relationship, RelationshipIdentity,
+    SubjectIdentity, SubjectKind,
+};
 use filament_protocol::captures::{bind_captures, CaptureFailure, CaptureSupply};
 use filament_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
 use filament_protocol::closure::{AssessmentExecution, TruthDisposition};
@@ -1126,6 +1129,93 @@ fn the_subject_key_is_compared_whole() {
         .err(),
         Some(WaitRefusal::SubjectNotInstance)
     );
+}
+
+/// V1-RUN-009: an order and its payment attempt or refund are related
+/// instances, read from the owner's static bundle (the same fixture bytes
+/// filament-observation's TC-005 admits). The relationship resolves only in its
+/// declared direction, and the related instance is another instance than the
+/// order: the order's observation links to the order's wait and not to the
+/// related instance's.
+#[trace("TC-154", "FR-100-AC-24")]
+#[test]
+fn a_payment_attempt_or_refund_of_an_order_is_another_instance() {
+    let producer = admitted_producer();
+    let order = subject(TAG);
+    let declarations = awaiting().linked().declarations();
+    for (declared, kind) in [
+        (
+            "ix://agent-ix/commerce/relationship/Order-paymentAttempt",
+            "ix://agent-ix/commerce/type/PaymentAttempt",
+        ),
+        (
+            "ix://agent-ix/commerce/relationship/Order-refund",
+            "ix://agent-ix/commerce/type/Refund",
+        ),
+    ] {
+        let related = QualifiedSubject::new(
+            &producer,
+            SubjectKind::new(kind.as_bytes().to_vec()).expect("a kind"),
+            SubjectIdentity::new(b"related:R1".to_vec()).expect("an identity"),
+        );
+        let identity = || RelationshipIdentity::new(b"relationship:one".to_vec()).expect("an id");
+        let relationship = Relationship::new(
+            &producer,
+            declared,
+            identity(),
+            order.clone(),
+            related.clone(),
+        )
+        .expect("the declared relationship resolves");
+        assert_eq!(
+            (relationship.source(), relationship.target()),
+            (&order, &related)
+        );
+        assert_eq!(
+            Relationship::new(
+                &producer,
+                declared,
+                identity(),
+                related.clone(),
+                order.clone()
+            )
+            .err(),
+            Some(ReferenceRefusal::ReversedEndpoints)
+        );
+
+        let mut wait = Wait::new(
+            pure(),
+            key(TAG),
+            declaration(),
+            &link(TAG),
+            &clock(),
+            ClockFamily::Timestamped,
+        )
+        .expect("the order's wait");
+        wait.admit(after_fact(1, 0))
+            .expect("the order's observation links to the order's wait");
+
+        let related_key = WaitKey::new(
+            declarations,
+            &control(),
+            WorkflowInstanceId::new(b"related:R1", "r1"),
+            Vec::new(),
+        )
+        .expect("the related instance keys its own wait");
+        let mut related_wait = Wait::new(
+            pure(),
+            related_key,
+            declaration(),
+            &Link::new(mapping(TAG), related),
+            &clock(),
+            ClockFamily::Timestamped,
+        )
+        .expect("the related instance's wait");
+        assert_eq!(
+            related_wait.admit(after_fact(1, 0)).err(),
+            Some(WaitRefusal::ObservationUnlinked(Unlinked::OtherInstance))
+        );
+    }
 }
 
 /// FSL's occurrence schema keys the wait: an undeclared control, a wrong

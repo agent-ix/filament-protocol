@@ -46,7 +46,7 @@ repository owns its strict implementation and evidence-backed conformance.
 - Typed finite protocol representation and identity preservation.
 - Activation, compensation registration, commit, retry, and recovery assessment.
 - Finite global conformance decided by FSL's protocol checker and carried unchanged (FR-205); bounded finite replay of an observed history on the dynamic axes (FR-053..FR-056). Global conformance of an observed history (order invariance, adverse observations, closure axes, batch against incremental) is decided here over the live assessment axes (FR-208..FR-211); no FSL engine decides it.
-- Composition of the scenario record Quoin's intake takes (FR-206) and replay of a serialized observed history (FR-207), both blocked on owners (ADR-010 Decision 8). A supplied finite protocol trace is the half FSL's `finite-replay` engine serves (FR-303); the serialized observed-history reader and assessor wait on QSL-2210.
+- Composition of the scenario record Quoin's intake takes, from the live dispositions of a scenario's claims (FR-206, TC-179). Replay of a serialized observed history (FR-207) is blocked on an owner (ADR-010 Decision 8). A supplied finite protocol trace is the half FSL's `finite-replay` engine serves (FR-303); the serialized observed-history reader and assessor wait on QSL-2210.
 - Independent claim dispositions without fallback promotion.
 - Canonical protocol result production, RFC 8785 identity, and strict reading.
 - Total source-bound projection into the selected E02 contract.

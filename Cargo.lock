@@ -119,6 +119,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arraydeque"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
+
+[[package]]
 name = "arrayvec"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -394,6 +400,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "engineering-assurance"
+version = "0.8.2"
+source = "git+https://github.com/agent-ix/engineering-assurance.git?rev=34695afc3cb2e14dbe3619b6dc5d808041d7e6e6#34695afc3cb2e14dbe3619b6dc5d808041d7e6e6"
+dependencies = [
+ "rustix",
+ "thiserror",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -435,6 +450,26 @@ name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
+
+[[package]]
+name = "filament-analyze"
+version = "0.1.0"
+source = "git+https://github.com/agent-ix/filament-analyze?branch=main#e2a8d1b2b2ad4ff3ed80201dac1b6c91457e6d3d"
+dependencies = [
+ "filament-analyze-method-contract",
+ "filament-contract-model",
+ "ix-cli-kit",
+ "jsonschema 0.17.1",
+ "libc",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
+name = "filament-analyze-method-contract"
+version = "0.1.0"
+source = "git+https://github.com/agent-ix/filament-analyze?branch=main#e2a8d1b2b2ad4ff3ed80201dac1b6c91457e6d3d"
 
 [[package]]
 name = "filament-checked"
@@ -505,7 +540,7 @@ dependencies = [
 [[package]]
 name = "filament-observation"
 version = "0.1.0"
-source = "git+https://github.com/agent-ix/filament-observation?branch=main#0b4543ace1250739960939a993792d7d5a967a4d"
+source = "git+https://github.com/agent-ix/filament-observation?branch=main#7b1cd4f205f37f2cc4772de43f0eb3f71e98f116"
 dependencies = [
  "filament-exact",
  "fsl-foundation",
@@ -521,7 +556,7 @@ name = "filament-protocol"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "engineering-assurance",
+ "engineering-assurance 0.7.1",
  "filament-checked",
  "filament-contract-model",
  "filament-eval",
@@ -541,6 +576,7 @@ dependencies = [
  "fsl-semantics",
  "ix-trace-rs",
  "jsonschema 0.17.1",
+ "quoin-evidence",
  "serde",
  "serde_json",
  "sha2",
@@ -956,6 +992,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashlink"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a596f1b20ed2cc5ecac41a164aaebc7258057060f06c0cf7a2ba3991ee7990fb"
+dependencies = [
+ "hashbrown 0.17.1",
+]
+
+[[package]]
 name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1113,6 +1158,16 @@ name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
+
+[[package]]
+name = "ix-cli-kit"
+version = "0.1.0"
+source = "git+https://github.com/agent-ix/ix-cli-kit?branch=main#7f3b58b6a65e237bf733437c1c10cd609c84f835"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
 
 [[package]]
 name = "ix-trace-rs"
@@ -1499,6 +1554,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
+name = "ordered-float"
+version = "5.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f59006ce1e204c30956638535b74d317bca99477b9356dfaec54c37f6f600ab"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "outref"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1614,6 +1678,55 @@ dependencies = [
  "thiserror",
  "uuid",
  "yaml_serde",
+]
+
+[[package]]
+name = "quoin-evidence"
+version = "0.31.0"
+source = "git+https://github.com/agent-ix/quoin?branch=main#acbb7ba32c98fbce82419909dbf80e5cf46cd5f1"
+dependencies = [
+ "filament-analyze",
+ "ix-trace-rs",
+ "quoin-quire-types",
+ "quoin-store",
+ "quoin-yaml",
+ "regex",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "uuid",
+]
+
+[[package]]
+name = "quoin-quire-types"
+version = "0.31.0"
+source = "git+https://github.com/agent-ix/quoin?branch=main#acbb7ba32c98fbce82419909dbf80e5cf46cd5f1"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "quoin-store"
+version = "0.31.0"
+source = "git+https://github.com/agent-ix/quoin?branch=main#acbb7ba32c98fbce82419909dbf80e5cf46cd5f1"
+dependencies = [
+ "engineering-assurance 0.8.2",
+ "libc",
+ "quire-canonical",
+ "sha2",
+ "thiserror",
+]
+
+[[package]]
+name = "quoin-yaml"
+version = "0.31.0"
+source = "git+https://github.com/agent-ix/quoin?branch=main#acbb7ba32c98fbce82419909dbf80e5cf46cd5f1"
+dependencies = [
+ "saphyr",
+ "saphyr-parser",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
@@ -1800,6 +1913,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "saphyr"
+version = "0.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "372edd44fb1d21f97d7160ca1fb3ed522b7f7315b2369cd10e5127379db5af33"
+dependencies = [
+ "hashlink",
+ "ordered-float",
+ "saphyr-parser",
+ "thiserror",
+]
+
+[[package]]
+name = "saphyr-parser"
+version = "0.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0b1b76852c5643f558e7347e4de549474c3ecb7154295a189f4668428c1b453"
+dependencies = [
+ "arraydeque",
+ "thiserror",
+]
+
+[[package]]
 name = "schemars"
 version = "0.8.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1847,9 +1982,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a8e94ea7f378bd32cbbd37198a4a91436180c5bb472411e48b5ec2e2124ae9e"
+checksum = "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba"
 dependencies = [
  "serde_core",
  "serde_derive",
@@ -1857,22 +1992,22 @@ dependencies = [
 
 [[package]]
 name = "serde_core"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41d385c7d4ca58e59fc732af25c3983b67ac852c1a25000afe1175de458b67ad"
+checksum = "67dca2c9c51e58a4791a4b1ed58308b39c64224d349a935ab5039aa360942a48"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.228"
+version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d540f220d3187173da220f885ab66608367b6574e925011a9353e4badda91d79"
+checksum = "e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.119",
+ "syn 3.0.6",
 ]
 
 [[package]]
