@@ -19,8 +19,9 @@ use fsl_analyze::analyze::DispositionKind;
 use fsl_eval::simulation::protocol::Unsupported;
 use fsl_eval::simulation::RequiresBound;
 use fsl_foundation::bound::{DomainKey, DomainKind};
+use fsl_foundation::diagnostic::Stopped;
 use fsl_foundation::BackendId;
-use fsl_replay::{SettlementBasis, TerminalValue, Truth};
+use fsl_replay::{SettlementBasis, TerminalRecord, TerminalValue, Truth};
 use fsl_semantics::check::Capability;
 
 use crate::closure::AssessmentExecution;
@@ -222,6 +223,10 @@ pub enum Disposition<P> {
 pub struct RefusedDisposition<P> {
     /// The backend's code, in its own vocabulary.
     pub code: CatalogCode,
+    /// FSL's declined terminal record when the refusal is a decline of a
+    /// supplied trace (FR-303): its diagnostic detail (the step position, the
+    /// document path) is FSL's, unchanged.
+    pub record: Option<Box<TerminalRecord>>,
     /// The exact premises the request carried, unchanged.
     pub premises: P,
 }
@@ -246,9 +251,23 @@ pub enum FailureCause {
     /// record (FSpec FR-352), which no settled result is meant to do. FSL's
     /// error text.
     RunRecordRefused(String),
-    /// EN-1 refused the item. FSL maps the refusal to a code in a crate-private
-    /// function (ADR-010 G9), so only the refusal's text is carried.
+    /// EN-1 refused the item with a refusal FSL publishes no code for (ADR-010
+    /// G9: its refusal-to-code map is crate-private), so only the refusal's
+    /// `Display` text is carried. A requires-bound refusal is not this cause:
+    /// it is the typed `RequiresBound` disposition (FR-058).
     CheckerRefused(String),
+    /// FSL's `analyze` entry refused the request before running its item (an
+    /// unadmitted subject binding or an unprovisioned source): the `Display`
+    /// text of FSL's refusal (FR-303).
+    AnalyzeRefused(String),
+    /// FSL's `analyze` entry stopped before settling the item: a reached
+    /// limit, a cancellation or an internal fault, as FSL's own value. The
+    /// request was not refused, and the run is incomplete (FR-303).
+    AnalyzeStopped(Stopped),
+    /// The replay request is not for the claim the engine was asked to settle:
+    /// its item's claim is none of the dispatched claim's source identities in
+    /// the engine's bound package (FR-303).
+    ReplayNotTheBoundClaim,
 }
 
 /// A selected backend's failure for one claim, with its cause.
@@ -281,6 +300,9 @@ pub enum FslReport<R> {
     },
     /// FSL's backend returned a refusal, by its catalog code.
     Refusal(CatalogCode),
+    /// FSL declined a supplied trace (FR-303): its `declined` terminal record,
+    /// unchanged, whose diagnostic code is the refusal's code.
+    Declined(Box<TerminalRecord>),
     /// The selected backend failed.
     Failed(FailureCause),
 }
@@ -295,6 +317,7 @@ impl<R> FslReport<R> {
                 FslReport::RequiresBound { outcome, construct }
             }
             Self::Refusal(code) => FslReport::Refusal(code),
+            Self::Declined(record) => FslReport::Declined(record),
             Self::Failed(cause) => FslReport::Failed(cause),
         }
     }
@@ -345,9 +368,21 @@ pub fn settle_claim<C, R, P>(
         FslReport::Refusal(code) => {
             ClaimSettlement::Disposition(Disposition::Refused(RefusedDisposition {
                 code,
+                record: None,
                 premises,
             }))
         }
+        FslReport::Declined(record) => match record.diagnostic() {
+            Some(code) => ClaimSettlement::Disposition(Disposition::Refused(RefusedDisposition {
+                code,
+                record: Some(record),
+                premises,
+            })),
+            None => ClaimSettlement::Disposition(Disposition::Failed(FailedDisposition {
+                cause: FailureCause::SettledWithoutDiagnostic(Box::new(record.value().clone())),
+                premises,
+            })),
+        },
         FslReport::Failed(cause) => {
             ClaimSettlement::Disposition(Disposition::Failed(FailedDisposition { cause, premises }))
         }

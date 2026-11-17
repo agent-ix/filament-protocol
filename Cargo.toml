@@ -8,6 +8,9 @@ description = "Strict consumer boundary for accepted native Filament protocol pa
 publish = false
 
 [dependencies]
+# Cargo.lock holds FSL at the commit that merged #2785 on purpose: FSL main moved
+# `checked_handoff` to `fsl-command`. Expires when the fixtures are repointed there
+# (ADR-010, "Temporary mirrors and held pins").
 # FSL main, followed by branch; Cargo.lock holds the commit. `checked-handoff`
 # is the feature that publishes `Selection` (FSL FR-517), which the admission
 # compares an admitted package with.
@@ -49,6 +52,9 @@ ix-trace-rs = { git = "https://github.com/agent-ix/ix-trace-rs", branch = "main"
 fsl-cst = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
 fsl-forms = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
 filament-checked = { git = "https://github.com/agent-ix/filament-eval", branch = "main" }
+# The counterexample wire spells a state key as unpadded URL-safe base64 (FSpec
+# FR-433); the replay tests spell the keys FSL's own system computes.
+base64 = "0.22"
 serde_json = "=1.0.151"
 tempfile = "3"
 

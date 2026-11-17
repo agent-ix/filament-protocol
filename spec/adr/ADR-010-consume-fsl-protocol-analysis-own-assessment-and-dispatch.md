@@ -238,8 +238,13 @@ them (FR-005). Those are different questions, and the split follows them.
      library composes the value from its live dispositions and declares none
      of the shape. That needs `quoin-evidence` as a dependency, which cannot
      resolve beside `filament-observation` today (gap G11).
-   - *Serialized replay (V1-PROT-025, FR-207).* No owner publishes a
-     serialization of an observed history; the library declares none (gap
+   - *Replay (V1-PROT-025, FR-207, FR-303).* Two halves. A supplied finite
+     *protocol trace* is replayed by FSL's `finite-replay` engine (FSL FR-636,
+     agent-ix/filament-spec-language#2785) and FR-303 dispatches it through
+     the provider boundary like the other kinds. A serialized *observed
+     history* stays blocked on QSL-2210: its reader and assessor (FSL FR-737)
+     are not published, no owner defines how an observation record becomes a
+     role, channel, join or loop fact, and the library declares none (gap
      G10).
 
 ## Per-ticket ownership
@@ -285,12 +290,28 @@ does no FSL-side work.
 | G6 | Declared least-fixed-point cycles: the composition planner computes no fixed point and discharges a cycle only from a `fixed-point` slot holding a proved result. No producer of that result was found. Closed here by Decision 6: this library computes no fixed point either and refuses a cycle as circular | `fsl-replay/src/planner/compose.rs` | TL-9 |
 | G7 | Other protocol-system constructs that are not stepped and refuse today: `activation on each` with a compensation template, a protocol capture, an `unordered` channel with a `head` or `tail` loss selector, and a step binder of an unenumerable record type | `Unsupported` in `fsl-eval/src/simulation/protocol.rs` | TL-11, TL-6 |
 | G8 | No engine advertises the `global-conformance` kind. FSL FR-636 names `global-conformance` for protocol model checking, but EN-1's manifest advertises only `temporal-satisfaction`, and `protocol-analysis` only `local-projection` and `realizability`. The library selects on `temporal-satisfaction` (FR-205). FSL should advertise the kind or state that the item is a `temporal-satisfaction` item | `fsl-analyze/src/model_check/manifest.rs`, `protocol_analysis/manifest.rs` | TL-8 |
-| G9 | EN-1's protocol check cannot be settled `refuted` in process: `settle_protocol_check` takes a replay, and FSL's `replay_protocol_trace` recompiles from a `ReplayRequestWire` that holds source, which a checked handoff does not carry (realizability has an in-process `replay_counterexample`). The refusal map `model_refusal` is crate-private, so an EN-1 refusal reaches this library with no code | `fsl-replay/src/model_check/replay.rs`, `fsl-analyze/src/analyze/items.rs` | TL-8 |
-| G10 | No owner publishes a serialized observed history. FSpec FR-433 spells a protocol counterexample trace (steps, not observations); FSL's `finite-replay` item (FSL FR-636) that would replay a supplied trace is not implemented and `fsl-replay` reads no such spelling; no owner defines how an observation record becomes a role, channel, join or loop fact | `fsl-replay/src/planner/key.rs` (kind only) | TL-8 |
+| G9 | EN-1's protocol check cannot be settled `refuted` in process: `settle_protocol_check` takes a replay, and FSL's `replay_protocol_trace` recompiles from a `ReplayRequestWire` that holds source, which a checked handoff does not carry (realizability has an in-process `replay_counterexample`). The refusal map `model_refusal` is crate-private, so an EN-1 refusal reaches this library with no code The requires-bound refusal is not part of this gap: `ModelCheckRefusal::RequiresBound` is public and typed, and FR-205 carries it as FR-058's disposition | `fsl-replay/src/model_check/replay.rs`, `fsl-analyze/src/analyze/items.rs` | TL-8 |
+| G10 | No owner publishes a serialized observed history. FSpec FR-433 spells a protocol counterexample trace (steps, not observations); FSL's `finite-replay` item (FSL FR-636) now replays a supplied protocol trace and FR-303 dispatches it; the serialized observed-history reader and assessor (FSL FR-737) wait on QSL-2210, and no owner defines how an observation record becomes a role, channel, join or loop fact | `fsl-analyze/src/protocol_analysis/finite_replay.rs` (the protocol-trace half) | TL-8 |
 | G11 | `quoin-evidence` (the owner of `ScenarioEvidence`) pins `serde =1.0.229`; `filament-observation` pins `serde =1.0.228`. Both are exact, so no manifest depends on both | `quoin/rust/Cargo.toml`, `filament-observation/Cargo.toml` | TL-8 |
 
 G5 and G6 are findings from a negative search. The FSL code lead should confirm
 or correct each before opening a ticket.
+
+## Temporary mirrors and held pins
+
+- *FSL's supplied-trace wire (FR-303, TC-178).* FSL publishes neither the
+  `filament.protocol-trace/v1` format word nor a writer of a trace, so the test
+  support spells the format word and the unpadded URL-safe base64 state keys
+  (FSpec FR-433) itself. This is a temporary mirror in test support only.
+  Expiry: FSL publishes the format constant or a trace writer; the mirror is
+  then deleted and the `base64` dev-dependency with it.
+- *The held FSL revision.* `Cargo.lock` is deliberately held at the FSL commit
+  that merged agent-ix/filament-spec-language#2785, with
+  `filament-contract-model` at the revision that FSL commit's own lock uses,
+  because FSL main moved `checked_handoff` to `fsl-command` and this
+  repository's handoff fixtures do not build against it. Expiry: the
+  follow-up that repoints the fixtures to `fsl-command` lands; the lock is then
+  updated to FSL main.
 
 ## Alternatives considered
 

@@ -541,7 +541,11 @@ type Request = AssumeGuaranteeRequest<filament_contract_model::CheckedNodeId>;
 
 /// FSL's label for the result the real engine settled.
 fn label_of(fixture: &Realizability) -> ItemLabel {
-    ItemLabel::of(&realize(fixture).settlement().value)
+    let settled = realize(fixture);
+    let settlement = settled
+        .settlement()
+        .expect("a realizability result has FSL's settlement");
+    ItemLabel::of(&settlement.value)
 }
 
 /// Three real components, each a protocol of its own name (`FlowA`, `FlowB`,

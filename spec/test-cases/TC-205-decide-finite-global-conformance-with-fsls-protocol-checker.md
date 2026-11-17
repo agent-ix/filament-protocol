@@ -10,12 +10,12 @@ relationships:
 
 ## Description
 
-Verify V1-PROT-026 of IT-005 over protocols written by FSL's checked-handoff writer, compiled back by FSL's `compile` and linked, with the protocol subject built by FSL's `protocol_subject` and no result, record or counterexample built by hand.
+Verify V1-PROT-026 of IT-005 and the requires-bound refusal of V1-PROT-014 over protocols written by FSL's checked-handoff writer, compiled back by FSL's `compile` and linked, with the protocol subject built by FSL's `protocol_subject` and no result, record or counterexample built by hand.
 
 ## Test Procedure
 
-Register FSL's EN-1 descriptor and the provider that makes FSL's two calls (`check_protocol`, `settle_protocol_check`) at a provider boundary. Dispatch a `global-conformance` claim over a deadlock-free reference protocol and read the record. Run the same item through FSL's two calls directly and compare. Dispatch the claim over a protocol whose ship branch sends twice on a blocking channel of capacity one that nothing receives, with a replay that refuses. Dispatch it at an empty boundary. Tag each test with the exact acceptance criterion it verifies.
+Register FSL's EN-1 descriptor and the provider that makes FSL's two calls (`check_protocol`, `settle_protocol_check`) at a provider boundary. Dispatch a `global-conformance` claim over a deadlock-free reference protocol and read the record. Run the same item through FSL's two calls directly and compare. Dispatch the claim over a protocol whose ship branch sends twice on a blocking channel of capacity one that nothing receives, with a replay that refuses. Dispatch it at an empty boundary. Dispatch it over the recipe model as FSL ships it, whose `Total` and `Amount` are unbounded quantity roots, with no bounding rewrite, read the checker's refusal by calling it directly, and compare. Tag each test with the exact acceptance criterion it verifies.
 
 ## Expected Results
 
-The deadlock-free protocol settles `satisfied` on `closed-scope`, label `proved`, no counterexample. The dispatched record equals the direct record in value, label, basis, truth and limits. The deadlocked protocol, whose counterexample FSL cannot replay, settles neither `violated` nor `satisfied` and carries no counterexample. The empty boundary settles the claim `unsupported` with a warning naming `temporal-satisfaction`.
+The deadlock-free protocol settles `satisfied` on `closed-scope`, label `proved`, no counterexample. The dispatched record equals the direct record in value, label, basis, truth and limits. The deadlocked protocol, whose counterexample FSL cannot replay, settles neither `violated` nor `satisfied` and carries no counterexample. The empty boundary settles the claim `unsupported` with a warning naming `temporal-satisfaction`. The unbounded model is refused by the checker as requiring a bound, and the dispatch settles the typed requires-bound disposition with FSL's outcome, domain kinds and keys unchanged, no record and no truth.
