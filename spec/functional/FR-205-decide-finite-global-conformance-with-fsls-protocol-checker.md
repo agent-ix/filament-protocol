@@ -44,7 +44,8 @@ FSL's `ModelCheckRecord` of the run (terminal value, label, settlement basis, tr
 - The dispatcher shall read the truth and settlement basis from FSL's record and add none (FR-040): a decisive `violated` is reported only when FSL's replay reproduced the counterexample.
 - The dispatcher shall carry a decisive result only beside at least one source identity (FR-152). A `closed-scope` proof is not decisive in that sense (FR-152), so it carries none and no test refuses it.
 - While no backend serves the capability, the dispatcher shall settle the claim `unsupported` (FR-153).
-- When FSL's checker refuses the item, the dispatcher shall report a failure of the selected backend and no result. FSL classifies the refusal in a map it does not publish, so no code is carried.
+- When FSL's checker refuses the subject as requiring a bound (`ModelCheckRefusal::RequiresBound`, FSL FR-336), the dispatcher shall settle the claim with the typed requires-bound disposition of FR-058 carrying FSL's outcome and its domain kinds and keys unchanged.
+- When FSL's checker refuses the item otherwise, the dispatcher shall report a failure of the selected backend and no result. FSL classifies those refusals in a map it does not publish (ADR-010 G9), so only the refusal's text is carried.
 - The dispatcher shall settle the claim independently of every other requested claim (FR-029).
 
 ## Acceptance Criteria
@@ -55,7 +56,7 @@ FSL's `ModelCheckRecord` of the run (terminal value, label, settlement basis, tr
 | FR-205-AC-2 | Given the same protocol checked by the checker directly, the dispatched record equals the direct record in value, label, basis, truth and limits, so the dispatcher changed nothing. | Test (TC-205) |
 | FR-205-AC-3 | Given a protocol the checker finds deadlocked and a replay that cannot reproduce the counterexample, the dispatch holds neither truth `violated` nor a counterexample, and the record is FSL's refused settlement. | Test (TC-205) |
 | FR-205-AC-4 | Given an empty registry, a `global-conformance` claim settles `unsupported` with a warning naming the capability it selects on, and holds neither `satisfied` nor `violated`. | Test (TC-205) |
-| FR-205-AC-5 | Given the checked-handoff recipe model as FSL ships it, whose `Total` and `Amount` are unbounded quantity roots (FSL FR-120), with no bound supplied and none chosen by a rewrite of the model, the checker refuses the subject as requiring a bound, and the dispatch carries that refusal as the backend's failure, with the checker's own text unchanged, no record and neither truth `satisfied` nor `violated`. | Test (TC-205) |
+| FR-205-AC-5 | Given the checked-handoff recipe model as FSL ships it, whose `Total` and `Amount` are unbounded quantity roots (FSL FR-120), with no bound supplied and none chosen by a rewrite of the model, the checker refuses the subject as requiring a bound and the dispatch settles the typed requires-bound disposition (FR-058), whose outcome equals the one `check_protocol` returns directly and whose domain kinds and keys are FSL's unchanged, with no record and neither truth `satisfied` nor `violated`. | Test (TC-205) |
 
 ## Adopted vocabulary
 

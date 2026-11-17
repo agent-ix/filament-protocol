@@ -12,10 +12,10 @@ mod support {
 }
 
 use filament_protocol::dispatch::{
-    dispatch, BackendResult, Binding, DispositionRefusal, ProtocolClaimKind, ProtocolOutcome,
-    ProviderBoundary,
+    dispatch, replay_settlement, BackendResult, Binding, DispositionRefusal, ProtocolClaimKind,
+    ProtocolOutcome, ProviderBoundary,
 };
-use filament_protocol::disposition::{ClaimSettlement, Disposition, Warning};
+use filament_protocol::disposition::{ClaimSettlement, Disposition, FailureCause, Warning};
 use filament_protocol::engine::{engine_descriptor, EngineRequest, EngineResult, FslEngine};
 use filament_semantic_value::catalog::CatalogCode;
 use fsl_analyze::analyze::{analyze, Engines};
@@ -27,7 +27,7 @@ use fsl_replay::{
 use fsl_route::ProviderOrigin;
 use fsl_semantics::check::Capability;
 use ix_trace_rs::trace;
-use serde_json::Value;
+use serde_json::{json, Value};
 use support::dynamic::Dynamic;
 use support::projection::{claim_of, Asked, CANCELLED, PICK};
 use support::realizability::Realizability;
@@ -47,9 +47,25 @@ fn replay_claim(fixture: &Realizability) -> filament_protocol::dispatch::Protoco
 /// Dispatch the `finite-replay` claim of the trace `steps` to FSL's engine.
 fn replay(fixture: &Realizability, steps: &[Value]) -> Outcome {
     let (snapshots, trace) = fixture.with_trace("t", steps);
+    replay_with(fixture, fixture, &snapshots, trace, |_| {})
+}
+
+/// Dispatch the claim of `claimed` to an engine bound to `claimed`'s package,
+/// sending the replay request `asked` builds over the trace `trace`, adjusted
+/// by `adjust`.
+fn replay_with(
+    claimed: &Realizability,
+    asked: &Realizability,
+    snapshots: &fsl_semantics::model::observation::DocumentProvision,
+    trace: fsl_semantics::model::observation::DocumentRef,
+    adjust: impl Fn(&mut filament_protocol::engine::FiniteReplayRequest<'_>),
+) -> Outcome {
+    let fixture = claimed;
     let mut boundary: ProviderBoundary<'_, Asked, EngineResult> = ProviderBoundary::new();
     let engine = FslEngine::new(fixture.package(), |_: &Binding<()>| {
-        EngineRequest::FiniteReplay(Box::new(fixture.replay_request(&snapshots, trace.clone())))
+        let mut request = asked.replay_request(snapshots, trace.clone());
+        adjust(&mut request);
+        EngineRequest::FiniteReplay(Box::new(request))
     })
     .expect("FSL's linked engines register");
     boundary
@@ -65,13 +81,27 @@ fn replay(fixture: &Realizability, steps: &[Value]) -> Outcome {
     )
 }
 
-fn refused_with(outcome: Outcome) -> CatalogCode {
+fn refused(outcome: Outcome) -> filament_protocol::disposition::RefusedDisposition<Binding<()>> {
     let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::Refused(refused))) =
         outcome
     else {
         panic!("a refusal: {outcome:?}");
     };
-    refused.code
+    refused
+}
+
+fn refused_with(outcome: Outcome) -> CatalogCode {
+    refused(outcome).code
+}
+
+/// FSL's declined terminal record a refusal carries, and its diagnostic detail.
+fn declined(outcome: Outcome) -> serde_json::Map<String, Value> {
+    let record = *refused(outcome).record.expect("FSL's declined record");
+    assert!(matches!(record.value(), TerminalValue::Declined { .. }));
+    record
+        .diagnostic_detail()
+        .expect("FSL's decline names where it is")
+        .clone()
 }
 
 #[test]
@@ -123,10 +153,22 @@ fn a_trace_with_a_step_not_enabled_at_the_replayed_state_is_refused_with_fsls_co
     let steps = fixture.trace_steps(2);
     let outcome = replay(&fixture, &steps[1..2]);
     assert_eq!(outcome.truth(), Truth::Unavailable);
+    let stale = refused(outcome);
     assert_eq!(
-        refused_with(outcome),
+        stale.code,
         CatalogCode::new("invalid_runtime_input", "invalid-value")
     );
+    // FSL's record is carried with the step it declined at.
+    let detail = declined(replay(&fixture, &steps[1..2]));
+    assert_eq!(detail.get("position"), Some(&json!(0)));
+    assert!(detail.get("path").is_none());
+    // A trace from an initial state the subject does not have has the same
+    // code and is told apart by its path, not by a step.
+    let (snapshots, trace) = fixture.with_trace_from("t", Some(99), &steps);
+    let outcome = replay_with(&fixture, &fixture, &snapshots, trace, |_| {});
+    let detail = declined(outcome);
+    assert_eq!(detail.get("path"), Some(&json!("/initial_state")));
+    assert!(detail.get("position").is_none());
 }
 
 #[test]
@@ -139,10 +181,20 @@ fn a_send_step_without_its_send_record_is_refused_before_any_step_replays() {
         .expect("a step")
         .remove("send_record")
         .expect("the first step is a send");
+    let outcome = replay(&fixture, &steps);
+    let missing = refused(outcome);
     assert_eq!(
-        refused_with(replay(&fixture, &steps)),
+        missing.code,
         CatalogCode::new("invalid_runtime_input", "missing-member")
     );
+    let detail = missing
+        .record
+        .expect("FSL's declined record")
+        .diagnostic_detail()
+        .expect("FSL names the member")
+        .clone();
+    assert_eq!(detail.get("path"), Some(&json!("/prefix/0/send_record")));
+    assert_eq!(detail.get("position"), Some(&json!(0)));
 }
 
 #[test]
@@ -214,6 +266,86 @@ fn an_empty_registry_settles_a_finite_replay_claim_unsupported() {
             kind: Capability::FiniteReplay,
             backend: None,
         }]
+    );
+}
+
+#[test]
+#[trace("TC-178", "FR-303-AC-7")]
+fn an_item_stated_unsupported_settles_the_typed_unsupported_path_not_a_failure() {
+    let fixture = Realizability::worked(PICK, CANCELLED);
+    let steps = fixture.trace_steps(1);
+    let (snapshots, trace) = fixture.with_trace("t", &steps);
+    let outcome = replay_with(&fixture, &fixture, &snapshots, trace, |request| {
+        request.request.items[0].disposition = fsl_route::routing::Disposition::Unsupported;
+    });
+    assert_eq!(outcome.truth(), Truth::Unavailable);
+    let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::Unsupported(found))) =
+        outcome
+    else {
+        panic!("the typed unsupported path: {outcome:?}");
+    };
+    assert_eq!(found.truth(), Truth::Unavailable);
+    assert_eq!(found.basis(), SettlementBasis::Unavailable);
+}
+
+#[test]
+#[trace("TC-178", "FR-303-AC-8")]
+fn fsls_outcome_axes_give_a_replay_records_truth_and_basis() {
+    // FSL emits no `refuted` replay record yet (it proves or declines), so the
+    // `refuted` row is read from FSL's axes on the value alone.
+    assert_eq!(
+        replay_settlement(&TerminalValue::Refuted),
+        (Truth::Violated, SettlementBasis::DecisiveCounterexample)
+    );
+    assert_eq!(
+        replay_settlement(&proved_record().value().clone()),
+        (Truth::Satisfied, SettlementBasis::ClosedScope)
+    );
+    assert_eq!(
+        replay_settlement(&TerminalValue::Failed),
+        (Truth::Unavailable, SettlementBasis::Unavailable)
+    );
+}
+
+#[test]
+#[trace("TC-178", "FR-303-AC-9")]
+fn a_replay_request_for_another_protocols_clause_is_not_run() {
+    let claimed = Realizability::worked(PICK, CANCELLED);
+    let other = Realizability::worked_as("Other", "", PICK, CANCELLED);
+    let (snapshots, trace) = other.with_trace("t", &other.trace_steps(1));
+    let outcome = replay_with(&claimed, &other, &snapshots, trace, |_| {});
+    let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::Failed(failed))) =
+        outcome
+    else {
+        panic!("a typed failure: {outcome:?}");
+    };
+    assert_eq!(failed.cause, FailureCause::ReplayNotTheBoundClaim);
+}
+
+#[test]
+#[trace("TC-178", "FR-303-AC-10")]
+fn fsls_refusal_to_admit_the_request_is_carried_as_its_display_text() {
+    let fixture = Realizability::worked(PICK, CANCELLED);
+    let (snapshots, trace) = fixture.with_trace("t", &fixture.trace_steps(1));
+    // No source is provisioned under the label the package names.
+    let outcome = replay_with(&fixture, &fixture, &snapshots, trace, |request| {
+        request.request.provision = fsl_analyze::analyze::SourceProvision::default();
+    });
+    let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::Failed(failed))) =
+        outcome
+    else {
+        panic!("a typed failure: {outcome:?}");
+    };
+    let FailureCause::AnalyzeRefused(text) = failed.cause else {
+        panic!("FSL's refusal: {:?}", failed.cause);
+    };
+    assert!(
+        text.starts_with("the analyze source provision did not admit"),
+        "{text}"
+    );
+    assert!(
+        !text.contains("Provision("),
+        "FSL's Display, not Debug: {text}"
     );
 }
 

@@ -18,8 +18,8 @@
 
 use filament_exact::Cancel;
 use fsl_analyze::analyze::ProtocolItem;
-use fsl_analyze::model_check::check_protocol;
 use fsl_analyze::model_check::manifest::descriptor;
+use fsl_analyze::model_check::{check_protocol, ModelCheckRefusal};
 use fsl_eval::simulation::protocol::ProtocolTransition;
 use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
@@ -116,9 +116,11 @@ where
             replay,
         } = (self.supply)(binding);
         let limits = request.limits;
-        // FSL classifies an engine refusal by its FR-281 table in a
-        // crate-private map (ADR-010 G9); this library does not restate it, so
-        // the refusal is carried as the checker's own text.
+        // FSL's requires-bound refusal is a public typed value (FSL FR-336):
+        // it is carried as the typed outcome FR-058 specifies. Every other
+        // refusal is classified by FSL's FR-281 table in a crate-private map
+        // (ADR-010 G9); this library does not restate it, so it is carried as
+        // the checker's own text.
         match check_protocol(request, &self.cancel) {
             Ok(outcome) => FslReport::Result(ConformanceResult {
                 record: settle_protocol_check(
@@ -129,6 +131,10 @@ where
                     replay,
                 ),
             }),
+            Err(ModelCheckRefusal::RequiresBound(outcome)) => FslReport::RequiresBound {
+                outcome,
+                construct: None,
+            },
             Err(refusal) => FslReport::Failed(FailureCause::CheckerRefused(refusal.to_string())),
         }
     }

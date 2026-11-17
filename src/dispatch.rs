@@ -24,8 +24,8 @@ use fsl_foundation::BackendId;
 use fsl_package::protocol_view::Delivery;
 use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
-    InconclusiveCause, SeparatingWitnessRecord, SettlementBasis, TerminalRecord, TerminalValue,
-    Truth,
+    InconclusiveCause, OutcomeAxes, SeparatingWitnessRecord, SettlementBasis, TerminalRecord,
+    TerminalValue, Truth, TruthAxis,
 };
 use fsl_route::{BackendDescriptor, Candidate, CandidateOutcome, RegistrationRefusal, Registry};
 use fsl_semantics::check::Capability;
@@ -180,8 +180,9 @@ pub enum DispositionRefusal {
     /// The record a result carries states another truth or basis than the
     /// result does (FR-302).
     RecordNotTheResults,
-    /// A `finite-replay` result carries no FSL terminal record, or one that is
-    /// not the `proved` record its truth and basis state (FR-303).
+    /// A `finite-replay` result carries no FSL terminal record that settles,
+    /// or states a truth or basis other than FSL's outcome axes give its
+    /// record (FR-303).
     ReplayWithoutItsRecord,
     /// FSL's registry selected a backend that has no provider.
     NoProvider(BackendId),
@@ -647,13 +648,30 @@ fn carry_refusal<R: BackendResult>(
     (!record.witness_is(witness)).then(|| DispositionRefusal::WitnessNotTheRecords.into())
 }
 
+/// The truth and settlement basis of a `finite-replay` terminal record, read
+/// from FSL's FR-622 outcome axes (`OutcomeAxes::of_record`): axis `true` is
+/// `satisfied`, `false` is `violated`, `pending` or an unsettled basis is
+/// `pending`, and no truth is `unavailable`. This library adds no rule of its
+/// own to FSL's map.
+pub fn replay_settlement(value: &TerminalValue) -> (Truth, SettlementBasis) {
+    let axes = OutcomeAxes::of_record(value, false);
+    let basis = axes.settlement.unwrap_or(SettlementBasis::Unavailable);
+    let truth = match axes.truth {
+        Some(TruthAxis::True) => Truth::Satisfied,
+        Some(TruthAxis::False) => Truth::Violated,
+        Some(TruthAxis::Pending) => Truth::Pending,
+        None if basis == SettlementBasis::Unsettled => Truth::Pending,
+        None => Truth::Unavailable,
+    };
+    (truth, basis)
+}
+
 /// FR-303: a `finite-replay` result is carried beside the source identities the
 /// disposition retains, with the terminal record FSL's `finite-replay` item
-/// settled it with. A replay that settles a truth is `proved`: truth `satisfied`
-/// on basis `closed-scope`, and the record must be FSL's `proved` one. A
-/// result with no record settles `unsupported`; a result whose record is not
-/// the proved one, or whose truth or basis differ from it, is refused. A replay
-/// has no separating witness, so one is refused.
+/// settled it with. A result with no record settles `unsupported`; a result
+/// whose record is not a `proved` or `refuted` one, or whose truth or basis
+/// differ from the ones FSL's outcome axes give that record, is refused. A
+/// replay has no separating witness, so one is refused.
 fn carry_replay_refusal<R: BackendResult>(
     result: &R,
     sources: &[CheckedNodeId],
@@ -667,10 +685,12 @@ fn carry_replay_refusal<R: BackendResult>(
     let Some(record) = result.terminal_record() else {
         return Some(Rejected::NoRunRecord);
     };
-    let proved = matches!(record.value(), TerminalValue::Proved { .. });
-    let stated =
-        result.truth() == Truth::Satisfied && result.basis() == SettlementBasis::ClosedScope;
-    (!(proved && stated)).then(|| DispositionRefusal::ReplayWithoutItsRecord.into())
+    let settles = matches!(
+        record.value(),
+        TerminalValue::Proved { .. } | TerminalValue::Refuted
+    );
+    let stated = (result.truth(), result.basis()) == replay_settlement(record.value());
+    (!(settles && stated)).then(|| DispositionRefusal::ReplayWithoutItsRecord.into())
 }
 
 /// Settle every requested claim, in request order and independently of one

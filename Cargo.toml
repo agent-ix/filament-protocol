@@ -8,6 +8,9 @@ description = "Strict consumer boundary for accepted native Filament protocol pa
 publish = false
 
 [dependencies]
+# Cargo.lock holds FSL at the commit that merged #2785 on purpose: FSL main moved
+# `checked_handoff` to `fsl-command`. Expires when the fixtures are repointed there
+# (ADR-010, "Temporary mirrors and held pins").
 # FSL main, followed by branch; Cargo.lock holds the commit. `checked-handoff`
 # is the feature that publishes `Selection` (FSL FR-517), which the admission
 # compares an admitted package with.

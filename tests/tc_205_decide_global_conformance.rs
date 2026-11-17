@@ -16,10 +16,11 @@ use filament_protocol::conformance::{engine_descriptor, ConformanceResult, FslPr
 use filament_protocol::dispatch::{
     dispatch, BackendResult, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
 };
-use filament_protocol::disposition::{ClaimSettlement, Disposition, FailureCause, Warning};
+use filament_protocol::disposition::{ClaimSettlement, Disposition, Warning};
 use fsl_analyze::analyze::ProtocolItem;
-use fsl_analyze::model_check::{check_protocol, ProtocolCheckRequest};
+use fsl_analyze::model_check::{check_protocol, ModelCheckRefusal, ProtocolCheckRequest};
 use fsl_eval::simulation::protocol::ProtocolTransition;
+use fsl_foundation::bound::DomainKind;
 use fsl_replay::{
     settle_protocol_check, ModelCheckItem, ModelCheckLimits, ModelCheckOutcome,
     ProtocolCertificateRequest, ReplayRefusal, ResultLabel, SettlementBasis, TerminalValue, Truth,
@@ -205,26 +206,36 @@ fn an_empty_registry_settles_the_claim_unsupported_naming_the_capability() {
 
 #[test]
 #[trace("TC-205", "FR-205-AC-5")]
-fn an_unbounded_quantity_root_is_refused_by_the_real_checker_and_its_refusal_carried_unchanged() {
+fn an_unbounded_quantity_root_is_reported_requires_bound_by_the_real_checker_as_the_typed_disposition(
+) {
     // The recipe model as FSL ships it: `Total` and `Amount` are unbounded
     // quantities (FSL FR-120), and neither the fixture nor this test bounds
     // them (the in-memory rewrite of the other fixtures is not applied).
     let fixture = Realizability::unbounded();
-    // The checker itself refuses the subject: it requires a bound.
-    let Err(direct) = check_protocol(item(&fixture).request, &Cancel::new()) else {
-        panic!("the checker refuses an unbounded root");
+    // The checker itself refuses the subject: it requires a bound, and names
+    // the unbounded roots by key and kind.
+    let Err(ModelCheckRefusal::RequiresBound(direct)) =
+        check_protocol(item(&fixture).request, &Cancel::new())
+    else {
+        panic!("the checker refuses an unbounded root as requiring a bound");
     };
-    let direct = direct.to_string();
-    assert!(direct.contains("requires a bound"), "{direct}");
+    let direct_domains: Vec<_> = direct.domains.iter().collect();
+    // FSL names the unbounded roots of `Workflow` and `Depot` (the quantity
+    // fields, which FSL classifies as `Integer` domains), by key and kind.
+    assert!(!direct_domains.is_empty());
+    assert!(direct_domains
+        .iter()
+        .all(|(_, kind)| *kind == DomainKind::Integer));
     let outcome = settle(&fixture);
     assert_eq!(outcome.truth(), Truth::Unavailable);
-    let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::Failed(failed))) =
+    let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::RequiresBound(found))) =
         outcome
     else {
-        panic!("the refusal is carried as the backend's failure: {outcome:?}");
+        panic!("the typed requires-bound disposition (FR-058): {outcome:?}");
     };
-    // FSL's refusal, in FSL's words, with no bound chosen and no record.
-    assert_eq!(failed.cause, FailureCause::CheckerRefused(direct));
+    // FSL's outcome, domain kinds and keys unchanged; no bound chosen.
+    assert_eq!(found.outcome, direct);
+    assert_eq!(found.domains().collect::<Vec<_>>(), direct_domains);
     // The same protocol over the bounded fixture is decided, so the refusal is
     // the model's unbounded root and nothing else.
     let bounded = Realizability::worked(PICK, CANCELLED);

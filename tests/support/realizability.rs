@@ -566,13 +566,30 @@ impl Realizability {
     /// The snapshots of this fixture with the trace document `steps` spell,
     /// provisioned under the reference the document names itself by.
     pub fn with_trace(&self, identity: &str, steps: &[Json]) -> (DocumentProvision, DocumentRef) {
-        let document = json!({
+        self.with_trace_from(identity, None, steps)
+    }
+
+    /// `with_trace`, starting from the initial state `initial` when given.
+    //
+    // Temporary mirror of FSL's trace wire (FSpec FR-433): FSL publishes
+    // neither the `filament.protocol-trace/v1` format word nor a trace writer,
+    // so the document and the URL-safe-no-pad state keys are spelled here.
+    // Expires when FSL publishes the format constant / a writer (ADR-010).
+    pub fn with_trace_from(
+        &self,
+        identity: &str,
+        initial: Option<u64>,
+        steps: &[Json],
+    ) -> (DocumentProvision, DocumentRef) {
+        let mut document = json!({
             "format": "filament.protocol-trace/v1",
             "identity": {"authority": "test", "identity": identity},
             "prefix": steps,
-        })
-        .to_string()
-        .into_bytes();
+        });
+        if let Some(initial) = initial {
+            document["initial_state"] = json!(initial);
+        }
+        let document = document.to_string().into_bytes();
         let reference = document_reference(&document).expect("a document names itself");
         let mut snapshots = self.snapshots.clone();
         snapshots.insert(reference.clone(), document);

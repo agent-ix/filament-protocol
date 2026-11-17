@@ -13,6 +13,7 @@
 
 use filament_contract_model::CheckedPackageV2;
 use filament_exact::Cancel;
+use filament_exact::NodeKey;
 use filament_semantic_value::catalog::CatalogCode;
 use fsl_analyze::analyze::{
     analyze, analyze_items, AnalyzeLimits, AnalyzeRecord, AnalyzeRequest, Disposed,
@@ -34,9 +35,10 @@ use fsl_replay::{
     Truth,
 };
 use fsl_route::{BackendDescriptor, ProviderOrigin, RegistrationRefusal};
+use fsl_semantics::check::wire_id::WireGraph;
 use fsl_semantics::check::Capability;
 
-use crate::dispatch::{BackendResult, Binding, ProtocolClaimKind};
+use crate::dispatch::{replay_settlement, BackendResult, Binding, ProtocolClaimKind};
 use crate::disposition::{FailureCause, FslBoundary, FslReport, UnsupportedCause};
 
 /// The request the caller states for one claim, in the engine's own request
@@ -158,19 +160,19 @@ impl EngineResult {
 }
 
 impl BackendResult for EngineResult {
-    /// A replay result exists only for a trace FSL proved (FSL FR-636): its
-    /// `proved` record with the replay depth as its basis.
+    /// A replay's truth and basis are read from FSL's outcome axes of its
+    /// terminal record (FR-303).
     fn truth(&self) -> Truth {
         match &self.body {
             Body::Analysis(analysis) => analysis.settlement.truth,
-            Body::Replay(_) => Truth::Satisfied,
+            Body::Replay(record) => replay_settlement(record.value()).0,
         }
     }
 
     fn basis(&self) -> SettlementBasis {
         match &self.body {
             Body::Analysis(analysis) => analysis.settlement.basis,
-            Body::Replay(_) => SettlementBasis::ClosedScope,
+            Body::Replay(record) => replay_settlement(record.value()).1,
         }
     }
 
@@ -307,15 +309,42 @@ fn without_result<R>(record: &AnalyzeRecord) -> FslReport<R> {
 const INAPPLICABLE_KIND: CatalogCode = CatalogCode::new("invalid_capability", "inapplicable-kind");
 
 impl<S> FslEngine<'_, S> {
+    /// Whether the replay item's claim is one of the dispatched claim's source
+    /// identities, read in the package this engine is bound to.
+    fn is_the_bound_claim<A>(&self, binding: &Binding<A>, claim: &NodeKey) -> bool {
+        let Ok(graph) = WireGraph::new(
+            self.package
+                .resolved_graph()
+                .nodes
+                .iter()
+                .map(|n| &n.node_id),
+        ) else {
+            return false;
+        };
+        binding
+            .request
+            .sources
+            .iter()
+            .any(|source| graph.key(source).is_ok_and(|key| key == *claim))
+    }
+
     /// Run FSL's `finite-replay` item (FSL FR-636) and read what it returned:
-    /// a `proved` record is the result, a `declined` one FSL's refusal with its
-    /// code, and any other value a failure carrying FSL's diagnostic.
-    fn replay(&self, request: &FiniteReplayRequest<'_>) -> FslReport<EngineResult> {
+    /// a `proved` (or `refuted`) record is the result, a `declined` one FSL's
+    /// refusal with its record, an `unsupported` one the typed unsupported
+    /// path, and any other value a failure carrying FSL's diagnostic.
+    fn replay<A>(
+        &self,
+        binding: &Binding<A>,
+        request: &FiniteReplayRequest<'_>,
+    ) -> FslReport<EngineResult> {
         let [negotiated] = request.request.items.as_slice() else {
             return FslReport::Refusal(INAPPLICABLE_KIND);
         };
         if negotiated.item.kind != Capability::FiniteReplay {
             return FslReport::Refusal(INAPPLICABLE_KIND);
+        }
+        if !self.is_the_bound_claim(binding, negotiated.item.claim.node()) {
+            return FslReport::Failed(FailureCause::ReplayNotTheBoundClaim);
         }
         let outcome = match analyze(
             request.package,
@@ -325,22 +354,33 @@ impl<S> FslEngine<'_, S> {
             &self.cancel,
         ) {
             Ok(staged) => staged.into_value(),
-            Err(refused) => {
-                return FslReport::Failed(FailureCause::AnalyzeRefused(format!("{refused:?}")))
+            Err(failure) => {
+                return FslReport::Failed(match failure.into_refused() {
+                    Ok(refusal) => FailureCause::AnalyzeRefused(refusal.to_string()),
+                    Err(stopped) => FailureCause::AnalyzeStopped(stopped),
+                })
             }
         };
         let Some(record) = outcome.records.into_iter().next() else {
             return FslReport::Failed(FailureCause::NoRecord);
         };
-        match record.value() {
-            TerminalValue::Proved { .. } => FslReport::Result(EngineResult {
-                body: Body::Replay(Box::new(record)),
-            }),
-            TerminalValue::Declined { .. } => record.diagnostic().map_or_else(
-                || FslReport::Failed(settled_failure(record.value(), None)),
-                FslReport::Refusal,
-            ),
-            value => FslReport::Failed(settled_failure(value, record.diagnostic())),
+        match record.value().clone() {
+            TerminalValue::Proved { .. } | TerminalValue::Refuted => {
+                FslReport::Result(EngineResult {
+                    body: Body::Replay(Box::new(record)),
+                })
+            }
+            TerminalValue::Declined { .. } => FslReport::Declined(Box::new(record)),
+            // A requires-bound disposition reaches here too: a terminal
+            // record holds no domain, so none can be rebuilt from it.
+            TerminalValue::Unsupported(_) => FslReport::Unsupported {
+                cause: record.diagnostic().map_or_else(
+                    UnsupportedCause::requested_capability,
+                    UnsupportedCause::RequestedCapability,
+                ),
+                construct: None,
+            },
+            value => FslReport::Failed(settled_failure(&value, record.diagnostic())),
         }
     }
 }
@@ -354,7 +394,7 @@ where
         // The request the caller supplies must be the claim's own kind.
         let item = match ((self.supply)(binding), binding.request.kind) {
             (EngineRequest::FiniteReplay(request), ProtocolClaimKind::FiniteReplay) => {
-                return self.replay(&request);
+                return self.replay(binding, &request);
             }
             (EngineRequest::Projection(request), ProtocolClaimKind::LocalProjection) => {
                 projection_item(index, self.package, *request)
