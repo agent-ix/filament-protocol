@@ -25,7 +25,7 @@ use filament_protocol::compensation::algebra::{
 use filament_protocol::compensation::purity::{Capability, CapabilityInventory, PureAssessment};
 use filament_protocol::ids::{AttemptId, DefinitionId, EffectId};
 use filament_protocol::slot::{attempts_maximum, evaluate, SlotEvaluation, SlotOutcome};
-use filament_spec_language::checked_handoff::Corpus;
+use fsl_command::checked_handoff::Corpus;
 use fsl_eval::value::{ProtocolSlot, ProtocolSuppliedValue, ProtocolSupply, SuppliedValue};
 use fsl_package::{BarePackage, BareSupply, ProtocolSlotDescriptor};
 use fsl_semantics::check::wire_id::WireGraph;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! FR-043: admission of the checked-package handoff.
 //!
-//! The handoff directory that `filament_spec_language::checked_handoff` writes
+//! The handoff directory that `fsl_command::checked_handoff` writes
 //! (FSL FR-517) holds `checked-package.json`, `selection.json`, `identities.json`
 //! and `equality.json`. [`admit`] reads the package with Contract IR's
 //! [`read_checked_package`], compares the admitted package with the selection
@@ -19,7 +19,7 @@ use filament_contract_model::{
     CheckedPackageIncomplete, CheckedPackageReadLimits, CheckedPackageRefusal, CheckedPackageV2,
     NativeJoinBudget,
 };
-use filament_spec_language::checked_handoff::{Selection, SelectionReadError, SelectionRefusal};
+use fsl_command::checked_handoff::{Selection, SelectionReadError, SelectionRefusal};
 use fsl_package::{EqualityFileRefusal, IdentityFileRefusal, ReadEqualityRows, ReadIdentityRows};
 
 /// The bytes of the four handoff files [`admit`] reads.

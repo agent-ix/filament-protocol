@@ -48,6 +48,7 @@ One disposition per requested claim (FR-029), carrying the backend's result, ref
 - The dispatcher shall record on the disposition the backend it selected the claim against.
 - The provider boundary shall refuse a second provider for a backend identity that already has one.
 - The dispatcher shall introduce no dispatch path, resource guard or fallback backend beyond FR-005's closed dispatch.
+- The capacity binding of a `symbolic(<name>)` queue is part of the realizability request's protocol subject, in FSL's own `CapacityBinding` (FSpec FR-785). The dispatcher shall carry it to FSL unchanged and FSL's result unchanged. FSL's `bounded-static` realizability profile admits literal capacities only and settles a symbolic one `unsupported` (`symbolic-queue-capacity`), bound or not; a bounded profile that decides a bound capacity is not available in FSL yet, and this library defines none.
 
 ## Acceptance Criteria
 
@@ -73,6 +74,7 @@ One disposition per requested claim (FR-029), carrying the backend's result, ref
 | FR-150-AC-18 | Given a checked-handoff directory written by FSL's writer and nothing else, FSL's `compile` of it, and a protocol subject built by FSL's `protocol_subject` from the compiled handoff's checked package, domain package documents and emission ceiling, a `realizability` claim over the handoff's protocol settles as AC-16 and AC-17 state: `satisfied` on `closed-scope` for a protocol every role can tell apart, and `violated` on `decisive-counterexample` with the separating-witness record unchanged for an incompatible merge. | Test (TC-172) |
 | FR-150-AC-19 | Given FSL's linked engine registered and a `local-projection` claim for which the supplied request is a `realizability` request, the dispatch returns FSL's `invalid_capability`/`inapplicable-kind` refusal and no result. | Test (TC-164) |
 | FR-150-AC-20 | Given a selected backend that fails, the failure carries a cause: FSL's diagnostic code when it wrote one, otherwise the terminal value or the disposition kind FSL settled with, and a cause the backend reports is carried to the disposition unchanged. A record FSL does not return, an artifact it does not return, a run record it cannot write and an EN-1 refusal (FR-205) have their own causes, which FSL's engine does not produce and no test reaches. | Test (TC-160, TC-164) |
+| FR-150-AC-21 | Given a `realizability` request over a protocol with a symbolic-capacity channel, with and without a binding for it, FSL's engine settles the item `unsupported` with its `symbolic-queue-capacity` cause naming the capacity, and the dispatch carries that record unchanged with truth `unavailable`; given a binding naming no capacity of the protocol, FSL's `invalid_runtime_input`/`unknown-member` refusal is carried unchanged. | Test (TC-209) |
 
 ## Adopted vocabulary
 

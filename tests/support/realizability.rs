@@ -16,7 +16,6 @@ use filament_contract_model::{
 };
 use filament_exact::ScalarLimits;
 use filament_protocol::engine::FiniteReplayRequest;
-use filament_spec_language::checked_handoff::{compile, CompiledHandoff, Corpus};
 use fsl_analyze::analyze::{
     AnalyzeLimits, AnalyzeRequest, ClaimItem, ItemOptions, NegotiatedItem, SourceProvision,
     SubjectBinding,
@@ -24,7 +23,8 @@ use fsl_analyze::analyze::{
 use fsl_analyze::protocol_analysis::{
     protocol_subject, RealizabilityRequest, SubjectBindings, SubjectPackage,
 };
-use fsl_eval::model_subject::{ModelInstance, ProtocolSubject, RoleBinding};
+use fsl_command::checked_handoff::{compile, CompiledHandoff, Corpus};
+use fsl_eval::model_subject::{CapacityBinding, ModelInstance, ProtocolSubject, RoleBinding};
 use fsl_eval::simulation::model::ModelSystem;
 use fsl_eval::simulation::model::{ExpansionLimits, PopulationUniverse};
 use fsl_eval::simulation::protocol::{
@@ -232,6 +232,8 @@ pub struct Realizability {
     protocol: String,
     /// The realizability request's depth bound.
     depth: u64,
+    /// The subject's bindings of `symbolic(<name>)` capacities (FSpec FR-785).
+    capacities: Vec<CapacityBinding>,
     /// The text of the unit the handoff was written from, which a
     /// `finite-replay` request provisions under the package's source label.
     unit: String,
@@ -252,6 +254,19 @@ impl Realizability {
     /// clause node differs from another component's.
     pub fn worked_as(protocol: &str, extra: &str, ship: &str, cancel: &str) -> Self {
         Self::delivering_as(protocol, "exactly-once-premise", "", extra, ship, cancel)
+    }
+
+    /// The same fixture whose subject binds each `(name, value)` capacity, in
+    /// order and as given: a repeated or unknown name is the caller's to state.
+    pub fn bound(mut self, capacities: &[(&str, u64)]) -> Self {
+        self.capacities = capacities
+            .iter()
+            .map(|(name, value)| CapacityBinding {
+                name: (*name).to_owned(),
+                value: *value,
+            })
+            .collect();
+        self
     }
 
     /// The same fixture with the realizability depth bound set to `depth`.
@@ -289,11 +304,16 @@ impl Realizability {
     /// in-memory bounding. FSL's explicit-state checker refuses such a root as
     /// requiring a bound (V1-PROT-014, FR-205-AC-5).
     pub fn unbounded() -> Self {
+        Self::unbounded_with("")
+    }
+
+    /// `unbounded`, with `extra` member declarations (channels) added.
+    pub fn unbounded_with(extra: &str) -> Self {
         Self::build(
             "Flow",
             "exactly-once-premise",
             "",
-            "",
+            extra,
             super::projection::PICK,
             super::projection::CANCELLED,
             "",
@@ -408,6 +428,7 @@ impl Realizability {
             linked,
             protocol: protocol.to_owned(),
             depth: 64,
+            capacities: Vec::new(),
             unit: text,
         }
     }
@@ -483,6 +504,7 @@ impl Realizability {
                         model: PACKAGE.to_owned(),
                     })
                     .collect(),
+                capacities: self.capacities.clone(),
                 memory: Vec::new(),
                 initial: self.initial.clone(),
                 universes: [
@@ -626,6 +648,7 @@ impl Realizability {
             required: true,
             max_cases: None,
             trace: Some(trace),
+            backend_options: std::collections::BTreeMap::new(),
         };
         let descriptor =
             filament_protocol::engine::engine_descriptor(fsl_route::ProviderOrigin::Linked)

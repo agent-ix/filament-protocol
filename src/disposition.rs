@@ -16,7 +16,7 @@
 use filament_contract_model::{CheckedNodeId, CheckedPackageV2, CheckedSourceMapEntry};
 use filament_semantic_value::catalog::CatalogCode;
 use fsl_analyze::analyze::DispositionKind;
-use fsl_eval::simulation::protocol::Unsupported;
+use fsl_eval::simulation::protocol::{UnboundCapacity, Unsupported};
 use fsl_eval::simulation::RequiresBound;
 use fsl_foundation::bound::{DomainKey, DomainKind};
 use fsl_foundation::diagnostic::Stopped;
@@ -204,6 +204,24 @@ impl<P> RequiresBoundDisposition<P> {
     }
 }
 
+/// A requires-bound disposition for a protocol subject whose capacity binding
+/// leaves `symbolic(<name>)` capacities unbound and nothing else unbounded
+/// (FSpec FR-785): FSL's list unchanged, each name with the channels whose
+/// queue uses it. When another root is unbounded too, FSL reports one
+/// [`RequiresBoundDisposition`] whose outcome names the capacities with the
+/// domains. Like it, this is non-success on its own axis and carries no
+/// partial result.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UnboundCapacityDisposition<P> {
+    /// FSL's unbound capacity names, unchanged.
+    pub capacities: Vec<UnboundCapacity>,
+    /// The construct the bound is missing for; absent when the report names
+    /// none.
+    pub construct: Option<Construct>,
+    /// The exact premises the request carried, unchanged.
+    pub premises: P,
+}
+
 /// A typed non-success disposition. It has no success variant.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Disposition<P> {
@@ -211,6 +229,8 @@ pub enum Disposition<P> {
     Unsupported(UnsupportedDisposition<P>),
     /// FSL reported unbounded domains.
     RequiresBound(RequiresBoundDisposition<P>),
+    /// FSL reported only unbound symbolic capacities (FSpec FR-785).
+    UnboundCapacity(UnboundCapacityDisposition<P>),
     /// FSL's backend returned a refusal, by its catalog code.
     Refused(RefusedDisposition<P>),
     /// The selected backend failed for exactly this claim.
@@ -298,6 +318,13 @@ pub enum FslReport<R> {
         /// The construct, when the report names one.
         construct: Option<Construct>,
     },
+    /// FSL reported only unbound symbolic capacities (FSpec FR-785), unchanged.
+    UnboundCapacity {
+        /// FSL's unbound capacity names.
+        capacities: Vec<UnboundCapacity>,
+        /// The construct, when the report names one.
+        construct: Option<Construct>,
+    },
     /// FSL's backend returned a refusal, by its catalog code.
     Refusal(CatalogCode),
     /// FSL declined a supplied trace (FR-303): its `declined` terminal record,
@@ -316,6 +343,13 @@ impl<R> FslReport<R> {
             Self::RequiresBound { outcome, construct } => {
                 FslReport::RequiresBound { outcome, construct }
             }
+            Self::UnboundCapacity {
+                capacities,
+                construct,
+            } => FslReport::UnboundCapacity {
+                capacities,
+                construct,
+            },
             Self::Refusal(code) => FslReport::Refusal(code),
             Self::Declined(record) => FslReport::Declined(record),
             Self::Failed(cause) => FslReport::Failed(cause),
@@ -389,6 +423,16 @@ pub fn settle_claim<C, R, P>(
         FslReport::RequiresBound { outcome, construct } => {
             ClaimSettlement::Disposition(Disposition::RequiresBound(RequiresBoundDisposition {
                 outcome,
+                construct,
+                premises,
+            }))
+        }
+        FslReport::UnboundCapacity {
+            capacities,
+            construct,
+        } => {
+            ClaimSettlement::Disposition(Disposition::UnboundCapacity(UnboundCapacityDisposition {
+                capacities,
                 construct,
                 premises,
             }))

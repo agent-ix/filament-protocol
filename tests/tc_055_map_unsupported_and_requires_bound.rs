@@ -61,8 +61,8 @@ fn each_adr_listed_cause_is_carried_by_its_fsl_name_with_the_constructs_node() {
     let dynamic = Dynamic::with("workflow", 3);
     let construct = dynamic.construct(&dynamic.named("channel", "Symbolic"));
     let causes = [
-        Unsupported::SymbolicCapacity,
         Unsupported::UnenumerableRecord,
+        Unsupported::OverNotAnObject,
     ];
     for cause in causes {
         let claim = Claim("conformance");
@@ -158,12 +158,12 @@ fn symbolic_capacity_and_predicate_joins_hold_no_derived_number_or_truth_value()
     )
     .expect("declared");
     let symbolic = dynamic.named("channel", "Symbolic");
-    // The unsupported outcome has no occupancy, capacity or violation field:
-    // a derived number could not be held in it.
+    // The requires-bound outcome has no occupancy, capacity value or violation
+    // field: a derived number could not be held in it.
     assert!(channels.iter().any(|outcome| matches!(
         outcome,
-        ChannelOutcome::Unsupported { channel, cause: UnsupportedCause::Construct(Unsupported::SymbolicCapacity), .. }
-            if *channel == symbolic
+        ChannelOutcome::RequiresBound { channel, capacity, .. }
+            if *channel == symbolic && &**capacity == "Bound"
     )));
     let joins = assess_joins(
         dynamic.linked().declarations(),
@@ -197,7 +197,7 @@ fn an_unrecognised_cause_is_retained_unchanged_and_mapped_to_no_known_cause() {
     assert_eq!(retained.as_bytes(), offered);
     // It equals no cause FSL defines, including the requested-capability one.
     for known in [
-        UnsupportedCause::Construct(Unsupported::SymbolicCapacity),
+        UnsupportedCause::Construct(Unsupported::UnenumerableRecord),
         UnsupportedCause::Assessment(AssessmentUnsupported::JoinPredicate),
         UnsupportedCause::requested_capability(),
     ] {
@@ -248,6 +248,7 @@ fn requires_bound(dynamic: &Dynamic) -> (RequiresBound, [(DomainKey, DomainKind)
     (
         RequiresBound {
             domains: domains_of,
+            capacities: Vec::new(),
         },
         domains,
     )

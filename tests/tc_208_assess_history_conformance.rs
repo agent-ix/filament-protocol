@@ -307,7 +307,7 @@ fn delivery_out_of_send_order_is_non_conformant_on_the_channel_axis_only() {
         .iter()
         .filter_map(|outcome| match outcome {
             ChannelOutcome::Assessed(channel) => Some(&channel.violations),
-            ChannelOutcome::Unsupported { .. } => None,
+            ChannelOutcome::Unsupported { .. } | ChannelOutcome::RequiresBound { .. } => None,
         })
         .flatten()
         .collect();
@@ -323,8 +323,9 @@ fn delivery_out_of_send_order_is_non_conformant_on_the_channel_axis_only() {
 #[test]
 #[trace("TC-208", "FR-209-AC-4")]
 fn an_unsupported_axis_is_unavailable_and_a_violation_outranks_it() {
-    // The full choreography declares a channel of symbolic capacity, which FSL
-    // does not step, so its channel axis is unsupported for any history.
+    // The full choreography declares an unordered channel losing its head,
+    // which FSL does not step, so its channel axis is unsupported for any
+    // history.
     let dynamic = Dynamic::with("workflow", 3);
     let unsupported = judge(&dynamic, &conforming(&dynamic));
     assert_eq!(
@@ -349,6 +350,34 @@ fn an_unsupported_axis_is_unavailable_and_a_violation_outranks_it() {
 }
 
 #[test]
+#[trace("TC-208", "FR-209-AC-4")]
+fn a_channel_of_symbolic_capacity_is_requires_bound_not_unsupported() {
+    // Only the channel of symbolic capacity is left unjudged: its bound is a
+    // subject binding FSL admits, which a history assessment is not given.
+    let dynamic = Dynamic::with_symbolic_capacity_only();
+    let result = judge(&dynamic, &conforming(&dynamic));
+    assert_eq!(
+        result.verdict(DynamicAxis::Channels),
+        AxisVerdict::RequiresBound
+    );
+    for axis in [DynamicAxis::Roles, DynamicAxis::Joins, DynamicAxis::Loops] {
+        assert_eq!(result.verdict(axis), AxisVerdict::Conformant);
+    }
+    assert_eq!(result.truth(), Truth::Unavailable);
+    // A violation on another axis outranks it.
+    let breached = judge(&dynamic, &history(&dynamic, 4, 2, &["a", "b", "c"], 3));
+    assert_eq!(
+        breached.verdict(DynamicAxis::Roles),
+        AxisVerdict::NonConformant
+    );
+    assert_eq!(
+        breached.verdict(DynamicAxis::Channels),
+        AxisVerdict::RequiresBound
+    );
+    assert_eq!(breached.truth(), Truth::Violated);
+}
+
+#[test]
 #[trace("TC-208", "FR-209-AC-5")]
 fn a_violation_names_the_declaration_it_breaches_by_checked_node() {
     let dynamic = Dynamic::with_finite_capacities();
@@ -361,7 +390,7 @@ fn a_violation_names_the_declaration_it_breaches_by_checked_node() {
         .iter()
         .filter_map(|outcome| match outcome {
             ChannelOutcome::Assessed(channel) => Some(&channel.violations),
-            ChannelOutcome::Unsupported { .. } => None,
+            ChannelOutcome::Unsupported { .. } | ChannelOutcome::RequiresBound { .. } => None,
         })
         .flatten()
         .collect();

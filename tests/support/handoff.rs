@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 //! The handoff directory of recipe R, written in process by FSL's writer
 //! (FSL FR-517) from FSL's own recipe inputs (`examples/checked-handoff` of the
-//! checkout Cargo resolved for the `filament-spec-language` dependency, found
+//! checkout Cargo resolved for the `fsl-command` dependency, found
 //! with `cargo metadata`) and the one unit this repository authored itself,
 //! `tests/fixtures/checked-handoff/unit-instance-bound.native`, for which FSL
 //! has no equivalent. No FSL file is copied here.
@@ -14,8 +14,8 @@ use std::sync::OnceLock;
 use filament_contract_model::{
     CheckedPackageEvidence, ClockConfiguration, ClockExactNumber, NativeJoinBudget,
 };
-use filament_spec_language::checked_handoff::{evidence, write, CheckedHandoffRequest, Corpus};
-use filament_spec_language::emit_checked_v2::{ClockSelection, Request};
+use fsl_command::checked_handoff::{evidence, write, CheckedHandoffRequest, Corpus};
+use fsl_command::emit_checked_v2::{ClockSelection, Request};
 use fsl_package::NativeJoinLimits;
 
 /// The directory of the units this repository authored.
@@ -24,8 +24,8 @@ const OWN_DIR: &str = concat!(
     "/tests/fixtures/checked-handoff"
 );
 
-/// FSL's `examples/checked-handoff`, in the checkout of the dependency that
-/// Cargo resolved.
+/// FSL's `examples/checked-handoff`, at the root of the FSL checkout that
+/// holds the `fsl-command` dependency Cargo resolved.
 pub fn fsl_dir() -> &'static Path {
     static DIR: OnceLock<PathBuf> = OnceLock::new();
     DIR.get_or_init(|| {
@@ -41,12 +41,13 @@ pub fn fsl_dir() -> &'static Path {
             .as_array()
             .expect("packages")
             .iter()
-            .find(|package| package["name"] == "filament-spec-language")
+            .find(|package| package["name"] == "fsl-command")
             .and_then(|package| package["manifest_path"].as_str())
-            .expect("the filament-spec-language dependency");
+            .expect("the fsl-command dependency");
         Path::new(manifest)
             .parent()
-            .expect("a manifest directory")
+            .and_then(Path::parent)
+            .expect("the FSL checkout root")
             .join("examples/checked-handoff")
     })
 }

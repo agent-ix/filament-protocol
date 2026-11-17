@@ -95,6 +95,11 @@ pub enum AxisVerdict {
     /// and no violation was observed on the rest: neither conformant nor
     /// violating (FR-057).
     Unsupported,
+    /// A declaration of the axis names a bound the assessment is not given (a
+    /// channel of symbolic capacity, FR-054) and no violation was observed on
+    /// the rest: neither conformant nor violating. It is requires-bound, never
+    /// `unsupported`.
+    RequiresBound,
     /// An observation breaches what the protocol declares: it names a subject
     /// or a join branch the protocol does not declare, or a lifecycle event of
     /// a static role. It is reported with the refusal that names it, never
@@ -164,14 +169,18 @@ impl HistoryAssessment {
                 &self.roles,
                 |role| !role.lifetime_violations.is_empty() || role.population_violation.is_some(),
                 |_| false,
+                |_| false,
             ),
             DynamicAxis::Channels => judge(
                 &self.channels,
                 |outcome| match outcome {
                     ChannelOutcome::Assessed(channel) => !channel.violations.is_empty(),
-                    ChannelOutcome::Unsupported { .. } => false,
+                    ChannelOutcome::Unsupported { .. } | ChannelOutcome::RequiresBound { .. } => {
+                        false
+                    }
                 },
                 |outcome| matches!(outcome, ChannelOutcome::Unsupported { .. }),
+                |outcome| matches!(outcome, ChannelOutcome::RequiresBound { .. }),
             ),
             DynamicAxis::Joins => judge(
                 &self.joins,
@@ -180,10 +189,14 @@ impl HistoryAssessment {
                     JoinOutcome::Unsupported { .. } => false,
                 },
                 |outcome| matches!(outcome, JoinOutcome::Unsupported { .. }),
+                |_| false,
             ),
-            DynamicAxis::Loops => {
-                judge(&self.loops, |looped| looped.violation.is_some(), |_| false)
-            }
+            DynamicAxis::Loops => judge(
+                &self.loops,
+                |looped| looped.violation.is_some(),
+                |_| false,
+                |_| false,
+            ),
         }
     }
 
@@ -207,7 +220,7 @@ impl HistoryAssessment {
 
     /// The truth of the history: `violated` when any axis is non-conformant or
     /// holds an unexpected observation, `unavailable` when none is but an axis
-    /// is unsupported or unreadable, otherwise `satisfied`. A violation
+    /// is unsupported, requires-bound or unreadable, otherwise `satisfied`. A violation
     /// outranks an unsupported axis.
     #[must_use]
     pub fn truth(&self) -> Truth {
@@ -222,7 +235,7 @@ impl HistoryAssessment {
         } else if verdicts.iter().any(|(_, verdict)| {
             matches!(
                 verdict,
-                AxisVerdict::Unsupported | AxisVerdict::Unreadable(_)
+                AxisVerdict::Unsupported | AxisVerdict::RequiresBound | AxisVerdict::Unreadable(_)
             )
         }) {
             Truth::Unavailable
@@ -236,12 +249,14 @@ fn judge<T>(
     assessed: &Result<Vec<T>, HistoryRefusal>,
     violates: impl Fn(&T) -> bool,
     unsupported: impl Fn(&T) -> bool,
+    requires_bound: impl Fn(&T) -> bool,
 ) -> AxisVerdict {
     match assessed {
         Err(refusal) if breaches_declarations(refusal) => AxisVerdict::Unexpected(refusal.clone()),
         Err(refusal) => AxisVerdict::Unreadable(refusal.clone()),
         Ok(items) if items.iter().any(violates) => AxisVerdict::NonConformant,
         Ok(items) if items.iter().any(unsupported) => AxisVerdict::Unsupported,
+        Ok(items) if items.iter().any(requires_bound) => AxisVerdict::RequiresBound,
         Ok(_) => AxisVerdict::Conformant,
     }
 }

@@ -8,13 +8,14 @@ description = "Strict consumer boundary for accepted native Filament protocol pa
 publish = false
 
 [dependencies]
-# Cargo.lock holds FSL at the commit that merged #2785 on purpose: FSL main moved
-# `checked_handoff` to `fsl-command`. Expires when the fixtures are repointed there
-# (ADR-010, "Temporary mirrors and held pins").
-# FSL main, followed by branch; Cargo.lock holds the commit. `checked-handoff`
-# is the feature that publishes `Selection` (FSL FR-517), which the admission
-# compares an admitted package with.
-filament-spec-language = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main", features = ["checked-handoff"] }
+# FSL main, followed by branch; Cargo.lock holds the commit. `fsl-command` owns
+# `checked_handoff` (FSL FR-517), which publishes `Selection` (the admission
+# compares an admitted package with it) and the in-process handoff writer the
+# tests call.
+# BLOCKED upstream: `fsl-command` brings `tl-mltl`, which requires `serde =1.0.228`,
+# while `quoin-evidence` and `engineering-assurance` require `=1.0.229`. The lock
+# resolves only once `tl-mltl` relaxes its `serde` requirement; delete this note then.
+fsl-command = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
 fsl-foundation = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
 # The bytes-only identity and equality files (FSL FR-531, FR-533).
 fsl-package = { git = "https://github.com/agent-ix/filament-spec-language", branch = "main" }
@@ -33,7 +34,7 @@ filament-eval = { git = "https://github.com/agent-ix/filament-eval", branch = "m
 filament-exact = { git = "https://github.com/agent-ix/filament-exact", branch = "main" }
 filament-semantic-value = { git = "https://github.com/agent-ix/filament-semantic-value", branch = "main" }
 # Contract IR's checked-package reader (FR-043); the one reader of the format.
-filament-contract-model = { git = "https://github.com/agent-ix/filament-contract-ir", branch = "main" }
+filament-contract-model = { git = "https://github.com/agent-ix/filament-contract-ir", tag = "v0.1.0" }
 filament-observation = { git = "https://github.com/agent-ix/filament-observation", branch = "main" }
 # Owner of the scenario record Quoin's intake takes (FR-206): `ScenarioEvidence`
 # and `write_scenario_evidence`. Default features only; `schema` stays off.

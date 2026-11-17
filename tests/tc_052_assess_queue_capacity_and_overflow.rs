@@ -15,7 +15,6 @@ use filament_protocol::dynamics::{
     assess_channels, ChannelAssessment, ChannelEvent, ChannelFact, ChannelOutcome, OverflowOutcome,
     PremiseBreach, QueueViolation,
 };
-use fsl_eval::simulation::protocol::Unsupported;
 use fsl_package::protocol_view::Delivery;
 use fsl_replay::{SettlementBasis, Truth};
 use fsl_semantics::check::Capability;
@@ -73,7 +72,8 @@ fn outcome(dynamic: &Dynamic, name: &str, facts: &[ChannelFact]) -> ChannelOutco
     .into_iter()
     .find(|outcome| match outcome {
         ChannelOutcome::Assessed(assessment) => assessment.channel == id,
-        ChannelOutcome::Unsupported { channel, .. } => *channel == id,
+        ChannelOutcome::Unsupported { channel, .. }
+        | ChannelOutcome::RequiresBound { channel, .. } => *channel == id,
     })
     .expect("the channel is assessed")
 }
@@ -81,7 +81,9 @@ fn outcome(dynamic: &Dynamic, name: &str, facts: &[ChannelFact]) -> ChannelOutco
 fn assessed(dynamic: &Dynamic, name: &str, events: Vec<ChannelEvent>) -> ChannelAssessment {
     match outcome(dynamic, name, &history(dynamic, name, events)) {
         ChannelOutcome::Assessed(assessment) => assessment,
-        other @ ChannelOutcome::Unsupported { .. } => panic!("{name}: {other:?}"),
+        other @ (ChannelOutcome::Unsupported { .. } | ChannelOutcome::RequiresBound { .. }) => {
+            panic!("{name}: {other:?}")
+        }
     }
 }
 
@@ -276,23 +278,26 @@ fn delivery_out_of_send_order_within_a_key_is_an_order_violation() {
 
 #[test]
 #[trace("TC-052", "FR-054-AC-5")]
-fn a_symbolic_capacity_returns_the_unsupported_disposition_and_judges_nothing() {
+fn a_symbolic_capacity_is_requires_bound_and_judges_nothing() {
     let dynamic = Dynamic::with("workflow", 3);
     let facts = history(
         &dynamic,
         "Symbolic",
         (1..=9).map(|n| enqueue(&format!("m{n}"), "k")).collect(),
     );
-    let ChannelOutcome::Unsupported {
-        cause, construct, ..
+    // Nine enqueues would breach any small literal capacity; the outcome has
+    // no occupancy, capacity or violation field, so none is judged.
+    let ChannelOutcome::RequiresBound {
+        channel,
+        capacity,
+        construct,
     } = outcome(&dynamic, "Symbolic", &facts)
     else {
-        panic!("a symbolic capacity is unsupported");
+        panic!("a symbolic capacity is requires-bound, not unsupported");
     };
-    assert_eq!(
-        cause,
-        UnsupportedCause::Construct(Unsupported::SymbolicCapacity)
-    );
+    assert_eq!(channel, dynamic.named("channel", "Symbolic"));
+    // The authored name, unresolved.
+    assert_eq!(&*capacity, "Bound");
     assert_eq!(construct.node, dynamic.named("channel", "Symbolic"));
 }
 

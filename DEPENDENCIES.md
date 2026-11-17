@@ -10,7 +10,7 @@ discharges.
 
 | Crate | Source | Declared license | Role |
 | --- | --- | --- | --- |
-| `filament-spec-language` | `agent-ix/filament-spec-language`, `main`, feature `checked-handoff` | `AGPL-3.0-or-later` | Publishes `checked_handoff::Selection` (FSL FR-517), compared with an admitted package, and the in-process handoff writer the tests call. |
+| `fsl-command` | `agent-ix/filament-spec-language`, `main` | `AGPL-3.0-or-later` | Publishes `checked_handoff::Selection` (FSL FR-517), compared with an admitted package, and the in-process handoff writer the tests call. |
 | `fsl-package` | `agent-ix/filament-spec-language`, `main` | `AGPL-3.0-or-later` | Publishes the bytes-only identity and equality file readers (FSL FR-531, FR-533), `protocol_view` and `causal_relation` (FSL FR-519), and `BarePackage` (FSL FR-531). |
 | `fsl-eval` | `agent-ix/filament-spec-language`, `main` | `AGPL-3.0-or-later` | Owns the slot evaluation `CheckedPackageEvaluation` (FSL FR-390, FR-520, FR-533) and the temporal `EvidencePackage` (FSL FR-532). |
 | `fsl-semantics` | `agent-ix/filament-spec-language`, `main` | `AGPL-3.0-or-later` | The channel overflow, loss selector and outstanding vocabulary the linked declarations retain (FR-051, FR-052); the wire graph that keys protocol nodes in tests. |

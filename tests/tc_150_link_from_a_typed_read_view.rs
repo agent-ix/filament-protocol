@@ -16,7 +16,7 @@ use filament_contract_model::{
 };
 use filament_protocol::checked_package::{admit, HandoffFiles};
 use filament_protocol::link::{link, LinkRefusal, LinkedProtocol};
-use filament_spec_language::checked_handoff::Corpus;
+use fsl_command::checked_handoff::Corpus;
 use fsl_package::protocol_view::{
     causal_relation, control_operation, protocol_view, temporal_binding, CausalEdge,
     ControlOperation, EdgeKind, ViewRefusal,

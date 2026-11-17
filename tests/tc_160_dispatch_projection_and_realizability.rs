@@ -186,7 +186,7 @@ fn each_backend_cause_is_carried_in_the_backends_vocabulary_and_no_other_is_call
         (
             "unsupported",
             FslReport::Unsupported {
-                cause: UnsupportedCause::Construct(Unsupported::SymbolicCapacity),
+                cause: UnsupportedCause::Construct(Unsupported::WeakMemory),
                 construct: None,
             },
         ),
@@ -231,7 +231,7 @@ fn each_backend_cause_is_carried_in_the_backends_vocabulary_and_no_other_is_call
                 ))),
             ) => assert_eq!(
                 carried.cause,
-                UnsupportedCause::Construct(Unsupported::SymbolicCapacity)
+                UnsupportedCause::Construct(Unsupported::WeakMemory)
             ),
             (
                 "tool",

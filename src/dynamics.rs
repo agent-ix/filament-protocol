@@ -25,7 +25,6 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use filament_contract_model::CheckedNodeId;
 use filament_exact::{Integer, NodeKey};
-use fsl_eval::simulation::protocol::Unsupported;
 use fsl_package::protocol_view::Delivery;
 use fsl_package::{
     OccurrenceKeyError, ProtocolOccurrenceSchema, RoleLifetime, RoleReplication,
@@ -490,6 +489,19 @@ pub struct ChannelAssessment {
 pub enum ChannelOutcome {
     /// The channel was assessed.
     Assessed(ChannelAssessment),
+    /// The channel's capacity is `symbolic(<name>)` (FR-054): it takes its value
+    /// only from a subject binding that FSL admits (FSpec FR-785), which an
+    /// assessment of an observed history is not given. The missing bound is
+    /// requires-bound, never `unsupported`; no capacity, order or premise
+    /// judgment is made.
+    RequiresBound {
+        /// The channel.
+        channel: CheckedNodeId,
+        /// The authored capacity name, unresolved.
+        capacity: Box<str>,
+        /// The channel node.
+        construct: Construct,
+    },
     /// FSL would report an `Unsupported` cause for the channel (FR-057); no
     /// capacity, order or premise judgment is made.
     Unsupported {
@@ -536,20 +548,29 @@ pub fn assess_channels(
     Ok(outcomes)
 }
 
-/// The literal capacity FSL steps, or the `Unsupported` cause for a channel it
-/// does not.
-fn steppable_capacity(channel: &ChannelDeclaration) -> Result<u64, UnsupportedCause> {
-    let Capacity::Literal(capacity) = channel.capacity else {
-        return Err(UnsupportedCause::Construct(Unsupported::SymbolicCapacity));
+/// Why a channel is not judged: its capacity names a bound the assessment is
+/// not given, or FSL would report an `Unsupported` cause for it.
+enum Unjudged {
+    /// The authored name of a symbolic capacity.
+    Unbound(Box<str>),
+    /// An `Unsupported` cause.
+    Unsupported(UnsupportedCause),
+}
+
+/// The literal capacity the assessment judges against, or why it judges none.
+fn steppable_capacity(channel: &ChannelDeclaration) -> Result<u64, Unjudged> {
+    let capacity = match &channel.capacity {
+        Capacity::Literal(capacity) => *capacity,
+        Capacity::Symbolic(name) => return Err(Unjudged::Unbound(name.clone())),
     };
     let loses_ordered = matches!(
         channel.overflow,
         ChannelOverflow::Loss(LossSelector::Head | LossSelector::Tail)
     );
     if channel.ordering == Ordering::Unordered && loses_ordered {
-        return Err(UnsupportedCause::Assessment(
+        return Err(Unjudged::Unsupported(UnsupportedCause::Assessment(
             AssessmentUnsupported::UnorderedLossSelector,
-        ));
+        )));
     }
     Ok(capacity)
 }
@@ -574,7 +595,14 @@ fn assess_channel(
 ) -> ChannelOutcome {
     let capacity = match steppable_capacity(channel) {
         Ok(capacity) => capacity,
-        Err(cause) => {
+        Err(Unjudged::Unbound(capacity)) => {
+            return ChannelOutcome::RequiresBound {
+                channel: channel.node.clone(),
+                capacity,
+                construct: construct(&channel.node),
+            }
+        }
+        Err(Unjudged::Unsupported(cause)) => {
             return ChannelOutcome::Unsupported {
                 channel: channel.node.clone(),
                 cause,

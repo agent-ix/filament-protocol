@@ -7,7 +7,7 @@
 use filament_contract_model::{CheckedNodeId, CheckedPackageReadLimits};
 use filament_protocol::checked_package::{admit, HandoffFiles};
 use filament_protocol::link::{link, LinkedProtocol};
-use filament_spec_language::checked_handoff::Corpus;
+use fsl_command::checked_handoff::Corpus;
 
 use super::handoff::{join_budget, request, written_request};
 

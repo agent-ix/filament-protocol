@@ -31,7 +31,7 @@ A verdict for each of the four axes (`conformant`, `non-conformant`, `unsupporte
 ## Behavior
 
 - The library shall settle a history `violated` when any axis is non-conformant or holds an unexpected observation.
-- The library shall settle a history `unavailable` and not `violated` or `satisfied` when an axis is unsupported (FR-057) and none is adverse.
+- The library shall settle a history `unavailable` and not `violated` or `satisfied` when an axis is unsupported (FR-057) or requires-bound (FR-058) and none is adverse.
 - The library shall name the axis and the exact declaration the observation violates, by checked node identity.
 - The library shall report an observation of an undeclared subject or join branch, or a lifecycle event of a static role, as `unexpected` on its axis, carrying the refusal that names the node.
 - The library shall report a fact it cannot read as an occurrence as `unreadable` on its axis, settling the history `unavailable` and not `violated`.
@@ -45,7 +45,7 @@ A verdict for each of the four axes (`conformant`, `non-conformant`, `unsupporte
 | FR-209-AC-1 | A history that exceeds a role's population bound, a queue's capacity, a join's threshold or a loop's maximum is `non-conformant` on exactly that axis, `conformant` on the other three, and `violated`; the conforming history is `satisfied`. | Test (TC-208) |
 | FR-209-AC-2 | A fact naming a node the protocol does not declare as that kind of subject is `unexpected` on its axis, carrying the node; the other axes stay `conformant` and the history is `violated`. | Test (TC-208) |
 | FR-209-AC-3 | A delivery out of send order within an ordered channel's key is a queue order violation, `non-conformant` on the channel axis only. | Test (TC-208) |
-| FR-209-AC-4 | An axis FSL does not step (a channel of symbolic capacity) is `unsupported`; with no adverse axis the history is `unavailable`, and with an adverse axis it is `violated`. | Test (TC-208) |
+| FR-209-AC-4 | An axis FSL does not step (an unordered channel that loses its head) is `unsupported`, and an axis whose bound the history does not carry (a channel of symbolic capacity) is `requires-bound`; with no adverse axis the history is `unavailable`, and with an adverse axis it is `violated`. | Test (TC-208) |
 | FR-209-AC-5 | A violation names the declaration it breaches by its checked node: a capacity violation carries the channel node, the authored capacity and the occupancy, and a population violation is carried on the assessment of the role node. | Test (TC-208) |
 | FR-209-AC-6 | A workflow identity that is not text is `unreadable` on its axis and the history is `unavailable`; a lifecycle event of a static role is `unexpected` and the history is `violated`. | Test (TC-208) |
 

@@ -18,7 +18,7 @@ use filament_eval::{CallAdmissionFailure, CallFailure};
 use filament_exact::Meter;
 use filament_protocol::checked_package::{admit, AdmittedHandoff, HandoffFiles};
 use filament_protocol::evidence::{assess, package, EvidenceRecord, EvidenceRefusal};
-use filament_spec_language::checked_handoff::Corpus;
+use fsl_command::checked_handoff::Corpus;
 use fsl_eval::temporal::evidence::{
     ActivationState, CaptureFact, CapturedValue, CompletenessRecord, EvidencePackage,
     EvidencePosition, EvidenceRef, EvidenceRequest, ExecutionDisposition, ExecutionOrigin,
