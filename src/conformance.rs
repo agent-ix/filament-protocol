@@ -23,7 +23,6 @@ use fsl_analyze::model_check::manifest::descriptor;
 use fsl_analyze::model_check::{check_protocol, ModelCheckRefusal};
 use fsl_eval::simulation::protocol::ProtocolRefusal;
 use fsl_eval::simulation::protocol::ProtocolTransition;
-use fsl_foundation::diagnostic::Code;
 use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
     settle_protocol_check, InconclusiveCause, ModelCheckRecord, SeparatingWitnessRecord,
