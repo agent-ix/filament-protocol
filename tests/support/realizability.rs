@@ -648,6 +648,7 @@ impl Realizability {
             required: true,
             max_cases: None,
             trace: Some(trace),
+            recording: None,
             backend_options: std::collections::BTreeMap::new(),
         };
         let descriptor =

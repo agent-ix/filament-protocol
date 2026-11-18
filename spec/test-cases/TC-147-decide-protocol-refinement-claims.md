@@ -14,7 +14,7 @@ Verify that a refinement claim is decided by the library's procedure over two fi
 
 ## Test Procedure
 
-Request refinements between handoff-compiled protocols whose traces are included, equal and extended, and a message that can be lost. Build each system through the step view. Put a replicated role, a symbolic-capacity channel and an unsupported construct in turn into the claim. Bound the exploration and the step view's state limit. Hide a channel by leaving it out of the fragment. Remove or substitute each retained component one at a time. Request a refinement beside finite global conformance. Tag each test with the exact acceptance criterion it verifies.
+Request refinements between handoff-compiled protocols whose traces are included, equal and extended, and a message that can be lost. Build each system through the step view. Put a replicated role and an unsupported construct in turn into the claim. Put a symbolic-capacity channel into the claim with no binding, with the capacity bound, and with a binding naming no capacity and a capacity twice. Bound the exploration and the step view's state limit. Hide a channel by leaving it out of the fragment. Remove or substitute each retained component one at a time. Request a refinement beside finite global conformance. Tag each test with the exact acceptance criterion it verifies.
 
 ## Expected Results
 

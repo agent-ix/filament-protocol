@@ -18,10 +18,15 @@
 //!   an observable trace after which the specification cannot.
 //! - **Stronger assumptions.** Either system rests on an assumption the request
 //!   did not offer.
-//! - **Unsupported dynamics.** A replicated role, a symbolic queue capacity or
-//!   a construct the system builder could not step in the fragment is never
-//!   decided: the claim never refines (FSL FR-148's rule for what it cannot
-//!   decide).
+//! - **Unsupported dynamics.** A replicated role or a construct the system
+//!   builder could not step in the fragment is never decided: the claim never
+//!   refines (FSL FR-148's rule for what it cannot decide).
+//! - **Capacity binding.** A `symbolic(<name>)` queue capacity takes its value
+//!   from the capacity binding in the protocol subject the system is stepped
+//!   over (FSpec FR-785). FSL decides with the binding; a capacity it leaves
+//!   unbound, or a binding FSL refuses, is FSL's own refusal, carried
+//!   unchanged as [`RefinementOutcome::Capacity`]. This library never decides
+//!   whether a capacity is symbolic.
 //!
 //! The specification side is explored by subset construction over its
 //! internal-step closure, so a specification that is nondeterministic or takes
@@ -43,19 +48,19 @@ use filament_contract_model::{CheckedNodeId, CheckedPackageV2};
 use filament_exact::ObjectReference;
 use fsl_analyze::protocol_analysis::protocol_step_view;
 use fsl_eval::model_subject::ProtocolSubject;
-use fsl_eval::simulation::protocol::StepKind;
+use fsl_eval::simulation::protocol::{CapacityRefusal, ProtocolRefusal, StepKind};
 use fsl_foundation::witness::ObservationIdentity;
 use fsl_package::RoleReplication;
 use fsl_replay::protocol_analysis::{AssessedRoot, AssessedRootDraft};
 use fsl_replay::{
     ProtocolStepView, ProtocolSteps, RefinementWitness, RefinementWitnessError, SettlementBasis,
-    StateIndex, Truth, UnsteppedConstruct,
+    StateIndex, StepViewRefusal, Truth, UnsteppedConstruct,
 };
 use fsl_semantics::check::wire_id::WireGraph;
 
 use crate::assume_guarantee::{bind_fragment, owner};
 use crate::closure::AssessmentExecution;
-use crate::declarations::{Capacity, Declarations};
+use crate::declarations::Declarations;
 use crate::dispatch::{DispositionRefusal, Fragment};
 
 /// A state of a [`TransitionSystem`], by its index in that system.
@@ -106,6 +111,7 @@ pub struct TransitionSystem {
     assumptions: Vec<CheckedNodeId>,
     unsupported: Vec<UnsteppedConstruct>,
     incomplete: Option<String>,
+    capacity: Option<CapacityRefusal>,
 }
 
 impl TransitionSystem {
@@ -147,6 +153,17 @@ impl TransitionSystem {
         self.incomplete.as_deref()
     }
 
+    /// FSL's refusal of the subject's capacity binding when it stopped the
+    /// step view, unchanged: [`CapacityRefusal::Missing`] for a symbolic
+    /// capacity the binding leaves unbound (requires-bound, FSpec FR-785), any
+    /// other member for a binding FSL refuses (`invalid_runtime_input`).
+    /// `None` for a system whose capacities FSL admitted. A system with a
+    /// refusal holds no steps and is never explored.
+    #[must_use]
+    pub fn capacity(&self) -> Option<&CapacityRefusal> {
+        self.capacity.as_ref()
+    }
+
     /// The system of FSL's step view `view` of the protocol in `package`, with
     /// the steps observable that send or receive on a channel in `observed`
     /// (FR-301). Every other step is internal.
@@ -169,6 +186,7 @@ impl TransitionSystem {
             assumptions: Vec::new(),
             unsupported,
             incomplete,
+            capacity: None,
         };
         match view {
             ProtocolStepView::Unsupported(found) => held(found, None),
@@ -254,6 +272,7 @@ impl TransitionSystem {
             assumptions,
             unsupported: Vec::new(),
             incomplete: None,
+            capacity: None,
         })
     }
 }
@@ -262,7 +281,8 @@ impl TransitionSystem {
 /// `subject`, as a [`TransitionSystem`] observing the channels of `fragment`
 /// (FR-301). FSL's refusal, including more than `max_states` states, gives a
 /// system that records why and is never explored: the claim settles
-/// `incomplete`, never `refines`.
+/// `incomplete`, never `refines`. FSL's refusal of the subject's capacity
+/// binding is kept as the system's [`TransitionSystem::capacity`], unchanged.
 #[must_use]
 pub fn step_system(
     package: &CheckedPackageV2,
@@ -273,14 +293,21 @@ pub fn step_system(
 ) -> TransitionSystem {
     match protocol_step_view(package, protocol, subject, max_states) {
         Ok(view) => TransitionSystem::from_view(package, view, &fragment.channels),
-        Err(refusal) => TransitionSystem {
-            initial: StateId(0),
-            final_states: Vec::new(),
-            transitions: Vec::new(),
-            assumptions: Vec::new(),
-            unsupported: Vec::new(),
-            incomplete: Some(refusal.to_string()),
-        },
+        Err(refusal) => {
+            let capacity = match &refusal {
+                StepViewRefusal::Protocol(ProtocolRefusal::Capacity(found)) => Some(found.clone()),
+                _ => None,
+            };
+            TransitionSystem {
+                initial: StateId(0),
+                final_states: Vec::new(),
+                transitions: Vec::new(),
+                assumptions: Vec::new(),
+                unsupported: Vec::new(),
+                incomplete: capacity.is_none().then(|| refusal.to_string()),
+                capacity,
+            }
+        }
     }
 }
 
@@ -339,8 +366,6 @@ pub struct AssessedSubject {
 pub enum Undecidable {
     /// The fragment holds a replicated role (dynamic population).
     DynamicRole(CheckedNodeId),
-    /// The fragment holds a channel with a symbolic capacity (unbounded).
-    UnboundedQueue(CheckedNodeId),
     /// A system's builder could not step this construct.
     Construct(Party, UnsteppedConstruct),
 }
@@ -539,6 +564,30 @@ pub enum RefinementOutcome {
     Decided(Refinement),
     /// The claim is refused under FR-030; it holds no success.
     Refused(DispositionRefusal),
+    /// FSL stopped a system's step view at the subject's capacity binding
+    /// (FSpec FR-785); nothing is decided, and FSL's refusal is carried
+    /// unchanged.
+    Capacity(CapacityOutcome),
+}
+
+/// FSL's refusal of one system's capacity binding, with the side it stopped.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CapacityOutcome {
+    /// The system whose subject FSL stopped at (the implementation first when
+    /// both are stopped).
+    pub party: Party,
+    /// FSL's refusal, unchanged.
+    pub refusal: CapacityRefusal,
+}
+
+impl CapacityOutcome {
+    /// Whether the binding leaves a symbolic capacity unbound: the
+    /// requires-bound outcome. Any other refusal is FSL's
+    /// `invalid_runtime_input`, with its code and cause in [`Self::refusal`].
+    #[must_use]
+    pub fn is_unbound(&self) -> bool {
+        matches!(self.refusal, CapacityRefusal::Missing { .. })
+    }
 }
 
 /// A system as sorted adjacency, with the states from which internal steps can
@@ -949,14 +998,6 @@ fn undecidable(components: &[&Declarations], request: &RefinementRequest) -> Vec
             found.push(Undecidable::DynamicRole(node.clone()));
         }
     }
-    for node in &request.fragment.channels {
-        let symbolic = owner(components, node)
-            .and_then(|declarations| declarations.channel(node))
-            .is_some_and(|channel| matches!(channel.capacity, Capacity::Symbolic(_)));
-        if symbolic {
-            found.push(Undecidable::UnboundedQueue(node.clone()));
-        }
-    }
     let mut constructs: Vec<(Party, UnsteppedConstruct)> = [
         (Party::Implementation, &request.implementation),
         (Party::Specification, &request.specification),
@@ -994,6 +1035,17 @@ fn unoffered<'a, T: Ord>(rested: &'a [T], offered: &[T]) -> BTreeSet<&'a T> {
 pub fn decide(components: &[&Declarations], request: &RefinementRequest) -> RefinementOutcome {
     if let Err(refusal) = bind(components, request) {
         return RefinementOutcome::Refused(refusal);
+    }
+    for (party, side) in [
+        (Party::Implementation, &request.implementation),
+        (Party::Specification, &request.specification),
+    ] {
+        if let Some(refusal) = side.system.capacity() {
+            return RefinementOutcome::Capacity(CapacityOutcome {
+                party,
+                refusal: refusal.clone(),
+            });
+        }
     }
     let sides = [
         &request.implementation.system,

@@ -21,6 +21,7 @@ use filament_protocol::refinement::{
     decide, step_system, Action, AssessedSubject, Counterexample, Fault, Label, Party, Refinement,
     RefinementOutcome, RefinementRequest, Side, StateId, Transition, Undecidable, Verdict,
 };
+use fsl_eval::simulation::protocol::CapacityRefusal;
 use fsl_eval::simulation::protocol::StepKind;
 use fsl_replay::UnsteppedConstruct;
 use fsl_replay::{SettlementBasis, Truth};
@@ -251,21 +252,64 @@ fn a_replicated_role_in_the_fragment_is_unsupported_and_never_refines() {
     assert_eq!(beside[0], ClaimDisposition::GlobalConformance(CONFORMANT));
 }
 
-#[test]
-#[trace("TC-147", "FR-301-AC-2")]
-fn a_channel_of_symbolic_capacity_in_the_fragment_is_unsupported() {
+fn symbolic_claim(bindings: &[(&str, u64)]) -> (Realizability, Realizability) {
     let symbolic = "channel Sym from Buyer to Seller carries Ack ordering unordered \
                     delivery exactly-once-premise capacity symbolic(Bound) overflow reject;\n";
     let unbounded =
-        Realizability::delivering("exactly-once-premise", "", symbolic, PICK, CANCELLED);
-    let plain = wide();
+        Realizability::delivering("exactly-once-premise", "", symbolic, PICK, CANCELLED)
+            .bound(bindings);
+    (unbounded, wide())
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-2")]
+fn a_symbolic_capacity_with_no_binding_is_fsls_unbound_outcome_carried_unchanged() {
+    let (unbounded, plain) = symbolic_claim(&[]);
     let request = asked_over(&unbounded, &plain, &["Order", "Pick", "Cancelled", "Sym"]);
-    let found = decided(&unbounded, &plain, &request);
-    assert!(found.undecidable.contains(&Undecidable::UnboundedQueue(
-        unbounded.named("channel", "Sym")
-    )));
-    assert_eq!(found.verdict(), Verdict::Unsupported);
-    assert_eq!(found.truth(), Truth::Unavailable);
+    assert!(matches!(
+        request.implementation.system.capacity(),
+        Some(CapacityRefusal::Missing { name }) if name == "Bound"
+    ));
+    let RefinementOutcome::Capacity(found) = outcome(&unbounded, &plain, &request) else {
+        panic!("FSL's unbound capacity, carried");
+    };
+    assert_eq!(found.party, Party::Implementation);
+    assert!(found.is_unbound());
+    let settled = settle(&unbounded, &plain, vec![Claims::Refinement(request)]);
+    assert_eq!(
+        settled[0],
+        ClaimDisposition::Refinement(RefinementOutcome::Capacity(found))
+    );
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-8")]
+fn a_symbolic_capacity_with_a_binding_is_decided_by_fsl() {
+    let (bound, plain) = symbolic_claim(&[("Bound", 2)]);
+    let request = asked_over(&bound, &plain, &["Order", "Pick", "Cancelled", "Sym"]);
+    assert!(request.implementation.system.capacity().is_none());
+    assert!(request.implementation.system.incomplete().is_none());
+    let found = decided(&bound, &plain, &request);
+    assert!(found.undecidable.is_empty());
+    assert_ne!(found.verdict(), Verdict::Unsupported);
+}
+
+#[test]
+#[trace("TC-147", "FR-301-AC-9")]
+fn a_refused_capacity_binding_is_fsls_invalid_runtime_input_carried_unchanged() {
+    for (bindings, cause) in [
+        (&[("Nope", 3)][..], "unknown-member"),
+        (&[("Bound", 2), ("Bound", 2)][..], "duplicate-member"),
+    ] {
+        let (refused, plain) = symbolic_claim(bindings);
+        let request = asked_over(&refused, &plain, &["Order", "Pick", "Cancelled", "Sym"]);
+        let RefinementOutcome::Capacity(found) = outcome(&refused, &plain, &request) else {
+            panic!("FSL's refusal, carried: {bindings:?}");
+        };
+        assert!(!found.is_unbound());
+        assert_eq!(found.refusal.code().as_str(), "invalid_runtime_input");
+        assert_eq!(found.refusal.cause(), cause);
+    }
 }
 
 #[test]

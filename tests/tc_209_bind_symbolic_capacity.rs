@@ -18,14 +18,14 @@ use filament_protocol::conformance::{engine_descriptor, ConformanceResult, FslPr
 use filament_protocol::dispatch::{
     dispatch, BackendResult, Binding, ProtocolClaimKind, ProtocolOutcome, ProviderBoundary,
 };
-use filament_protocol::disposition::{ClaimSettlement, Disposition};
+use filament_protocol::disposition::{ClaimSettlement, Disposition, UnsupportedCause};
 use filament_protocol::engine::{EngineRequest, EngineResult, FslEngine};
 use fsl_analyze::analyze::ProtocolItem;
 use fsl_analyze::model_check::{check_protocol, ModelCheckRefusal, ProtocolCheckRequest};
 use fsl_analyze::protocol_analysis::ProtocolAnalysisArtifact;
 use fsl_eval::simulation::protocol::ProtocolTransition;
 use fsl_eval::simulation::protocol::{ProtocolRefusal, UnboundCapacity};
-use fsl_replay::protocol_analysis::{AnalysisOutcome, UnsupportedSlug};
+use fsl_replay::protocol_analysis::{AnalysisOutcome, InconclusiveCause, UnsupportedSlug};
 use fsl_replay::{
     ModelCheckItem, ModelCheckLimits, ModelCheckOutcome, ProtocolCertificateRequest, ReplayRefusal,
     Truth,
@@ -94,9 +94,19 @@ fn conformance(fixture: &Realizability) -> ProtocolOutcome<ConformanceResult, Bi
 }
 
 fn realizability(fixture: &Realizability) -> ProtocolOutcome<EngineResult, Binding<()>> {
+    realizability_under(fixture, "bounded-static")
+}
+
+/// The realizability claim under the strategy profile FSL names `profile`.
+fn realizability_under(
+    fixture: &Realizability,
+    profile: &str,
+) -> ProtocolOutcome<EngineResult, Binding<()>> {
     let mut boundary: ProviderBoundary<'_, Asked, EngineResult> = ProviderBoundary::new();
     let engine = FslEngine::new(fixture.package(), |_: &Binding<()>| {
-        EngineRequest::Realizability(Box::new(fixture.request()))
+        let mut request = fixture.request();
+        request.strategy_profile = Some(profile.to_owned());
+        EngineRequest::Realizability(Box::new(request))
     })
     .expect("FSL's linked engines register");
     boundary
@@ -242,36 +252,123 @@ fn a_refused_capacity_binding_is_fsls_invalid_runtime_input_carried_unchanged() 
     }
 }
 
-/// FSL's `bounded-static` realizability profile admits literal capacities
-/// only, so FSL settles a symbolic one `unsupported` (`symbolic-queue-capacity`)
-/// whatever the binding is; its bounded profile is not available yet. The
-/// library carries FSL's record as it is and defines no cause of its own.
-fn assert_unsupported_symbolic_queue_capacity(fixture: &Realizability) {
-    let ProtocolOutcome::Settled(ClaimSettlement::Result { result, .. }) = realizability(fixture)
+/// The outcome FSL's engine settles for the realizability claim of `$fixture`,
+/// carried by the dispatch.
+macro_rules! realizability_item {
+    ($fixture:expr, $profile:expr) => {{
+        let ProtocolOutcome::Settled(ClaimSettlement::Result { result, .. }) =
+            realizability_under($fixture, $profile)
+        else {
+            panic!("FSL settles the item");
+        };
+        let Some(ProtocolAnalysisArtifact::Realizability(found)) = result.artifact() else {
+            panic!("a realizability result");
+        };
+        (result.truth(), found.outcome.clone())
+    }};
+}
+
+/// FSL's `bounded-static` profile admits literal capacities only, so FSL
+/// settles a symbolic one `unsupported` whatever the binding is; the library
+/// carries that record and defines no cause of its own.
+#[test]
+#[trace("TC-209", "FR-150-AC-21")]
+fn the_bounded_static_profile_is_fsls_unsupported_for_a_symbolic_capacity_bound_or_not() {
+    for fixture in [symbolic(), symbolic().bound(&[("Bound", 2)])] {
+        let (truth, outcome) = realizability_item!(&fixture, "bounded-static");
+        assert_eq!(truth, Truth::Unavailable);
+        let AnalysisOutcome::Unsupported(cause) = outcome else {
+            panic!("FSL's unsupported outcome: {outcome:?}");
+        };
+        assert_eq!(cause.slug, UnsupportedSlug::SymbolicQueueCapacity);
+        assert_eq!(cause.detail.as_deref(), Some("Bound"));
+    }
+}
+
+#[test]
+#[trace("TC-209", "FR-150-AC-21")]
+fn realizability_over_an_unbound_symbolic_capacity_is_fsls_premise_not_stated_unchanged() {
+    let (truth, outcome) = realizability_item!(&symbolic(), "bounded");
+    assert_eq!(truth, Truth::Pending);
+    let AnalysisOutcome::Inconclusive(cause) = outcome else {
+        panic!("FSL's inconclusive outcome: {outcome:?}");
+    };
+    assert_eq!(
+        cause,
+        InconclusiveCause::PremiseNotStated {
+            member: "capacities"
+        }
+    );
+}
+
+#[test]
+#[trace("TC-209", "FR-150-AC-21")]
+fn realizability_over_a_bound_symbolic_capacity_is_decided_by_fsl() {
+    let (_, outcome) = realizability_item!(&symbolic().bound(&[("Bound", 2)]), "bounded");
+    assert!(
+        !matches!(
+            outcome,
+            AnalysisOutcome::Inconclusive(_) | AnalysisOutcome::Unsupported(_)
+        ),
+        "FSL decides with the bound: {outcome:?}"
+    );
+    // As FSL decides the same protocol with a literal capacity.
+    let (_, literal) = realizability_item!(&blocking("2"), "bounded");
+    assert_eq!(
+        std::mem::discriminant(&outcome),
+        std::mem::discriminant(&literal)
+    );
+}
+
+/// Dispatch the `finite-replay` claim of a supplied trace to FSL's engine.
+fn finite_replay(
+    fixture: &Realizability,
+    steps: &[serde_json::Value],
+) -> ProtocolOutcome<EngineResult, Binding<()>> {
+    let (snapshots, trace) = fixture.with_trace("t", steps);
+    let mut boundary: ProviderBoundary<'_, Asked, EngineResult> = ProviderBoundary::new();
+    let engine = FslEngine::new(fixture.package(), |_: &Binding<()>| {
+        EngineRequest::FiniteReplay(Box::new(fixture.replay_request(&snapshots, trace.clone())))
+    })
+    .expect("FSL's linked engines register");
+    boundary
+        .register(
+            filament_protocol::engine::engine_descriptor(ProviderOrigin::Linked)
+                .expect("FSL's own descriptor"),
+            engine,
+        )
+        .expect("the registration is accepted");
+    let asked = claim_of(
+        ProtocolClaimKind::FiniteReplay,
+        fixture.linked(),
+        fixture.clause(),
+        |form, name| fixture.named(form, name),
+    );
+    dispatch(&mut boundary, fixture.linked().declarations(), &asked)
+}
+
+#[test]
+#[trace("TC-209", "FR-058-AC-6")]
+fn finite_replay_over_a_symbolic_capacity_is_fsls_unbounded_extent_carried_unchanged() {
+    // FSL's finite replay request takes no capacity binding, so a symbolic
+    // capacity is an unbounded root of the replay whatever the fixture binds.
+    let fixture = symbolic().bound(&[("Bound", 2)]);
+    let steps = fixture.trace_steps(3);
+    let outcome = finite_replay(&fixture, &steps);
+    assert_eq!(outcome.truth(), Truth::Unavailable, "{outcome:?}");
+    let ProtocolOutcome::Settled(ClaimSettlement::Disposition(Disposition::Unsupported(found))) =
+        outcome
     else {
-        panic!("FSL settles the item");
+        panic!("FSL's outcome, carried as a typed disposition: {outcome:?}");
     };
-    assert_eq!(result.truth(), Truth::Unavailable);
-    let Some(ProtocolAnalysisArtifact::Realizability(found)) = result.artifact() else {
-        panic!("a realizability result");
+    // FSL's analyze maps its engine's requires-bound outcome to
+    // `unsupported_projection`/`unbounded-extent`; the library carries that
+    // code and cause as FSL gives them.
+    let UnsupportedCause::RequestedCapability(code) = &found.cause else {
+        panic!("a requested-capability cause: {:?}", found.cause);
     };
-    let AnalysisOutcome::Unsupported(cause) = &found.outcome else {
-        panic!("FSL's unsupported outcome: {:?}", found.outcome);
-    };
-    assert_eq!(cause.slug, UnsupportedSlug::SymbolicQueueCapacity);
-    assert_eq!(cause.detail.as_deref(), Some("Bound"));
-}
-
-#[test]
-#[trace("TC-209", "FR-150-AC-21")]
-fn realizability_over_an_unbound_symbolic_capacity_is_fsls_unsupported_cause_unchanged() {
-    assert_unsupported_symbolic_queue_capacity(&symbolic());
-}
-
-#[test]
-#[trace("TC-209", "FR-150-AC-21")]
-fn realizability_over_a_bound_symbolic_capacity_is_still_fsls_unsupported_cause_unchanged() {
-    assert_unsupported_symbolic_queue_capacity(&symbolic().bound(&[("Bound", 2)]));
+    assert_eq!(code.code(), "unsupported_projection");
+    assert_eq!(code.cause(), "unbounded-extent");
 }
 
 #[test]

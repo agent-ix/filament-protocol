@@ -202,7 +202,7 @@ const REFINEMENT_CORPUS: [RefinementCase; 7] = [
         expect: Expect::Unsupported,
     },
     RefinementCase {
-        name: "a channel of symbolic capacity in the fragment is unsupported",
+        name: "a channel of symbolic capacity in the fragment, unbound",
         implementation: symbolic,
         specification: wide,
         channels: &["Order", "Pick", "Cancelled", "Sym"],
@@ -409,15 +409,16 @@ fn the_unsupported_case_names_the_replicated_role_and_invents_no_counterexample(
 
 #[test]
 #[trace("TC-173", "FR-301-AC-2")]
-fn the_symbolic_capacity_case_names_the_channel_and_invents_no_counterexample() {
+fn the_symbolic_capacity_case_carries_fsls_unbound_outcome_and_invents_no_counterexample() {
     let (implementation, specification, request) = built(case_named(
-        "a channel of symbolic capacity in the fragment is unsupported",
+        "a channel of symbolic capacity in the fragment, unbound",
     ));
-    let found = decided(&implementation, &specification, &request);
-    assert!(found.undecidable.contains(&Undecidable::UnboundedQueue(
-        implementation.named("channel", "Sym")
-    )));
-    assert!(found.counterexamples.is_empty());
+    let RefinementOutcome::Capacity(found) =
+        decide(&components(&implementation, &specification), &request)
+    else {
+        panic!("FSL's unbound capacity, carried");
+    };
+    assert!(found.is_unbound());
 }
 
 #[test]

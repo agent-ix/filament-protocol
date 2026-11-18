@@ -273,6 +273,12 @@ where
             row(claim, r.execution(), r.truth(), r.basis())
         }
         ClaimDisposition::Refinement(RefinementOutcome::Refused(r)) => refusal(claim, r.code()),
+        ClaimDisposition::Refinement(RefinementOutcome::Capacity(c)) if c.is_unbound() => {
+            refusal(claim, "requires-bound")
+        }
+        ClaimDisposition::Refinement(RefinementOutcome::Capacity(c)) => {
+            refusal(claim, c.refusal.code().as_str())
+        }
     }
 }
 

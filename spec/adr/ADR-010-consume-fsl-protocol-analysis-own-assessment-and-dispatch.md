@@ -202,8 +202,13 @@ them (FR-005). Those are different questions, and the split follows them.
    over the specification's internal-step closure, with a paired replayable
    counterexample for an extra trace; deadlock; divergence; the
    stronger-assumption finding (FR-204); and `unsupported` for a replicated
-   role, a symbolic queue capacity (refinement takes no capacity binding yet) or a construct a system's builder could not
-   step, which never refines. The precedence is unsupported, refuted,
+   role or a construct a system's builder could not step, which never
+   refines. A symbolic queue capacity is not decided here at all: it takes its
+   value from the `CapacityBinding` in the protocol subject each system is
+   stepped over (FSpec FR-785), FSL's step view decides with it, and FSL's
+   refusal of a missing or invalid binding is carried unchanged (FR-301).
+   `fsl_replay::open_protocol_systems` is FSL's model-refines-protocol
+   check and is not used. The precedence is unsupported, refuted,
    incomplete, refines. The transition system is this library's own small
    type, derived from FSL's read-only protocol step view (FSL FR-578, S3), with
    the observable steps defined by FR-301. Atomic and
@@ -286,7 +291,7 @@ does no FSL-side work.
 | G1 | No decision procedure for `local-projection`: role-local projection with send/receive correspondence, queue order and merge visibility | Only vocabulary, applicability and routing exist; an unserved request settles `unsupported_projection` / `unsupported-requested-capability` | TL-10 |
 | G2 | No decision procedure for `realizability`: local-history strategy game, realizable/unrealizable witnesses, non-conclusive outcome on missing premises | Same as G1 | TL-10 |
 | G3 | `join predicate(...)` was not stepped and a join with no `outstanding` rule was refused (both closed in FSL by QSL-1885 and QSL-1891; this library still does not assess a predicate join) | `fsl-eval/src/simulation/protocol/program.rs` | TL-11 |
-| G4 | Resolved for the protocol check (FSpec FR-785, filament-spec-language#2828): a symbolic channel capacity takes its value from a `CapacityBinding` in the protocol subject, and an unbound one is requires-bound, not `Unsupported`. Still open in FSL: the `bounded-static` realizability profile settles a symbolic capacity `unsupported` bound or not, and refinement and finite replay take no binding | `fsl-eval/src/simulation/protocol/capacity.rs`, `fsl-analyze/src/protocol_analysis/profile.rs` | TL-11 |
+| G4 | Resolved (FSpec FR-785, filament-spec-language#2828, #2856): a symbolic channel capacity takes its value from a `CapacityBinding` in the protocol subject, and an unbound one is requires-bound, not `Unsupported`. Protocol check: FSL's unbound list or its `invalid_runtime_input` refusal. Realizability: `inconclusive`/`premise-not-stated` naming `capacities` unbound, decided when bound. Refinement: FSL's step view over the subject's binding. Still open in FSL: finite replay of a supplied trace takes no binding, so a symbolic capacity is requires-bound there | `fsl-eval/src/simulation/protocol/capacity.rs`, `fsl-analyze/src/protocol_analysis/profile.rs` | TL-11 |
 | G5 | No discharge of a `repeat`'s `invariant` and `variant` (lexicographic variants included) was found. They parse and lower into the checked package, but a search of `fsl-analyze`, `fsl-eval`, `fsl-replay` and `fsl-route` found no engine that proves them | `fsl-forms/src/protocol_control.rs`, `fsl-semantics/.../controls.rs` | TL-11 |
 | G6 | Declared least-fixed-point cycles: the composition planner computes no fixed point and discharges a cycle only from a `fixed-point` slot holding a proved result. No producer of that result was found. Closed here by Decision 6: this library computes no fixed point either and refuses a cycle as circular | `fsl-replay/src/planner/compose.rs` | TL-9 |
 | G7 | Other protocol-system constructs that are not stepped and refuse today: `activation on each` with a compensation template, a protocol capture, an `unordered` channel with a `head` or `tail` loss selector, and a step binder of an unenumerable record type | `Unsupported` in `fsl-eval/src/simulation/protocol.rs` | TL-11, TL-6 |
