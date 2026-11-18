@@ -31,7 +31,7 @@ Per channel: the observed maximum occupancy, whether it stayed within capacity, 
 
 ## Behavior
 
-- The evaluator shall judge occupancy only against a literal capacity. For a symbolic capacity it shall return the disposition of FR-057.
+- The evaluator shall judge occupancy only against a literal capacity. For a symbolic capacity, which takes its value only from a subject binding FSL admits (FSpec FR-785) and which an observed history does not carry, it shall return a channel outcome that names the authored capacity and judges nothing: the missing bound is requires-bound (FR-058), never `unsupported`.
 - The evaluator shall not evaluate the expression.
 - The evaluator shall report occupancy above capacity with no authored overflow event as a capacity violation naming the channel, capacity and observed occupancy.
 - The evaluator shall report an overflow outcome that differs from the authored policy as an overflow violation naming the channel, the authored policy and the observed outcome.
@@ -42,7 +42,8 @@ Per channel: the observed maximum occupancy, whether it stayed within capacity, 
 - For an `unordered` channel whose overflow loses its `head` or `tail`, the evaluator shall return the disposition of FR-057 for that channel.
 - The evaluator shall report each violation without repairing it (FR-027).
 - The evaluator shall refuse a history that names a node that is not a declared channel, naming the node, and return no assessment.
-- The library shall carry a channel's symbolic capacity unchanged through link and dispatch and shall not step it.
+- The library shall carry a channel's symbolic capacity unchanged through link and dispatch and shall not resolve it.
+- A capacity binding is FSL's own `CapacityBinding` in the request's protocol subject, and the library shall pass it to FSL unchanged, so that FSL decides with the bound or reports the requires-bound outcome or the `invalid_runtime_input` refusal (FR-058, FR-205).
 - This requirement states no step semantics. FSL owns the exploration semantics (FSL ADR-027); this library assesses one admitted observation history (ADR-010 Decision 2).
 
 ## Acceptance Criteria
@@ -53,12 +54,12 @@ Per channel: the observed maximum occupancy, whether it stayed within capacity, 
 | FR-054-AC-2 | Over histories whose occupancy exceeds capacity with and without an authored overflow event, the assessment reports a capacity violation only for the one without. | Test (TC-052) |
 | FR-054-AC-3 | Over one history per authored policy (`block`, `reject`, `loss head`, `loss tail` and `loss new` on `fifo` channels, `loss new` on an `unordered` channel) whose observed outcome matches, and one whose outcome differs, the assessment reports no violation for each match and an overflow violation naming authored policy and observed outcome for the mismatch. | Test (TC-052) |
 | FR-054-AC-4 | Over a `fifo` channel keyed by a field, a history delivering two messages of one key out of send order yields an order violation, and a history interleaving different keys does not. | Test (TC-052) |
-| FR-054-AC-5 | Over a channel with a symbolic capacity, the assessment returns the FR-057 disposition and reports neither a capacity violation nor its absence. | Test (TC-052) |
+| FR-054-AC-5 | Over a channel with a symbolic capacity, the assessment returns a requires-bound channel outcome naming the authored capacity, not an `unsupported` one, and reports neither a capacity violation nor its absence. | Test (TC-052) |
 | FR-054-AC-6 | Over a channel whose delivery premise forbids loss and a history with a lost message, and over one whose premise permits it, the assessment reports a premise violation naming channel and premise only for the first. | Test (TC-052) |
 | FR-054-AC-7 | Over an `unordered` channel, any delivery order of the same messages reports no order violation; over an `unordered` channel whose overflow loses `head` or `tail`, the assessment returns the FR-057 disposition for that channel. | Test (TC-052) |
 | FR-054-AC-8 | Over a `loss head` channel holding messages m1 to m4, a loss labelled `head` that drops m1 reports no violation, and one that drops m3, one labelled `tail` that drops m4 and a `head` loss of the arriving message on an empty queue each report an overflow violation. | Test (TC-052) |
 | FR-054-AC-9 | A fact naming a node that is not a declared channel refuses the history with the node named, and no channel assessment is returned. | Test (TC-052) |
-| FR-054-AC-10 | Over a linked channel declared with a symbolic capacity, linking retains the capacity as authored and dispatch hands the backend that declaration unchanged, and neither resolves it to a number. | Test (TC-052) |
+| FR-054-AC-10 | Over a linked channel declared with a symbolic capacity, linking retains the capacity as authored and dispatch hands the backend that declaration unchanged, and neither resolves it to a number. A binding in the request's protocol subject reaches FSL unchanged (TC-209). | Test (TC-052) |
 
 ## Dependencies
 

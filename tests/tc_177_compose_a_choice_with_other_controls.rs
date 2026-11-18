@@ -21,10 +21,10 @@ use support::handoff::MONEY_UNIT;
 use support::projection::{MEMBERS, PICK, RECORDS};
 
 /// Four choices: `InBranch` in a `parallel` branch, owned by `Warehouse`
-/// and seeing `not q.ok`; `InLoop` in a `repeat` body, and `Outer` with `Inner`
+/// and seeing `q.ok`; `InLoop` in a `repeat` body, and `Outer` with `Inner`
 /// in its `right` case, each owned by `Seller` and seeing `got.ok`. The
-/// owners and visible nodes differ, so a library that reused one choice's
-/// owner or visible set for another would fail. Only the `again` case of
+/// owners differ, so a library that reused one choice's
+/// owner for another would fail. Only the `again` case of
 /// `InLoop` has a guard that can never hold (`got.ok and not got.ok`): a
 /// library that evaluated guards would drop that branch. `Inner`'s guards are
 /// complementary.
@@ -40,7 +40,7 @@ fn composed() -> Dynamic {
          {PICK}\n\
          parallel Fan memory sc {{\n\
            branch a sequence BranchA {{\n\
-             choice InBranch by Warehouse visible (not q.ok) {{\n\
+             choice InBranch by Warehouse visible (q.ok) {{\n\
                case alpha when {{ not q.ok }} sequence AlphaBody {{ }}\n\
                case beta when {{ not (not q.ok) }} sequence BetaBody {{ }}\n\
              }} }}\n\
@@ -186,13 +186,13 @@ fn a_choice_inside_a_parallel_branch_a_loop_body_and_a_choice_is_linked_with_its
         );
         assert_eq!(choice.key, dynamic.key(&choice.control), "{name}: the key");
     }
-    // `InBranch` has its own owner and its own visible node: neither is
-    // merged with or shadowed by the `Seller` choices'. FSL shares the one
-    // `got.ok` node among the others.
+    // `InBranch` has its own owner, which is not merged with or shadowed by
+    // the `Seller` choices'. FSL identifies a visible node by the field read,
+    // so the one `ok` node is shared by every choice that names it.
     let branch = choice_named(&dynamic, "InBranch");
     let outer = choice_named(&dynamic, "Outer");
     assert_ne!(branch.owner, outer.owner);
-    assert_ne!(branch.visible, outer.visible);
+    assert_eq!(branch.visible, outer.visible);
     assert_eq!(
         choice_named(&dynamic, "Inner").visible,
         outer.visible,

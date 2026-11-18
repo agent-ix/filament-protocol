@@ -55,7 +55,7 @@ fn no_source_or_manifest_names_the_number_module() {
     // The control: the crate does name the FSL root it imports from.
     assert!(crate_text()
         .iter()
-        .any(|(_, text)| text.contains("filament_spec_language::checked_handoff")));
+        .any(|(_, text)| text.contains("fsl_command::checked_handoff")));
 }
 
 /// FR-047-AC-2: no `handoff-writer` feature and no retired format identity

@@ -18,4 +18,4 @@ Assess histories within and over a literal capacity, one per overflow policy mat
 
 ## Expected Results
 
-Capacity, overflow and order violations name the channel and the authored and observed values; a symbolic capacity returns the unsupported disposition.
+Capacity, overflow and order violations name the channel and the authored and observed values; a symbolic capacity returns a requires-bound channel outcome naming the authored capacity, not an unsupported one.

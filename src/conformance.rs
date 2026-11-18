@@ -17,9 +17,11 @@
 //! a refused replay, never as `refuted`.
 
 use filament_exact::Cancel;
+use filament_semantic_value::catalog::CatalogCode;
 use fsl_analyze::analyze::ProtocolItem;
 use fsl_analyze::model_check::manifest::descriptor;
 use fsl_analyze::model_check::{check_protocol, ModelCheckRefusal};
+use fsl_eval::simulation::protocol::ProtocolRefusal;
 use fsl_eval::simulation::protocol::ProtocolTransition;
 use fsl_replay::spine::ProtocolAnalysisRecord;
 use fsl_replay::{
@@ -135,6 +137,17 @@ where
                 outcome,
                 construct: None,
             },
+            // FSpec FR-785: a symbolic capacity the subject's binding leaves
+            // unbound is requires-bound, FSL's list carried unchanged.
+            Err(ModelCheckRefusal::UnboundCapacity(capacities)) => FslReport::UnboundCapacity {
+                capacities,
+                construct: None,
+            },
+            // A binding defect is FSL's `invalid_runtime_input` refusal; FSL
+            // publishes its code and cause on the refusal itself.
+            Err(ModelCheckRefusal::Protocol(ProtocolRefusal::Capacity(refusal))) => {
+                FslReport::Refusal(CatalogCode::new(refusal.code().as_str(), refusal.cause()))
+            }
             Err(refusal) => FslReport::Failed(FailureCause::CheckerRefused(refusal.to_string())),
         }
     }

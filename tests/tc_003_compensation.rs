@@ -33,7 +33,7 @@ use filament_protocol::ids::{
     AttemptId, CommitId, DefinitionId, DeliveryId, EffectId, ReceiveId, RecoveryId, RegistrationId,
     RoleInstanceId, SendId, WorkflowInstanceId,
 };
-use filament_spec_language::checked_handoff::Corpus;
+use fsl_command::checked_handoff::Corpus;
 use fsl_package::protocol_view::{control_operation, ChoiceVisibility, ControlOperation};
 use ix_trace_rs::trace;
 

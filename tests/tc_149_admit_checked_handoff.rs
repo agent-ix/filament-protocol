@@ -13,7 +13,7 @@ use filament_contract_model::{
     CheckedPackageRefusalCode, ExactTypeProjectionErrorCode,
 };
 use filament_protocol::checked_package::{admit, HandoffFiles, Refusal};
-use filament_spec_language::checked_handoff::{Corpus, SelectionAxis};
+use fsl_command::checked_handoff::{Corpus, SelectionAxis};
 use fsl_package::{EqualityFileRefusal, IdentityFileRefusal, NativeJoinLimits, IDENTITIES_FORMAT};
 use ix_trace_rs::trace;
 use serde_json::Value;

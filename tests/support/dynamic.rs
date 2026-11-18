@@ -16,7 +16,7 @@ use filament_protocol::disposition::Construct;
 use filament_protocol::dynamics::ObservationRef;
 use filament_protocol::ids::{MessageId, RoleInstanceId, WorkflowInstanceId};
 use filament_protocol::link::{link, LinkedProtocol};
-use filament_spec_language::checked_handoff::Corpus;
+use fsl_command::checked_handoff::Corpus;
 use fsl_semantics::check::wire_id::WireGraph;
 
 use super::handoff::{join_budget, request, written_request};
@@ -135,6 +135,18 @@ impl Dynamic {
         let text: String = source("workflow", 3, "head")
             .lines()
             .filter(|line| !line.contains("channel Symbolic") && !line.contains("channel BagHead"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        Self::from_source(&text)
+    }
+
+    /// The package without its unordered channel losing its head, keeping the
+    /// channel of symbolic capacity: the one channel the assessment judges no
+    /// capacity of is that channel.
+    pub fn with_symbolic_capacity_only() -> Self {
+        let text: String = source("workflow", 3, "head")
+            .lines()
+            .filter(|line| !line.contains("channel BagHead"))
             .collect::<Vec<_>>()
             .join("\n");
         Self::from_source(&text)

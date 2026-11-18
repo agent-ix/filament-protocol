@@ -208,7 +208,10 @@ fn inconclusive_and_requires_bound_are_carried_and_hold_no_decided_truth() {
     ) else {
         panic!("an unbounded domain");
     };
-    let bound = RequiresBound { domains };
+    let bound = RequiresBound {
+        domains,
+        capacities: Vec::new(),
+    };
     let mut boundary = Boundary::new();
     let reported = bound.clone();
     serve(

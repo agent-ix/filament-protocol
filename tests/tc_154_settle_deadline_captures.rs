@@ -39,7 +39,7 @@ use filament_protocol::dynamics::ObservationRef;
 use filament_protocol::ids::{EffectId, RoleInstanceId, WorkflowInstanceId};
 use filament_protocol::observation_link::{Link, RoleMapping, Unlinked};
 use filament_protocol::slot::{evaluate, SlotOutcome};
-use filament_spec_language::checked_handoff::Corpus;
+use fsl_command::checked_handoff::Corpus;
 use fsl_eval::value::{ProtocolSlot, ProtocolSuppliedValue, ProtocolSupply, SuppliedValue};
 use fsl_package::protocol_view::ChoiceVisibility;
 use fsl_package::{BarePackage, BareSupply, ProtocolSlotDescriptor};

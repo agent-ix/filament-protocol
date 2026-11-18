@@ -146,7 +146,7 @@ them (FR-005). Those are different questions, and the split follows them.
      FR-205; FR-006 is retired and FR-206 succeeds it, Decision 8).
 
 3. **Unsupported FSL constructs are carried, not repaired.** A FSL
-   `Unsupported` cause (symbolic capacity, join predicate, a join with no
+   `Unsupported` cause (join predicate, a join with no
    `outstanding` rule, and the others listed below), a requires-bound outcome or
    an unserved kind becomes a typed non-success disposition that names the
    construct. The library never truncates a bound to finish, never substitutes
@@ -202,7 +202,7 @@ them (FR-005). Those are different questions, and the split follows them.
    over the specification's internal-step closure, with a paired replayable
    counterexample for an extra trace; deadlock; divergence; the
    stronger-assumption finding (FR-204); and `unsupported` for a replicated
-   role, a symbolic queue capacity or a construct a system's builder could not
+   role, a symbolic queue capacity (refinement takes no capacity binding yet) or a construct a system's builder could not
    step, which never refines. The precedence is unsupported, refuted,
    incomplete, refines. The transition system is this library's own small
    type, derived from FSL's read-only protocol step view (FSL FR-578, S3), with
@@ -225,7 +225,7 @@ them (FR-005). Those are different questions, and the split follows them.
      (`settle_protocol_check`). The library dispatches that check and carries
      FSL's record unchanged. It decides no deadlock, evaluates no temporal
      formula and adds no refinement (Decision 1; FSL FR-530 and FR-147 stand).
-     The check answers whether every behaviour is deadlock-free. The history
+     The check answers whether every behaviour is deadlock-free, which is narrower than global conformance: V1-PROT-026 stays Partial, tied to QSL-2209, until the `refuted` settlement has a real test (G8, G9). The history
      questions of retired FR-004 are this library's, decided in `history` over
      the live assessment axes of `dynamics` and the closure algebra of
      `closure`, as composition and refinement are (Decisions 6, 7): order
@@ -286,12 +286,12 @@ does no FSL-side work.
 | G1 | No decision procedure for `local-projection`: role-local projection with send/receive correspondence, queue order and merge visibility | Only vocabulary, applicability and routing exist; an unserved request settles `unsupported_projection` / `unsupported-requested-capability` | TL-10 |
 | G2 | No decision procedure for `realizability`: local-history strategy game, realizable/unrealizable witnesses, non-conclusive outcome on missing premises | Same as G1 | TL-10 |
 | G3 | `join predicate(...)` was not stepped and a join with no `outstanding` rule was refused (both closed in FSL by QSL-1885 and QSL-1891; this library still does not assess a predicate join) | `fsl-eval/src/simulation/protocol/program.rs` | TL-11 |
-| G4 | Symbolic channel capacity is not stepped (`Unsupported::SymbolicCapacity`); only literal capacity is | Same file | TL-11 |
+| G4 | Resolved for the protocol check (FSpec FR-785, filament-spec-language#2828): a symbolic channel capacity takes its value from a `CapacityBinding` in the protocol subject, and an unbound one is requires-bound, not `Unsupported`. Still open in FSL: the `bounded-static` realizability profile settles a symbolic capacity `unsupported` bound or not, and refinement and finite replay take no binding | `fsl-eval/src/simulation/protocol/capacity.rs`, `fsl-analyze/src/protocol_analysis/profile.rs` | TL-11 |
 | G5 | No discharge of a `repeat`'s `invariant` and `variant` (lexicographic variants included) was found. They parse and lower into the checked package, but a search of `fsl-analyze`, `fsl-eval`, `fsl-replay` and `fsl-route` found no engine that proves them | `fsl-forms/src/protocol_control.rs`, `fsl-semantics/.../controls.rs` | TL-11 |
 | G6 | Declared least-fixed-point cycles: the composition planner computes no fixed point and discharges a cycle only from a `fixed-point` slot holding a proved result. No producer of that result was found. Closed here by Decision 6: this library computes no fixed point either and refuses a cycle as circular | `fsl-replay/src/planner/compose.rs` | TL-9 |
 | G7 | Other protocol-system constructs that are not stepped and refuse today: `activation on each` with a compensation template, a protocol capture, an `unordered` channel with a `head` or `tail` loss selector, and a step binder of an unenumerable record type | `Unsupported` in `fsl-eval/src/simulation/protocol.rs` | TL-11, TL-6 |
 | G8 | No engine advertises the `global-conformance` kind. FSL FR-636 names `global-conformance` for protocol model checking, but EN-1's manifest advertises only `temporal-satisfaction`, and `protocol-analysis` only `local-projection` and `realizability`. The library selects on `temporal-satisfaction` (FR-205). FSL should advertise the kind or state that the item is a `temporal-satisfaction` item | `fsl-analyze/src/model_check/manifest.rs`, `protocol_analysis/manifest.rs` | TL-8 |
-| G9 | EN-1's protocol check cannot be settled `refuted` in process: `settle_protocol_check` takes a replay, and FSL's `replay_protocol_trace` recompiles from a `ReplayRequestWire` that holds source, which a checked handoff does not carry (realizability has an in-process `replay_counterexample`). The refusal map `model_refusal` is crate-private, so an EN-1 refusal reaches this library with no code The requires-bound refusal is not part of this gap: `ModelCheckRefusal::RequiresBound` is public and typed, and FR-205 carries it as FR-058's disposition | `fsl-replay/src/model_check/replay.rs`, `fsl-analyze/src/analyze/items.rs` | TL-8 |
+| G9 | EN-1's protocol check cannot be settled `refuted` in process: `settle_protocol_check` takes a replay, and FSL's `replay_protocol_trace` recompiles from a `ReplayRequestWire` that holds source, which a checked handoff does not carry (realizability has an in-process `replay_counterexample`). The refusal map `model_refusal` is crate-private, so an EN-1 refusal reaches this library with no code The requires-bound refusal is not part of this gap: `ModelCheckRefusal::RequiresBound` is public and typed, and FR-205 carries it as FR-058's disposition. A capacity-binding refusal (`invalid_runtime_input`) is classified `Refused` by this library, while FSL's own EN-1 map settles it `Failed` | `fsl-replay/src/model_check/replay.rs`, `fsl-analyze/src/analyze/items.rs` | TL-8 |
 | G10 | No owner publishes a serialized observed history. FSpec FR-433 spells a protocol counterexample trace (steps, not observations); FSL's `finite-replay` item (FSL FR-636) now replays a supplied protocol trace and FR-303 dispatches it; the serialized observed-history reader and assessor (FSL FR-737) wait on QSL-2210, and no owner defines how an observation record becomes a role, channel, join or loop fact | `fsl-analyze/src/protocol_analysis/finite_replay.rs` (the protocol-trace half) | TL-8 |
 | G11 | Resolved: `quoin-evidence` (the owner of `ScenarioEvidence`) pinned `serde =1.0.229` and `filament-observation` pinned `serde =1.0.228`. `filament-observation` now takes `serde` 1.0.228 as a caret requirement (agent-ix/filament-observation#56), so both resolve at 1.0.229 and FR-206 is implemented | `quoin/rust/Cargo.toml`, `filament-observation/Cargo.toml` | Closed |
 | G12 | No owner publishes a canonical claim-row identity for the scenario record. Quoin's intake (`quoin-evidence` FR-130) validates only that a claim identity is not blank, and FSpec FR-241 defines no row identity. FR-206 composes `<position>/<kind>:<execution>:<truth>:<basis>` (or `...:refused:<cause>`) from the axes the dispositions carry. Expires when Quoin or FSL publishes a canonical identity: FR-206 then imports it and drops its own composition | `quoin-evidence/src/scenario/check.rs`, `filament-specification` FR-241 | TL-8 |
@@ -307,13 +307,6 @@ or correct each before opening a ticket.
   (FSpec FR-433) itself. This is a temporary mirror in test support only.
   Expiry: FSL publishes the format constant or a trace writer; the mirror is
   then deleted and the `base64` dev-dependency with it.
-- *The held FSL revision.* `Cargo.lock` is deliberately held at the FSL commit
-  that merged agent-ix/filament-spec-language#2785, with
-  `filament-contract-model` at the revision that FSL commit's own lock uses,
-  because FSL main moved `checked_handoff` to `fsl-command` and this
-  repository's handoff fixtures do not build against it. Expiry: the
-  follow-up that repoints the fixtures to `fsl-command` lands; the lock is then
-  updated to FSL main.
 
 ## Alternatives considered
 

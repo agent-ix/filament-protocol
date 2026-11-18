@@ -232,7 +232,9 @@ fn protocol_claim<R: BackendResult, B>(
             Disposition::Unsupported(_) => unrun(AssessmentExecution::Unsupported),
             Disposition::Failed(_) => unrun(AssessmentExecution::Failed),
             Disposition::Refused(d) => refusal(claim, &catalog(&d.code)),
-            Disposition::RequiresBound(_) => refusal(claim, "requires-bound"),
+            Disposition::RequiresBound(_) | Disposition::UnboundCapacity(_) => {
+                refusal(claim, "requires-bound")
+            }
         },
         ProtocolOutcome::InvalidRequest { code, .. } => refusal(claim, &catalog(code)),
         ProtocolOutcome::Refused(refused) => refusal(claim, refused.code()),
